@@ -1,0 +1,47 @@
+from flask import Flask
+from configuracion import Config
+from database import db
+from flask_cors import CORS
+from flask_jwt_extended import JWTManager
+
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(Config)
+    db.init_app(app)
+    
+    jwt = JWTManager(app)
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+    
+    from rutas.barberias import barberias_bp
+    from rutas.barberos import barberos_bp
+    from rutas.servicios import servicios_bp
+    from rutas.clientes import clientes_bp
+    from rutas.turnos import turnos_bp
+    from rutas.contabilidad import contabilidad_bp
+    from rutas.horarios import horarios_bp
+    from rutas.auth import auth_bp
+    
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(barberias_bp)
+    app.register_blueprint(barberos_bp)
+    app.register_blueprint(servicios_bp)
+    app.register_blueprint(clientes_bp)
+    app.register_blueprint(turnos_bp)
+    app.register_blueprint(contabilidad_bp)
+    app.register_blueprint(horarios_bp)
+    
+    @app.route("/")
+    def index():
+        return {"mensaje": "API Barbería Multi-Tenant", "version": "1.0"}
+    
+    @app.route("/health")
+    def health():
+        return {"status": "OK"}
+    
+    return app
+
+if __name__ == "__main__":
+    app = create_app()
+    app.run(debug=True, host="0.0.0.0", port=5000)
