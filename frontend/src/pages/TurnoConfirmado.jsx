@@ -38,7 +38,8 @@ function TurnoConfirmado() {
     
     try {
       await api.cancelarTurno(barberiaId, turno.id_turno);
-      navigate('/');
+      localStorage.removeItem('barberia_actual');
+      navigate(`/barberia/${turno.id_barberia}`);
     } catch (e) {
       alert('Error al cancelar turno');
       setCancelando(false);

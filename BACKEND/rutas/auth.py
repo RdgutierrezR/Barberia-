@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from controlador import auth as ctrl
+from controlador import invitacion as ctrl_inv
 from flask_jwt_extended import create_access_token
 from werkzeug.security import generate_password_hash
 
@@ -19,7 +20,7 @@ def login_barbero():
     
     token = create_access_token(
         identity=str(barbero.id_barbero),
-        additional_claims={"id_barberia": barbero.id_barberia, "nombre": barbero.nombre}
+        additional_claims={"id_barberia": barbero.id_barberia, "nombre": barbero.nombre, "rol": barbero.rol}
     )
     
     return jsonify({
@@ -46,12 +47,53 @@ def registro_barbero():
     
     token = create_access_token(
         identity=str(nuevo.id_barbero),
-        additional_claims={"id_barberia": nuevo.id_barberia, "nombre": nuevo.nombre}
+        additional_claims={"id_barberia": nuevo.id_barberia, "nombre": nuevo.nombre, "rol": nuevo.rol}
     )
     
     return jsonify({
         "token": token,
         "barbero": nuevo.to_dict()
+    }), 201
+
+@auth_bp.route("/barberia/registro", methods=["POST"])
+def registro_barberia():
+    data = request.get_json()
+    
+    codigo_inv = data.get("codigo_invitacion")
+    nombre_barberia = data.get("nombre_barberia")
+    nombre_barbero = data.get("nombre_barbero")
+    telefono = data.get("telefono")
+    correo = data.get("correo")
+    contrasena = data.get("contrasena")
+    direccion = data.get("direccion")
+    telefono_barberia = data.get("telefono_barberia")
+    
+    if not all([codigo_inv, nombre_barberia, nombre_barbero, telefono, correo, contrasena]):
+        return jsonify({"error": "Todos los campos son obligatorios"}), 400
+    
+    barberia, barbero, error = ctrl_inv.registrar_barberia_con_invitacion(
+        codigo_inv,
+        nombre_barberia,
+        nombre_barbero,
+        telefono,
+        correo,
+        contrasena,
+        direccion,
+        telefono_barberia
+    )
+    
+    if error:
+        return jsonify({"error": error}), 400
+    
+    token = create_access_token(
+        identity=str(barbero.id_barbero),
+        additional_claims={"id_barberia": barbero.id_barberia, "nombre": barbero.nombre, "rol": barbero.rol}
+    )
+    
+    return jsonify({
+        "token": token,
+        "barbero": barbero.to_dict(),
+        "barberia": barberia.to_dict()
     }), 201
 
 @auth_bp.route("/barbero/verificar", methods=["GET"])

@@ -1,4 +1,4 @@
-const API_URL = 'http://192.168.1.86:5000/api';
+import { API_URL } from './config';
 
 const getToken = () => localStorage.getItem('barbero_token');
 
@@ -22,8 +22,23 @@ export const api = {
     return res.json();
   },
   
+  getBarberiaPorCodigo: async (codigo) => {
+    const res = await fetch(`${API_URL}/barberias/qr/${codigo}`);
+    if (!res.ok) throw new Error(`Error: ${res.status}`);
+    return res.json();
+  },
+  
   getBarberos: async (idBarberia) => {
-    const res = await fetch(`${API_URL}/barberias/${idBarberia}/barberos`);
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/barberos/`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+  
+  getTodosBarberos: async (idBarberia) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/barberos/todos`, {
+      headers: headers()
+    });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
     return data;
@@ -51,6 +66,19 @@ export const api = {
     const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/codigo/${codigo}`);
     if (!res.ok) throw new Error(`Error: ${res.status}`);
     return res.json();
+  },
+
+  getTurnos: async (idBarberia, fecha = null, idBarbero = null, estado = null) => {
+    let url = `${API_URL}/barberias/${idBarberia}/turnos/`;
+    const params = [];
+    if (fecha) params.push(`fecha=${fecha}`);
+    if (idBarbero) params.push(`id_barbero=${idBarbero}`);
+    if (estado) params.push(`estado=${estado}`);
+    if (params.length) url += '?' + params.join('&');
+    const res = await fetch(url, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
   },
   
   getColaBarbero: async (idBarberia, idBarbero) => {
@@ -92,14 +120,54 @@ export const api = {
     return res.json();
   },
 
-  registroBarbero: async (data) => {
-    const res = await fetch(`${API_URL}/auth/barbero/registro`, {
+  registroBarberia: async (data) => {
+    const res = await fetch(`${API_URL}/auth/barberia/registro`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    if (!res.ok) throw new Error(`Error: ${res.status}`);
-    return res.json();
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || `Error: ${res.status}`);
+    return result;
+  },
+
+  registroBarbero: async (idBarberia, data) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/barberos/`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || `Error: ${res.status}`);
+    return result;
+  },
+
+  eliminarBarbero: async (idBarberia, idBarbero) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/barberos/${idBarbero}/`, {
+      method: 'DELETE',
+      headers: headers()
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || `Error: ${res.status}`);
+    return result;
+  },
+
+  validarInvitacion: async (codigo) => {
+    const res = await fetch(`${API_URL}/invitaciones/validar/${codigo}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+
+  generarInvitacion: async (tipo = 'crear_barberia') => {
+    const res = await fetch(`${API_URL}/invitaciones/generar`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({ tipo })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
   },
 
   getResumenContabilidad: async (idBarberia, idBarbero, periodo, fechaInicio, fechaFin) => {

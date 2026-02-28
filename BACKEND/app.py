@@ -22,6 +22,7 @@ def create_app():
     from rutas.contabilidad import contabilidad_bp
     from rutas.horarios import horarios_bp
     from rutas.auth import auth_bp
+    from rutas.invitaciones import invitaciones_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(barberias_bp)
@@ -31,6 +32,7 @@ def create_app():
     app.register_blueprint(turnos_bp)
     app.register_blueprint(contabilidad_bp)
     app.register_blueprint(horarios_bp)
+    app.register_blueprint(invitaciones_bp)
     
     @app.route("/")
     def index():

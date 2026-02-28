@@ -9,6 +9,7 @@ class Barbero(db.Model):
     telefono = db.Column(db.String(20), nullable=False)
     correo = db.Column(db.String(100), nullable=False)
     contrasena = db.Column(db.String(255), nullable=False)
+    rol = db.Column(db.String(20), default="barbero")
     activo = db.Column(db.Boolean, default=True)
     foto_url = db.Column(db.String(255), nullable=True)
     comision_porcentaje = db.Column(db.Numeric(5, 2), default=50)
@@ -22,6 +23,7 @@ class Barbero(db.Model):
             "nombre": self.nombre,
             "telefono": self.telefono,
             "correo": self.correo,
+            "rol": self.rol,
             "activo": self.activo,
             "foto_url": self.foto_url,
             "comision_porcentaje": float(self.comision_porcentaje) if self.comision_porcentaje else 50

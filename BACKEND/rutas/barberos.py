@@ -9,6 +9,12 @@ def listar(id_barberia):
     lista = ctrl.listar_barberos(id_barberia)
     return jsonify([b.to_dict() for b in lista])
 
+@barberos_bp.route("/todos", methods=["GET"])
+@jwt_required()
+def listar_todos(id_barberia):
+    lista = ctrl.listar_todos_barberos(id_barberia)
+    return jsonify([b.to_dict() for b in lista])
+
 @barberos_bp.route("/<int:id_barbero>", methods=["GET"])
 def obtener(id_barberia, id_barbero):
     b = ctrl.obtener_barbero(id_barbero)
@@ -20,6 +26,7 @@ def obtener(id_barberia, id_barbero):
 @jwt_required()
 def crear(id_barberia):
     data = request.get_json()
+    rol = data.get("rol", "barbero")
     nuevo = ctrl.crear_barbero(
         id_barberia,
         data["nombre"],
@@ -27,8 +34,11 @@ def crear(id_barberia):
         data["correo"],
         data["contrasena"],
         data.get("foto_url"),
-        data.get("comision_porcentaje", 50)
+        data.get("comision_porcentaje", 50),
+        rol
     )
+    if not nuevo:
+        return jsonify({"error": "Ya existe un barbero con este correo"}), 400
     return jsonify(nuevo.to_dict()), 201
 
 @barberos_bp.route("/<int:id_barbero>", methods=["PUT"])

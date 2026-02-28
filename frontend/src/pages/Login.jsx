@@ -1,32 +1,47 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 
 function Login() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [modo, setModo] = useState('login');
-  const [barberias, setBarberias] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [codigoValidado, setCodigoValidado] = useState(false);
   
   const [formData, setFormData] = useState({
-    nombre: '',
-    telefono: '',
     correo: '',
     contrasena: '',
-    id_barberia: ''
+    nombre: '',
+    telefono: '',
+    nombre_barberia: '',
+    direccion: '',
+    telefono_barberia: '',
+    codigo_invitacion: ''
   });
-
-  useEffect(() => {
-    api.getBarberias().then(setBarberias).catch(() => {
-      setError('No se pudieron cargar las barberías');
-    });
-  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
+  };
+
+  const handleValidarCodigo = async () => {
+    if (!formData.codigo_invitacion) {
+      setError('Ingresa el codigo de invitacion');
+      return;
+    }
+    setLoading(true);
+    try {
+      const result = await api.validarInvitacion(formData.codigo_invitacion);
+      if (result.valido) {
+        setCodigoValidado(true);
+        setError('');
+      }
+    } catch (err) {
+      setError(err.message || 'Codigo invalido');
+      setCodigoValidado(false);
+    }
+    setLoading(false);
   };
 
   const handleSubmit = async (e) => {
@@ -36,59 +51,49 @@ function Login() {
 
     try {
       if (modo === 'login') {
-        const res = await fetch(`${API_URL}/auth/barbero/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            correo: formData.correo,
-            contrasena: formData.contrasena,
-            id_barberia: formData.id_barberia ? parseInt(formData.id_barberia) : null
-          })
-        });
-        const data = await res.json();
+        const data = await api.loginBarbero(formData.correo, formData.contrasena);
         
-        if (!res.ok) {
-          setError(data.error || 'Error al iniciar sesión');
+        localStorage.setItem('barbero_token', data.token);
+        localStorage.setItem('barbero_id', data.barbero.id_barbero);
+        localStorage.setItem('barbero_nombre', data.barbero.nombre);
+        localStorage.setItem('barberia_id', data.barbero.id_barberia);
+        localStorage.setItem('barbero_rol', data.barbero.rol);
+
+        if (data.barbero.rol === 'admin') {
+          navigate('/admin');
+        } else if (data.barbero.rol === 'owner') {
+          navigate(`/barberia/${data.barbero.id_barberia}/dashboard`);
         } else {
-          console.log('Login exitoso, guardando token:', data.token);
-          localStorage.setItem('barbero_token', data.token);
-          localStorage.setItem('barbero_id', data.barbero.id_barbero);
-          localStorage.setItem('barbero_nombre', data.barbero.nombre);
-          localStorage.setItem('barberia_id', data.barbero.id_barberia);
           navigate(`/barbero/${data.barbero.id_barberia}/${data.barbero.id_barbero}`);
         }
       } else {
-        if (!formData.nombre || !formData.telefono || !formData.correo || !formData.contrasena || !formData.id_barberia) {
-          setError('Todos los campos son obligatorios');
+        if (!codigoValidado) {
+          setError('Valida el codigo de invitacion primero');
           setLoading(false);
           return;
         }
-        
-        const res = await fetch(`${API_URL}/auth/barbero/registro`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            nombre: formData.nombre,
-            telefono: formData.telefono,
-            correo: formData.correo,
-            contrasena: formData.contrasena,
-            id_barberia: parseInt(formData.id_barberia)
-          })
+
+        const data = await api.registroBarberia({
+          codigo_invitacion: formData.codigo_invitacion,
+          nombre_barberia: formData.nombre_barberia,
+          nombre_barbero: formData.nombre,
+          telefono: formData.telefono,
+          correo: formData.correo,
+          contrasena: formData.contrasena,
+          direccion: formData.direccion,
+          telefono_barberia: formData.telefono_barberia
         });
-        const data = await res.json();
-        
-        if (!res.ok) {
-          setError(data.error || 'Error al registrarte');
-        } else {
-          localStorage.setItem('barbero_token', data.token);
-          localStorage.setItem('barbero_id', data.barbero.id_barbero);
-          localStorage.setItem('barbero_nombre', data.barbero.nombre);
-          localStorage.setItem('barberia_id', data.barbero.id_barberia);
-          navigate(`/barbero/${data.barbero.id_barberia}/${data.barbero.id_barbero}`);
-        }
+
+        localStorage.setItem('barbero_token', data.token);
+        localStorage.setItem('barbero_id', data.barbero.id_barbero);
+        localStorage.setItem('barbero_nombre', data.barbero.nombre);
+        localStorage.setItem('barberia_id', data.barbero.id_barberia);
+        localStorage.setItem('barbero_rol', data.barbero.rol);
+
+        navigate(`/barberia/${data.barbero.id_barberia}/dashboard`);
       }
     } catch (err) {
-      setError('Error de conexión');
+      setError(err.message || 'Error al iniciar sesion');
     }
     
     setLoading(false);
@@ -100,21 +105,21 @@ function Login() {
         <div className="login-header">
           <div className="login-logo">✂️</div>
           <h1>BarberApp</h1>
-          <p>{modo === 'login' ? 'Inicia sesión en tu cuenta' : 'Crea tu cuenta de barbero'}</p>
+          <p>{modo === 'login' ? 'Inicia sesion en tu cuenta' : 'Crea tu barberia'}</p>
         </div>
 
         <div className="login-tabs">
           <button 
             className={`tab ${modo === 'login' ? 'active' : ''}`}
-            onClick={() => { setModo('login'); setError(''); }}
+            onClick={() => { setModo('login'); setError(''); setCodigoValidado(false); }}
           >
-            Iniciar Sesión
+            Iniciar Sesion
           </button>
           <button 
             className={`tab ${modo === 'registro' ? 'active' : ''}`}
-            onClick={() => { setModo('registro'); setError(''); }}
+            onClick={() => { setModo('registro'); setError(''); setCodigoValidado(false); }}
           >
-            Registrarse
+            Crear Barberia
           </button>
         </div>
 
@@ -122,32 +127,98 @@ function Login() {
           {modo === 'registro' && (
             <>
               <div className="form-group">
-                <label>Nombre completo</label>
-                <input
-                  type="text"
-                  name="nombre"
-                  value={formData.nombre}
-                  onChange={handleChange}
-                  placeholder="Tu nombre"
-                  required={modo === 'registro'}
-                />
+                <label>Codigo de invitacion</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    name="codigo_invitacion"
+                    value={formData.codigo_invitacion}
+                    onChange={handleChange}
+                    placeholder="Ingresa el codigo"
+                    disabled={codigoValidado}
+                    style={{ flex: 1 }}
+                  />
+                  <button 
+                    type="button" 
+                    onClick={handleValidarCodigo}
+                    disabled={loading || codigoValidado}
+                    style={{ 
+                      padding: '14px 16px', 
+                      background: codigoValidado ? '#4ade80' : '#fff', 
+                      color: '#000',
+                      border: 'none', 
+                      borderRadius: '10px',
+                      fontWeight: '600',
+                      cursor: codigoValidado ? 'default' : 'pointer'
+                    }}
+                  >
+                    {codigoValidado ? '✓' : 'Validar'}
+                  </button>
+                </div>
               </div>
-              <div className="form-group">
-                <label>Teléfono</label>
-                <input
-                  type="tel"
-                  name="telefono"
-                  value={formData.telefono}
-                  onChange={handleChange}
-                  placeholder="Tu número de teléfono"
-                  required={modo === 'registro'}
-                />
-              </div>
+
+              {codigoValidado && (
+                <>
+                  <div className="form-group">
+                    <label>Nombre de tu barberia</label>
+                    <input
+                      type="text"
+                      name="nombre_barberia"
+                      value={formData.nombre_barberia}
+                      onChange={handleChange}
+                      placeholder="Ej: Barberia Los Pibes"
+                      required={modo === 'registro'}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Direccion</label>
+                    <input
+                      type="text"
+                      name="direccion"
+                      value={formData.direccion}
+                      onChange={handleChange}
+                      placeholder="Direccion de la barberia"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Telefono de la barberia</label>
+                    <input
+                      type="tel"
+                      name="telefono_barberia"
+                      value={formData.telefono_barberia}
+                      onChange={handleChange}
+                      placeholder="3001234567"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Tu nombre completo</label>
+                    <input
+                      type="text"
+                      name="nombre"
+                      value={formData.nombre}
+                      onChange={handleChange}
+                      placeholder="Tu nombre"
+                      required={modo === 'registro'}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Tu telefono</label>
+                    <input
+                      type="tel"
+                      name="telefono"
+                      value={formData.telefono}
+                      onChange={handleChange}
+                      placeholder="Tu numero de telefono"
+                      required={modo === 'registro'}
+                    />
+                  </div>
+                </>
+              )}
             </>
           )}
 
           <div className="form-group">
-            <label>Correo electrónico</label>
+            <label>Correo electronico</label>
             <input
               type="email"
               name="correo"
@@ -159,38 +230,21 @@ function Login() {
           </div>
 
           <div className="form-group">
-            <label>Contraseña</label>
+            <label>Contrasena</label>
             <input
               type="password"
               name="contrasena"
               value={formData.contrasena}
               onChange={handleChange}
-              placeholder="••••••••"
+              placeholder="********"
               required
             />
           </div>
 
-          <div className="form-group">
-            <label>Barbería</label>
-            <select 
-              name="id_barberia" 
-              value={formData.id_barberia} 
-              onChange={handleChange}
-              required
-            >
-              <option value="">Selecciona tu barbería</option>
-              {barberias.map(b => (
-                <option key={b.id_barberia} value={b.id_barberia}>
-                  {b.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-
           {error && <div className="error-message">{error}</div>}
 
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Cargando...' : modo === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
+          <button type="submit" className="btn-primary" disabled={loading || (modo === 'registro' && !codigoValidado)}>
+            {loading ? 'Cargando...' : modo === 'login' ? 'Iniciar Sesion' : 'Crear Barberia'}
           </button>
         </form>
 
@@ -201,7 +255,5 @@ function Login() {
     </div>
   );
 }
-
-const API_URL = 'http://192.168.1.86:5000/api';
 
 export default Login;

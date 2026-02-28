@@ -11,7 +11,11 @@ def obtener_barbero(id_barbero):
 def obtener_barbero_por_correo(correo):
     return Barbero.query.filter_by(correo=correo).first()
 
-def crear_barbero(id_barberia, nombre, telefono, correo, contrasena, foto_url=None, comision_porcentaje=50):
+def crear_barbero(id_barberia, nombre, telefono, correo, contrasena, foto_url=None, comision_porcentaje=50, rol="barbero"):
+    existente = Barbero.query.filter_by(correo=correo, id_barberia=id_barberia).first()
+    if existente:
+        return None
+    
     contrasena_hash = generate_password_hash(contrasena)
     nuevo = Barbero(
         id_barberia=id_barberia,
@@ -20,7 +24,9 @@ def crear_barbero(id_barberia, nombre, telefono, correo, contrasena, foto_url=No
         correo=correo,
         contrasena=contrasena_hash,
         foto_url=foto_url,
-        comision_porcentaje=comision_porcentaje
+        comision_porcentaje=comision_porcentaje,
+        rol=rol,
+        activo=True
     )
     db.session.add(nuevo)
     db.session.commit()
@@ -44,3 +50,6 @@ def eliminar_barbero(id_barbero):
         db.session.commit()
         return True
     return False
+
+def listar_todos_barberos(id_barberia):
+    return Barbero.query.filter_by(id_barberia=id_barberia).all()

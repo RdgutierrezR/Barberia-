@@ -47,7 +47,6 @@ def pasar_siguiente(id_barberia, id_barbero):
     return jsonify({"mensaje": "No hay mas clientes en cola"})
 
 @turnos_bp.route("/<int:id_turno>/cancelar", methods=["PUT"])
-@jwt_required()
 def cancelar_turno(id_barberia, id_turno):
     t = ctrl.cancelar_turno(id_turno)
     if t:
