@@ -1,4 +1,4 @@
-# Barbería Pro - Sistema de Gestión Multi-Tenant
+# BarberAPP by Rainer Gutierrez - Sistema de Gestión Multi-Tenant
 
 <p align="center">
   <img src="https://img.shields.io/badge/Stack-Flask%20%2B%20React-blue" alt="Stack">
