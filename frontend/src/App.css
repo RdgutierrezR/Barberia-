@@ -18,11 +18,14 @@ body {
 }
 
 .page {
-  min-height: 100vh;
+  height: 100vh;
   padding: 16px;
   background: #0a0a0a;
   max-width: 480px;
   margin: 0 auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Header */
@@ -241,6 +244,31 @@ body {
   color: #666;
 }
 
+.btn-secondary {
+  background: transparent;
+  color: #888;
+  border: 1px solid #444;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 8px;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border-color: #555;
+}
+
+.botones-siguiente {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .btn-cancelar {
   width: auto;
   padding: 10px 24px;
@@ -314,6 +342,35 @@ body {
   letter-spacing: 6px;
   margin-top: 4px;
   font-weight: 700;
+}
+
+.cita-info-card {
+  background: linear-gradient(180deg, #1a3a5c 0%, #0f1f2e 100%);
+  color: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid #2a5a8c;
+}
+
+.cita-fecha {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cita-label {
+  font-size: 11px;
+  color: #6ba3d6;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.cita-valor {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  text-transform: capitalize;
 }
 
 .posicion-card {
@@ -419,45 +476,58 @@ body {
 /* Barbero Dashboard */
 .barbero-dashboard {
   background: #0a0a0a;
-  padding-bottom: 80px;
+  padding-bottom: 70px;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.dashboard-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .header-barbero {
   background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
   color: #fff;
-  padding: 20px 16px 16px;
-  margin: -16px -16px 16px;
+  padding: 16px;
+  margin: -16px -16px 12px;
   text-align: left;
   border-bottom: 1px solid #1f1f1f;
+  flex-shrink: 0;
 }
 
 .header-barbero-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
 }
 
 .header-barbero-info h1 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   margin-bottom: 2px;
 }
 
 .header-barbero-info p {
-  font-size: 12px;
+  font-size: 11px;
   color: #666;
 }
 
 .user-avatar {
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 16px;
   border: 1px solid #333;
 }
 
@@ -470,7 +540,7 @@ body {
   border-top: 1px solid #1f1f1f;
   display: flex;
   justify-content: space-around;
-  padding: 10px 8px 20px;
+  padding: 8px 8px 16px;
   z-index: 100;
 }
 
@@ -478,15 +548,15 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   background: none;
   border: none;
   color: #666;
   cursor: pointer;
-  padding: 8px 16px;
-  border-radius: 12px;
+  padding: 6px 12px;
+  border-radius: 10px;
   transition: all 0.2s;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .nav-item:hover {
@@ -500,7 +570,7 @@ body {
 }
 
 .nav-item-icon {
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .nav-item-logout {
@@ -514,16 +584,17 @@ body {
 
 .actual-section {
   background: linear-gradient(145deg, #1a1a1a 0%, #141414 100%);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 12px;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
   border: 1px solid #252525;
+  flex-shrink: 0;
 }
 
 .actual-section h2 {
   font-size: 10px;
   color: #666;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
 }
@@ -533,9 +604,9 @@ body {
 }
 
 .cliente-nombre {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   background: linear-gradient(90deg, #fff 0%, #aaa 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -547,74 +618,69 @@ body {
   align-items: center;
   gap: 6px;
   background: #0f0f0f;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 14px;
+  font-size: 11px;
   color: #888;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   border: 1px solid #252525;
 }
 
 .cliente-servicio {
-  font-size: 15px;
+  font-size: 13px;
   color: #aaa;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   font-weight: 500;
 }
 
 .cliente-codigo {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: 3px;
-  margin-bottom: 16px;
-  padding: 14px 20px;
+  margin-bottom: 10px;
+  padding: 12px 16px;
   background: linear-gradient(145deg, #252525 0%, #1a1a1a 100%);
   color: #fff;
-  border-radius: 12px;
+  border-radius: 8px;
   border: 1px solid #333;
 }
 
 .sin-cliente {
   text-align: center;
-  padding: 20px;
+  padding: 12px;
 }
 
 .sin-cliente p {
   color: #555;
-  margin-bottom: 12px;
-  font-size: 13px;
+  margin-bottom: 10px;
+  font-size: 12px;
 }
 
 .cola-section {
   background: linear-gradient(145deg, #1a1a1a 0%, #141414 100%);
-  border-radius: 16px;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 12px;
   border: 1px solid #252525;
-  max-height: 280px;
+  max-height: 50vh;
   overflow-y: auto;
-}
-
-.cola-section h2 {
-  font-size: 10px;
-  color: #666;
-  margin-bottom: 16px;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .cola-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .cola-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 12px;
+  gap: 10px;
+  padding: 10px;
   background: linear-gradient(90deg, #1a1a1a 0%, #151515 100%);
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid #222;
 }
 
@@ -624,16 +690,66 @@ body {
 }
 
 .cola-posicion {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 100%);
   color: #fff;
-  border-radius: 10px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 11px;
+  flex-shrink: 0;
+  border: 1px solid #333;
+}
+
+.cola-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cola-section h2 {
+  font-size: 10px;
+  color: #666;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.cola-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cola-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: linear-gradient(90deg, #1a1a1a 0%, #151515 100%);
+  border-radius: 10px;
+  border: 1px solid #222;
+}
+
+.cola-item:hover {
+  border-color: #333;
+  background: linear-gradient(90deg, #1f1f1f 0%, #1a1a1a 100%);
+}
+
+.cola-posicion {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 100%);
+  color: #fff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 11px;
   flex-shrink: 0;
   border: 1px solid #333;
 }
@@ -645,7 +761,7 @@ body {
 
 .cola-nombre {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
@@ -654,12 +770,52 @@ body {
 }
 
 .cola-servicio {
-  font-size: 12px;
+  font-size: 11px;
   color: #777;
 }
 
 .cola-telefono {
+  font-size: 10px;
+  color: #555;
+}
+
+.cola-posicion {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 100%);
+  color: #fff;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 10px;
+  flex-shrink: 0;
+  border: 1px solid #333;
+}
+
+.cola-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cola-nombre {
+  font-weight: 600;
+  font-size: 13px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.cola-servicio {
   font-size: 11px;
+  color: #777;
+}
+
+.cola-telefono {
+  font-size: 10px;
   color: #555;
 }
 
@@ -672,6 +828,113 @@ body {
   white-space: nowrap;
   font-weight: 500;
   border: 1px solid #2a2a2a;
+}
+
+/* Nueva Cola Unificada */
+.cola-hoy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.cola-hoy-header h2 {
+  font-size: 11px;
+  font-weight: 700;
+  color: #888;
+  letter-spacing: 1px;
+}
+
+.fecha-hoy {
+  font-size: 11px;
+  color: #666;
+  text-transform: capitalize;
+}
+
+.cliente-actual-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.tipo-badge {
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.tipo-badge.cola {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.tipo-badge.cita {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.btn-finalizar {
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px;
+  font-size: 14px;
+}
+
+.cola-item.cita {
+  border-left: 3px solid #3b82f6;
+}
+
+.cola-item.cola {
+  border-left: 3px solid #f59e0b;
+}
+
+.cola-nombre-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.tipo-mini {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.tipo-mini.cola {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.tipo-mini.cita {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.cola-hora {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.hora-programada {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.cita-llegada {
+  font-size: 9px;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  padding: 2px 6px;
+  border-radius: 6px;
 }
 
 .no-hay {
@@ -1094,6 +1357,11 @@ body {
   font-weight: 500;
 }
 
+.historial-servicio {
+  font-size: 11px;
+  color: #888;
+}
+
 .historial-fecha {
   font-size: 11px;
   color: #555;
@@ -1352,6 +1620,123 @@ body {
   margin-top: 8px;
 }
 
+/* Tipo de reserva */
+.paso-fecha, .paso-horario {
+  padding: 24px 16px;
+}
+
+.tipo-reserva {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.tipo-card {
+  background: linear-gradient(145deg, #141414 0%, #1a1a1a 100%);
+  border-radius: 16px;
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.tipo-card:hover {
+  border-color: #444;
+}
+
+.tipo-card.selected {
+  border-color: #fff;
+  background: linear-gradient(145deg, #1a1a1a 0%, #252525 100%);
+}
+
+.tipo-icon {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.tipo-card h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.tipo-card p {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Selector fecha y hora cliente */
+.selector-fecha-cliente {
+  margin-bottom: 20px;
+}
+
+.selector-fecha-cliente label {
+  display: block;
+  color: #888;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.selector-fecha-cliente select {
+  width: 100%;
+  padding: 14px;
+  background: #141414;
+  border: 1px solid #333;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.selector-hora {
+  margin-top: 20px;
+}
+
+.selector-hora label {
+  display: block;
+  color: #888;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.horarios-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.hora-btn {
+  padding: 12px 8px;
+  background: #141414;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hora-btn:hover {
+  border-color: #555;
+}
+
+.hora-btn.selected {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+
+.loading-small {
+  color: #666;
+  font-size: 13px;
+  text-align: center;
+  padding: 20px;
+}
+
 /* Admin Panel */
 .admin-page {
   min-height: 100vh;
@@ -1603,6 +1988,22 @@ body {
   background: rgba(255, 255, 255, 0.05);
 }
 
+.btn-agregar-cola {
+  background: #22c55e;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-agregar-cola:hover {
+  background: #16a34a;
+}
+
 /* Modal Styles */
 .modal-overlay {
   position: fixed;
@@ -1816,4 +2217,258 @@ body {
   color: #555;
   margin-top: 8px;
   word-break: break-all;
+}
+
+/* Vista Agenda */
+.selector-fecha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.btn-nav-fecha {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dias-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  flex: 1;
+  padding: 4px 0;
+}
+
+.dias-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.dia-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 56px;
+  background: #1a1a1a;
+  border: 1px solid #252525;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.dia-btn:hover {
+  border-color: #444;
+}
+
+.dia-btn.active {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+
+.dia-btn.hoy {
+  border-color: #666;
+}
+
+.dia-nombre {
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.dia-numero {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.fecha-actual {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.turnos-citas, .bloqueos-dia {
+  background: linear-gradient(145deg, #1a1a1a 0%, #141414 100%);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid #252525;
+  margin-bottom: 16px;
+}
+
+.turnos-citas h3, .bloqueos-dia h3 {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.cita-card, .bloqueo-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #1a1a1a;
+  border-radius: 12px;
+  border: 1px solid #2a2a2a;
+  margin-bottom: 10px;
+}
+
+.cita-card:hover {
+  border-color: #3a3a3a;
+}
+
+.cita-hora, .bloqueo-hora {
+  font-size: 15px;
+  font-weight: 700;
+  color: #22c55e;
+  min-width: 75px;
+  text-align: center;
+}
+
+.cita-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cita-cliente {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.cita-servicio {
+  font-size: 13px;
+  color: #888;
+}
+
+.cita-telefono {
+  font-size: 12px;
+  color: #666;
+}
+
+.cita-completado {
+  color: #22c55e;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.estado-completado {
+  background: rgba(107, 114, 128, 0.2);
+  color: #6b7280;
+}
+
+.estado-pendiente {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.btn-eliminar-bloqueo {
+  background: transparent;
+  border: none;
+  color: #ff5555;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.btn-eliminar-bloqueo:hover {
+  background: rgba(255, 85, 85, 0.1);
+}
+
+.no-hay {
+  color: #555;
+  font-size: 13px;
+  text-align: center;
+  padding: 20px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #1a1a1a;
+  border-radius: 16px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  border: 1px solid #333;
+}
+
+.modal h2 {
+  color: #fff;
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  color: #888;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  background: #0a0a0a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #555;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.btn-secondary {
+  flex: 1;
+  padding: 12px;
+  background: #252525;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #2a2a2a;
 }

@@ -4,6 +4,8 @@ from database import db
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 
+from modelo.bloqueo_agenda import BloqueoAgenda
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)

@@ -90,8 +90,8 @@ export const api = {
     return data;
   },
   
-  pasarSiguiente: async (idBarberia, idBarbero) => {
-    const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/cola/${idBarbero}/siguiente`, {
+  pasarSiguiente: async (idBarberia, idBarbero, forzar_cita = false) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/cola/${idBarbero}/siguiente?forzar_cita=${forzar_cita}`, {
       method: 'PUT',
       headers: headers()
     });
@@ -188,6 +188,107 @@ export const api = {
     if (fechaFin) params.push(`fecha_fin=${fechaFin}`);
     if (params.length) url += '?' + params.join('&');
     const res = await fetch(url, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+
+  getDisponibilidad: async (idBarberia, idBarbero, fecha, duracion) => {
+    const url = `${API_URL}/barberias/${idBarberia}/turnos/disponibilidad/${idBarbero}?fecha=${fecha}&duracion=${duracion}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+
+  crearTurnoCita: async (idBarberia, data) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/cita`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || `Error: ${res.status}`);
+    return result;
+  },
+
+  getTurnosCita: async (idBarberia, idBarbero, fecha) => {
+    let url = `${API_URL}/barberias/${idBarberia}/turnos/citas`;
+    const params = [];
+    if (idBarbero) params.push(`id_barbero=${idBarbero}`);
+    if (fecha) params.push(`fecha=${fecha}`);
+    if (params.length) url += '?' + params.join('&');
+    const res = await fetch(url, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+
+  getBloqueos: async (idBarberia, idBarbero) => {
+    let url = `${API_URL}/barberias/${idBarberia}/turnos/bloqueos`;
+    if (idBarbero) url += `?id_barbero=${idBarbero}`;
+    const res = await fetch(url, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+
+  crearBloqueo: async (idBarberia, data) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/bloqueos`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || `Error: ${res.status}`);
+    return result;
+  },
+
+  eliminarBloqueo: async (idBarberia, idBloqueo) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/bloqueos/${idBloqueo}`, {
+      method: 'DELETE',
+      headers: headers()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+
+  getColaDiaria: async (idBarberia, idBarbero) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/cola/${idBarbero}/diaria`, {
+      headers: headers()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+
+  reordernarTurno: async (idBarberia, idTurno, nuevaPosicion) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/cola/reordenar`, {
+      method: 'PUT',
+      headers: headers(),
+      body: JSON.stringify({ id_turno: idTurno, nueva_posicion: nuevaPosicion })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+
+  marcarLlegada: async (idBarberia, idTurno) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/${idTurno}/llegada`, {
+      method: 'PUT',
+      headers: headers()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+
+  agregarCitaACola: async (idBarberia, idTurno) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/${idTurno}/agregar-a-cola`, {
+      method: 'PUT',
+      headers: headers()
+    });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
     return data;

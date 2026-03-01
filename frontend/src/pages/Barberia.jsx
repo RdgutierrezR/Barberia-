@@ -11,6 +11,11 @@ function Barberia() {
   const [paso, setPaso] = useState(1);
   const [barberoSeleccionado, setBarberoSeleccionado] = useState(null);
   const [servicioSeleccionado, setServicioSeleccionado] = useState(null);
+  const [tipoReserva, setTipoReserva] = useState('hoy');
+  const [fechaSeleccionada, setFechaSeleccionada] = useState('');
+  const [horaSeleccionada, setHoraSeleccionada] = useState('');
+  const [horariosDisponibles, setHorariosDisponibles] = useState([]);
+  const [loadingHorarios, setLoadingHorarios] = useState(false);
   const [nombre, setNombre] = useState('');
   const [telefono, setTelefono] = useState('');
   const [loading, setLoading] = useState(true);
@@ -45,6 +50,29 @@ function Barberia() {
       });
   }, [id]);
 
+  useEffect(() => {
+    if (tipoReserva === 'cita' && barberoSeleccionado && servicioSeleccionado && fechaSeleccionada) {
+      cargarHorariosDisponibles();
+    }
+  }, [tipoReserva, fechaSeleccionada, barberoSeleccionado, servicioSeleccionado]);
+
+  const cargarHorariosDisponibles = async () => {
+    setLoadingHorarios(true);
+    try {
+      const data = await api.getDisponibilidad(
+        id, 
+        barberoSeleccionado.id_barbero, 
+        fechaSeleccionada, 
+        servicioSeleccionado.duracion_minutos
+      );
+      setHorariosDisponibles(data.horarios_disponibles || []);
+    } catch (err) {
+      console.error('Error cargando horarios:', err);
+      setHorariosDisponibles([]);
+    }
+    setLoadingHorarios(false);
+  };
+
   const handleSiguiente = () => {
     if (paso === 1 && barberoSeleccionado) {
       setPaso(2);
@@ -54,33 +82,92 @@ function Barberia() {
   };
 
   const handleVolver = () => {
-    if (paso === 2) {
-      setBarberoSeleccionado(null);
-      setPaso(1);
+    if (paso === 5) {
+      setPaso(4);
+    } else if (paso === 4) {
+      if (tipoReserva === 'cita') {
+        setFechaSeleccionada('');
+        setHoraSeleccionada('');
+      }
+      setTipoReserva('hoy');
+      setPaso(3);
     } else if (paso === 3) {
       setServicioSeleccionado(null);
       setPaso(2);
+    } else if (paso === 2) {
+      setBarberoSeleccionado(null);
+      setPaso(1);
     }
+  };
+
+  const handleTipoReserva = (tipo) => {
+    setTipoReserva(tipo);
+    if (tipo === 'cita') {
+      const hoy = new Date();
+      setFechaSeleccionada(hoy.toISOString().split('T')[0]);
+    }
+    setPaso(4);
   };
 
   const handleTurno = async () => {
     if (!nombre || !telefono) return;
     setLoading(true);
     
-    const data = {
-      id_barbero: barberoSeleccionado.id_barbero,
-      id_servicio: servicioSeleccionado.id_servicio,
-      nombre_cliente: nombre,
-      telefono: telefono
-    };
-    
     try {
-      const resultado = await api.crearTurnoCola(id, data);
-      navigate(`/turno/${resultado.turno.codigo_confirmacion}`);
+      if (tipoReserva === 'hoy') {
+        const data = {
+          id_barbero: barberoSeleccionado.id_barbero,
+          id_servicio: servicioSeleccionado.id_servicio,
+          nombre_cliente: nombre,
+          telefono: telefono
+        };
+        const resultado = await api.crearTurnoCola(id, data);
+        navigate(`/turno/${resultado.turno.codigo_confirmacion}`);
+      } else {
+        const data = {
+          id_barbero: barberoSeleccionado.id_barbero,
+          id_servicio: servicioSeleccionado.id_servicio,
+          cita_fecha_hora: `${fechaSeleccionada} ${horaSeleccionada}`,
+          nombre_cliente: nombre,
+          telefono: telefono
+        };
+        const resultado = await api.crearTurnoCita(id, data);
+        navigate(`/turno/${resultado.turno.codigo_confirmacion}`);
+      }
     } catch (err) {
       setError(err.message);
       setLoading(false);
     }
+  };
+
+  const generarFechas = () => {
+    const fechas = [];
+    const hoy = new Date();
+    for (let i = 0; i <= 15; i++) {
+      const fecha = new Date(hoy);
+      fecha.setDate(hoy.getDate() + i);
+      const opcionesDia = i === 0 
+        ? { weekday: 'long', day: 'numeric', month: 'long' }
+        : { weekday: 'long', day: 'numeric', month: 'short' };
+      const label = i === 0 
+        ? 'Hoy - ' + fecha.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })
+        : fecha.toLocaleDateString('es-CO', opcionesDia);
+      fechas.push({
+        valor: fecha.toISOString().split('T')[0],
+        label: label.charAt(0).toUpperCase() + label.slice(1)
+      });
+    }
+    return fechas;
+  };
+
+  const formatHora12h = (hora24) => {
+    if (!hora24) return '';
+    const [hora, minuto] = hora24.split(':');
+    let h = parseInt(hora);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    h = h ? h : 12;
+    return `${h}:${minuto} ${ampm}`;
   };
 
   const scrollToServicios = () => {
@@ -185,10 +272,94 @@ function Barberia() {
       )}
 
       {paso === 3 && (
-        <div className="step paso-datos">
+        <div className="step paso-fecha">
           <div className="step-header">
             <button className="btn-volver" onClick={handleVolver}>←</button>
             <span className="step-numero">3</span>
+            <h2>¿Para cuándo quieres el turno?</h2>
+          </div>
+
+          <div className="tipo-reserva">
+            <div 
+              className={`tipo-card ${tipoReserva === 'hoy' ? 'selected' : ''}`}
+              onClick={() => handleTipoReserva('hoy')}
+            >
+              <span className="tipo-icon">📅</span>
+              <h3>Para hoy</h3>
+              <p>Te agrego a la cola</p>
+            </div>
+            <div 
+              className={`tipo-card ${tipoReserva === 'cita' ? 'selected' : ''}`}
+              onClick={() => handleTipoReserva('cita')}
+            >
+              <span className="tipo-icon">⏰</span>
+              <h3>Agendar</h3>
+              <p>Elige fecha y hora</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {paso === 4 && tipoReserva === 'cita' && (
+        <div className="step paso-horario">
+          <div className="step-header">
+            <button className="btn-volver" onClick={handleVolver}>←</button>
+            <span className="step-numero">4</span>
+            <h2>Elige fecha y hora</h2>
+          </div>
+
+          <div className="selector-fecha-cliente">
+            <label>Selecciona fecha:</label>
+            <select 
+              value={fechaSeleccionada} 
+              onChange={(e) => { setFechaSeleccionada(e.target.value); setHoraSeleccionada(''); }}
+            >
+              <option value="">Selecciona una fecha</option>
+              {generarFechas().map(f => (
+                <option key={f.valor} value={f.valor}>{f.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {fechaSeleccionada && (
+            <div className="selector-hora">
+              <label>Horarios disponibles:</label>
+              {loadingHorarios ? (
+                <p className="loading-small">Cargando...</p>
+              ) : horariosDisponibles.length === 0 ? (
+                <p className="no-hay">No hay horarios disponibles</p>
+              ) : (
+                <div className="horarios-grid">
+                  {horariosDisponibles.map(h => (
+                    <button
+                      key={h}
+                      className={`hora-btn ${horaSeleccionada === h ? 'selected' : ''}`}
+                      onClick={() => setHoraSeleccionada(h)}
+                    >
+                      {formatHora12h(h)}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {horaSeleccionada && (
+            <button 
+              className="btn-primary btn-siguiente" 
+              onClick={() => setPaso(5)}
+            >
+              Continuar
+            </button>
+          )}
+        </div>
+      )}
+
+      {(paso === 4 && tipoReserva === 'hoy') || paso === 5 ? (
+        <div className="step paso-datos">
+          <div className="step-header">
+            <button className="btn-volver" onClick={handleVolver}>←</button>
+            <span className="step-numero">{paso === 5 ? '5' : '4'}</span>
             <h2>Tus datos</h2>
           </div>
           
@@ -201,6 +372,12 @@ function Barberia() {
               <span>Servicio</span>
               <strong>{servicioSeleccionado?.nombre}</strong>
             </div>
+            {tipoReserva === 'cita' && (
+              <div className="resumen-item">
+                <span>Fecha y hora</span>
+                <strong>{new Date(fechaSeleccionada + 'T00:00:00').toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })} a las {formatHora12h(horaSeleccionada)}</strong>
+              </div>
+            )}
             <div className="resumen-item">
               <span>Precio</span>
               <strong>${servicioSeleccionado?.precio?.toLocaleString()}</strong>
@@ -229,7 +406,7 @@ function Barberia() {
             </button>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

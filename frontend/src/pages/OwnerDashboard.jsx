@@ -38,6 +38,19 @@ function OwnerDashboard() {
     setLoading(false);
   };
 
+  const formatFechaColombia = (fechaStr) => {
+    if (!fechaStr) return 'Sin fecha';
+    const fecha = new Date(fechaStr);
+    const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    let hora = fecha.getHours();
+    const minuto = fecha.getMinutes().toString().padStart(2, '0');
+    const ampm = hora >= 12 ? 'PM' : 'AM';
+    hora = hora % 12;
+    hora = hora ? hora : 12;
+    return `${dias[fecha.getDay()]} ${fecha.getDate()} de ${meses[fecha.getMonth()]}, ${hora}:${minuto} ${ampm}`;
+  };
+
   const agregarBarbero = async () => {
     if (!nuevoBarbero.nombre || !nuevoBarbero.telefono || !nuevoBarbero.correo || !nuevoBarbero.contrasena) {
       return;
@@ -154,7 +167,7 @@ function OwnerDashboard() {
                 <div className="turno-info">
                   <div className="turno-cliente">{t.cliente_nombre || 'Sin nombre'}</div>
                   <div className="turno-servicio">{t.servicio_nombre}</div>
-                  <div className="turno-fecha">{t.fecha_hora ? new Date(t.fecha_hora).toLocaleString() : 'Sin fecha'}</div>
+                  <div className="turno-fecha">{formatFechaColombia(t.fecha_hora)}</div>
                 </div>
                 <div className={`turno-estado ${t.estado}`}>{t.estado}</div>
               </div>

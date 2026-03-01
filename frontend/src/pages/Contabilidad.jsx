@@ -84,17 +84,20 @@ function Contabilidad({ idBarberia, idBarbero, nombreBarbero }) {
   const getNombreMes = () => {
     const [año, mes] = mesSeleccionado.split('-').map(Number);
     const fecha = new Date(año, mes - 1);
-    return fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    return `${meses[fecha.getMonth()]} de ${fecha.getFullYear()}`;
   };
 
   const formatFecha = (fechaStr) => {
     const fecha = new Date(fechaStr);
-    return fecha.toLocaleDateString('es-ES', { 
-      day: '2-digit', 
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    let hora = fecha.getHours();
+    const minuto = fecha.getMinutes().toString().padStart(2, '0');
+    const ampm = hora >= 12 ? 'PM' : 'AM';
+    hora = hora % 12;
+    hora = hora ? hora : 12;
+    return `${dias[fecha.getDay()]} ${fecha.getDate()} ${meses[fecha.getMonth()]}, ${hora}:${minuto} ${ampm}`;
   };
 
   const formatPeso = (monto) => {
@@ -108,15 +111,16 @@ function Contabilidad({ idBarberia, idBarbero, nombreBarbero }) {
   };
 
   const getPeriodoLabel = () => {
+    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
     switch (periodo) {
       case 'diario': 
         const fechaDia = new Date(diaSeleccionado);
-        return fechaDia.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+        return `${fechaDia.getDate()} de ${meses[fechaDia.getMonth()]} de ${fechaDia.getFullYear()}`;
       case 'semanal': return 'Últimos 7 días';
       case 'mensual': 
         const [año, mes] = mesSeleccionado.split('-').map(Number);
         const fechaMes = new Date(año, mes - 1);
-        return fechaMes.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+        return `${meses[fechaMes.getMonth()]} de ${fechaMes.getFullYear()}`;
       default: return periodo;
     }
   };
@@ -222,8 +226,13 @@ function Contabilidad({ idBarberia, idBarbero, nombreBarbero }) {
             {historial.map((item) => (
               <div key={item.id_registro} className={`historial-item ${item.tipo}`}>
                 <div className="historial-info">
-                  <span className="historial-desc">{item.descripcion || 'Corte'}</span>
-                  <span className="historial-fecha">{formatFecha(item.fecha)}</span>
+                  <span className="historial-desc">{item.cliente_nombre || item.descripcion || 'Corte'}</span>
+                  <span className="historial-servicio">{item.servicio_nombre}</span>
+                  <span className="historial-fecha">
+                    {item.fecha_fin_servicio ? formatFecha(item.fecha_fin_servicio) : 
+                     item.fecha_cita_original ? `Cita: ${formatFecha(item.fecha_cita_original)}` :
+                     formatFecha(item.fecha)}
+                  </span>
                 </div>
                 <span className={`historial-monto ${item.tipo}`}>
                   {item.tipo === 'ingreso' ? '+' : '-'}{formatPeso(item.monto)}

@@ -26,7 +26,7 @@ function TurnoConfirmado() {
     };
     buscarTurno();
     
-    const interval = setInterval(buscarTurno, 3000);
+    const interval = setInterval(buscarTurno, 5000);
     return () => clearInterval(interval);
   }, [codigo]);
 
@@ -49,42 +49,66 @@ function TurnoConfirmado() {
   if (loading) return <div className="page"><div className="loading">Buscando turno...</div></div>;
   if (!turno) return <div className="page"><div className="error">Turno no encontrado</div></div>;
 
-  const getMensajeEstado = () => {
-    switch(turno.estado) {
-      case 'pendiente': return 'Estas en espera';
-      case 'confirmado': return 'Te confirman pronto';
-      case 'en_proceso': return 'Es tu turno!';
-      case 'completado': return 'Turno completado';
-      case 'cancelado': return 'Turno cancelado';
-      default: return turno.estado;
-    }
-  };
+  const esCita = turno.tipo_reserva === 'cita';
+  const tieneHora = turno.cita_fecha_hora;
 
-  const getMensajePosicion = () => {
-    if (turno.estado === 'en_proceso') return 'Ya te estamos atendiendo!';
-    if (turno.estado === 'completado') return 'Gracias por visitarnos!';
-    if (!turno.posicion) return 'Calculando posición...';
-    if (turno.turnos_adelante === 0) return 'Eres el siguiente!';
-    return `Tienes ${turno.turnos_adelante} ${turno.turnos_adelante === 1 ? 'turno' : 'turnos'} adelante`;
+  const formatFechaHora = (fechaStr) => {
+    if (!fechaStr) return '';
+    const fecha = new Date(fechaStr);
+    const dia = fecha.getDate();
+    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const mes = meses[fecha.getMonth()];
+    const anio = fecha.getFullYear();
+    let hora = fecha.getHours();
+    const minuto = fecha.getMinutes().toString().padStart(2, '0');
+    const ampm = hora >= 12 ? 'PM' : 'AM';
+    hora = hora % 12;
+    hora = hora ? hora : 12;
+    return `${dia} de ${mes} de ${anio}, ${hora}:${minuto} ${ampm}`;
   };
 
   return (
     <div className="page">
       <div className="turno-confirmado">
-        <div className="check-icon">✓</div>
-        <h1>Turno Confirmado!</h1>
-        
-        <div className="codigo-turno">
-          <p>Tu código:</p>
-          <h2>{turno.codigo_confirmacion}</h2>
-        </div>
+        {esCita ? (
+          <>
+            <div className="check-icon">📅</div>
+            <h1>Turno Agendado!</h1>
+            
+            <div className="codigo-turno">
+              <p>Tu código:</p>
+              <h2>{turno.codigo_confirmacion}</h2>
+            </div>
 
-        {turno.estado !== 'completado' && turno.estado !== 'cancelado' && (
-          <div className="posicion-card">
-            <div className="posicion-numero">{turno.posicion || '-'}</div>
-            <div className="posicion-texto">Posición en cola</div>
-            <div className="posicion-mensaje">{getMensajePosicion()}</div>
-          </div>
+            <div className="cita-info-card">
+              <div className="cita-fecha">
+                <span className="cita-label">Fecha y hora</span>
+                <span className="cita-valor">{tieneHora ? formatFechaHora(turno.cita_fecha_hora) : 'Por confirmar'}</span>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="check-icon">📍</div>
+            <h1>En la Cola!</h1>
+            
+            <div className="codigo-turno">
+              <p>Tu código:</p>
+              <h2>{turno.codigo_confirmacion}</h2>
+            </div>
+
+            {turno.estado !== 'completado' && turno.estado !== 'cancelado' && (
+              <div className="posicion-card">
+                <div className="posicion-numero">{turno.posicion || '-'}</div>
+                <div className="posicion-texto">Posición en cola</div>
+                <div className="posicion-mensaje">
+                  {turno.estado === 'en_proceso' ? 'Ya te estamos atendiendo!' :
+                   turno.turnos_adelante === 0 ? 'Eres el siguiente!' :
+                   `${turno.turnos_adelante} ${turno.turnos_adelante === 1 ? 'turno' : 'turnos'} adelante`}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         <div className="turno-detalles">
@@ -103,7 +127,11 @@ function TurnoConfirmado() {
         </div>
 
         <div className={`estado ${turno.estado}`}>
-          <p>{getMensajeEstado()}</p>
+          {turno.estado === 'pendiente' && (esCita ? 'Esperando tu hora' : 'En espera')}
+          {turno.estado === 'confirmado' && 'Confirmado'}
+          {turno.estado === 'en_proceso' && 'Es tu turno!'}
+          {turno.estado === 'completado' && 'Turno completado'}
+          {turno.estado === 'cancelado' && 'Turno cancelado'}
         </div>
 
         {turno.estado === 'completado' && (
@@ -113,14 +141,14 @@ function TurnoConfirmado() {
         )}
 
         {turno.estado !== 'completado' && turno.estado !== 'cancelado' && (
-            <button 
-              className="btn-cancelar" 
-              onClick={handleCancelar}
-              disabled={cancelando}
-            >
-              {cancelando ? 'Cancelando...' : 'Cancelar turno'}
-            </button>
-          )}
+          <button 
+            className="btn-cancelar" 
+            onClick={handleCancelar}
+            disabled={cancelando}
+          >
+            {cancelando ? 'Cancelando...' : 'Cancelar turno'}
+          </button>
+        )}
       </div>
     </div>
   );

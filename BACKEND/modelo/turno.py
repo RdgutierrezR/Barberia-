@@ -10,11 +10,15 @@ class Turno(db.Model):
     id_cliente = db.Column(db.Integer, db.ForeignKey("clientes.id_cliente"), nullable=True)
     id_servicio = db.Column(db.Integer, db.ForeignKey("servicios.id_servicio"), nullable=False)
     fecha_hora = db.Column(db.DateTime, nullable=False)
+    tipo_reserva = db.Column(db.String(20), default="cola")  # "cola" o "cita"
+    cita_fecha_hora = db.Column(db.DateTime, nullable=True)  # Fecha/hora específica para citas
+    fecha_cita_original = db.Column(db.DateTime, nullable=True)  # Fecha/hora original de la cita para contabilidad
+    fecha_fin_servicio = db.Column(db.DateTime, nullable=True)  # Fecha/hora cuando se completó el servicio
     estado = db.Column(db.String(20), default="pendiente")
     codigo_confirmacion = db.Column(db.String(10), unique=True, nullable=True)
     notas = db.Column(db.Text, nullable=True)
     precio_final = db.Column(db.Numeric(10, 2), nullable=True)
-    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_creacion = db.Column(db.DateTime, default=lambda: datetime.now())
 
     barberia = db.relationship("Barberia", backref="turnos")
     barbero = db.relationship("Barbero", backref="turnos")
@@ -33,6 +37,10 @@ class Turno(db.Model):
             "id_servicio": self.id_servicio,
             "servicio_nombre": self.servicio.nombre if self.servicio else None,
             "servicio_precio": float(self.servicio.precio) if self.servicio else None,
+            "tipo_reserva": self.tipo_reserva,
+            "cita_fecha_hora": self.cita_fecha_hora.isoformat() if self.cita_fecha_hora else None,
+            "fecha_cita_original": self.fecha_cita_original.isoformat() if self.fecha_cita_original else None,
+            "fecha_fin_servicio": self.fecha_fin_servicio.isoformat() if self.fecha_fin_servicio else None,
             "fecha_hora": self.fecha_hora.isoformat() if self.fecha_hora else None,
             "estado": self.estado,
             "codigo_confirmacion": self.codigo_confirmacion,
