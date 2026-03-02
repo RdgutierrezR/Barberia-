@@ -5,6 +5,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 
 from modelo.bloqueo_agenda import BloqueoAgenda
+from modelo.horario_dia import HorarioDia
 
 def create_app():
     app = Flask(__name__)
@@ -25,6 +26,7 @@ def create_app():
     from rutas.horarios import horarios_bp
     from rutas.auth import auth_bp
     from rutas.invitaciones import invitaciones_bp
+    from rutas.horario_dia import horario_dia_bp
     
     app.register_blueprint(auth_bp)
     app.register_blueprint(barberias_bp)
@@ -35,6 +37,7 @@ def create_app():
     app.register_blueprint(contabilidad_bp)
     app.register_blueprint(horarios_bp)
     app.register_blueprint(invitaciones_bp)
+    app.register_blueprint(horario_dia_bp)
     
     @app.route("/")
     def index():

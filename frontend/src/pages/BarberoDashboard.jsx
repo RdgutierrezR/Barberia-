@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import Contabilidad from './Contabilidad';
 import VistaAgenda from './VistaAgenda';
+import Metricas from './Metricas';
 
 function BarberoDashboard() {
   const { id_barberia, id_barbero } = useParams();
@@ -11,6 +12,10 @@ function BarberoDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [vistaActual, setVistaActual] = useState('inicio');
+  const [horarioDia, setHorarioDia] = useState(null);
+  const [mostrarSelectorHorario, setMostrarSelectorHorario] = useState(false);
+  const [horaInicio, setHoraInicio] = useState('09:00');
+  const [horaFin, setHoraFin] = useState('18:00');
   const nombreBarbero = localStorage.getItem('barbero_nombre') || 'Barbero';
 
   useEffect(() => {
@@ -22,9 +27,42 @@ function BarberoDashboard() {
       return;
     }
     cargarCola();
+    cargarHorarioDia();
     const interval = setInterval(cargarCola, 5000);
     return () => clearInterval(interval);
   }, [id_barberia, id_barbero]);
+
+  const cargarHorarioDia = async () => {
+    try {
+      const data = await api.getHorarioDia(id_barberia, id_barbero);
+      setHorarioDia(data);
+      if (data.hora_inicio) {
+        setHoraInicio(data.hora_inicio.substring(0, 5));
+      }
+      if (data.hora_fin) {
+        setHoraFin(data.hora_fin.substring(0, 5));
+      }
+    } catch (err) {
+      console.error('Error al cargar horario:', err);
+    }
+  };
+
+  const guardarHorarioDia = async () => {
+    try {
+      const fechaHoy = new Date().toISOString().split('T')[0];
+      await api.setHorarioDia(id_barberia, {
+        id_barbero: parseInt(id_barbero),
+        fecha: fechaHoy,
+        hora_inicio: horaInicio,
+        hora_fin: horaFin
+      });
+      setMostrarSelectorHorario(false);
+      cargarHorarioDia();
+      cargarCola();
+    } catch (err) {
+      console.error('Error al guardar horario:', err);
+    }
+  };
 
   const cargarCola = async () => {
     try {
@@ -95,6 +133,14 @@ function BarberoDashboard() {
             nombreBarbero={nombreBarbero}
           />
         );
+      case 'metricas':
+        return (
+          <Metricas 
+            id_barberia={id_barberia} 
+            id_barbero={id_barbero}
+            nombreBarbero={nombreBarbero}
+          />
+        );
       case 'agenda':
         return (
           <VistaAgenda 
@@ -126,6 +172,43 @@ function BarberoDashboard() {
             <div className="cola-hoy-header">
               <h2>AGENDA DE HOY</h2>
               <span className="fecha-hoy">{getFechaHoy()}</span>
+            </div>
+
+            <div className="horario-dia-selector">
+              <div className="horario-actual" onClick={() => setMostrarSelectorHorario(!mostrarSelectorHorario)}>
+                <span className="horario-icon">🕐</span>
+                <div className="horario-info">
+                  <span className="horario-label">Mi horario hoy:</span>
+                  <span className="horario-horas">
+                    {horarioDia?.hora_inicio?.substring(0, 5) || horaInicio} - {horarioDia?.hora_fin?.substring(0, 5) || horaFin}
+                  </span>
+                </div>
+                <span className="horario-edit">✏️</span>
+              </div>
+              
+              {mostrarSelectorHorario && (
+                <div className="selector-horario-panel">
+                  <div className="selector-row">
+                    <label>Inicio:</label>
+                    <input 
+                      type="time" 
+                      value={horaInicio} 
+                      onChange={(e) => setHoraInicio(e.target.value)}
+                    />
+                  </div>
+                  <div className="selector-row">
+                    <label>Fin:</label>
+                    <input 
+                      type="time" 
+                      value={horaFin} 
+                      onChange={(e) => setHoraFin(e.target.value)}
+                    />
+                  </div>
+                  <button className="btn-primary" onClick={guardarHorarioDia}>
+                    Guardar Horario
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="actual-section">
@@ -219,6 +302,10 @@ function BarberoDashboard() {
         <button className={`nav-item ${vistaActual === 'inicio' ? 'active' : ''}`} onClick={() => setVistaActual('inicio')}>
           <span className="nav-item-icon">🏠</span>
           <span>Inicio</span>
+        </button>
+        <button className={`nav-item ${vistaActual === 'metricas' ? 'active' : ''}`} onClick={() => setVistaActual('metricas')}>
+          <span className="nav-item-icon">📊</span>
+          <span>Métricas</span>
         </button>
         <button className={`nav-item ${vistaActual === 'agenda' ? 'active' : ''}`} onClick={() => setVistaActual('agenda')}>
           <span className="nav-item-icon">📅</span>

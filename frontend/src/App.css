@@ -1301,7 +1301,7 @@ body {
 }
 
 .resumen-card.ingresos .resumen-value {
-  color: #4ade80;
+  color: #f59e0b;
 }
 
 .resumen-card.egresos .resumen-value {
@@ -1373,7 +1373,7 @@ body {
 }
 
 .historial-monto.ingreso {
-  color: #4ade80;
+  color: #f59e0b;
 }
 
 .historial-monto.egreso {
@@ -2471,4 +2471,558 @@ body {
 
 .btn-secondary:hover {
   background: #2a2a2a;
+}
+
+.horario-dia-selector {
+  margin-bottom: 20px;
+}
+
+.horario-actual {
+  display: flex;
+  align-items: center;
+  background: #1a1a1a;
+  padding: 12px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid #333;
+}
+
+.horario-icon {
+  font-size: 24px;
+  margin-right: 12px;
+}
+
+.horario-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.horario-label {
+  font-size: 12px;
+  color: #888;
+}
+
+.horario-horas {
+  font-size: 18px;
+  font-weight: 600;
+  color: #f59e0b;
+}
+
+.horario-edit {
+  font-size: 16px;
+}
+
+.selector-horario-panel {
+  background: #1a1a1a;
+  padding: 16px;
+  border-radius: 12px;
+  margin-top: 8px;
+  border: 1px solid #333;
+}
+
+.selector-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.selector-row label {
+  font-size: 14px;
+  color: #ccc;
+}
+
+.selector-row input {
+  background: #252525;
+  border: 1px solid #333;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.selector-horario-panel .btn-primary {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.metricas-page {
+  padding-bottom: 80px;
+}
+
+.metricas-periodo {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.periodo-btn {
+  flex: 1;
+  padding: 10px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.periodo-btn.active {
+  background: #f59e0b;
+  color: #000;
+  border-color: #f59e0b;
+}
+
+.periodo-btn:hover:not(.active) {
+  background: #252525;
+}
+
+.metricas-seccion {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid #2a2a2a;
+}
+
+.metricas-seccion h3 {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.bar-fecha {
+  width: 45px;
+  font-size: 11px;
+  color: #666;
+}
+
+.bar-track {
+  flex: 1;
+  height: 8px;
+  background: #252525;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.bar-pct {
+  width: 40px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px;
+  color: #555;
+}
+
+.metrica-card {
+  background: #1a1a1a;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid #333;
+}
+
+.metrica-icon {
+  font-size: 28px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.metrica-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #f59e0b;
+  display: block;
+}
+
+.metrica-label {
+  font-size: 12px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.metricas-seccion {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.metricas-seccion h3 {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.metricas-resumen {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.metricas-resumen .metrica-card {
+  background: #1a1a1a;
+  padding: 12px 8px;
+  border: 1px solid #2a2a2a;
+}
+
+.metricas-resumen .metrica-icon {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.metricas-resumen .metrica-value {
+  font-size: 20px;
+  color: #fff;
+}
+
+.metricas-resumen .metrica-label {
+  font-size: 10px;
+  color: #666;
+}
+
+.metricas-destaque {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  border: 1px solid #2a2a2a;
+}
+
+.ocupacion-circulo {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
+}
+
+.circulo-ocupacion {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.circulo-bg {
+  fill: none;
+  stroke: #2a2a2a;
+  stroke-width: 3;
+}
+
+.circulo-progreso {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.5s;
+}
+
+.ocupacion-texto {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.ocupacion-texto .ocupacion-pct {
+  font-size: 22px;
+  font-weight: 700;
+  display: block;
+  color: #fff;
+}
+
+.ocupacion-texto .ocupacion-label {
+  font-size: 10px;
+  color: #666;
+}
+
+.ocupacion-detalles {
+  flex: 1;
+}
+
+.ocupacion-fila {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #252525;
+  font-size: 13px;
+  color: #888;
+}
+
+.ocupacion-fila:last-child {
+  border-bottom: none;
+}
+
+.ocupacion-fila .valor {
+  font-weight: 600;
+  color: #ddd;
+}
+
+.servicios-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.servicio-chip {
+  background: #252525;
+  padding: 8px 12px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.servicio-chip .servicio-nombre {
+  color: #ccc;
+  font-weight: 500;
+}
+
+.servicio-chip .servicio-cantidad {
+  background: #f59e0b;
+  color: #000;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.servicio-chip .servicio-duracion {
+  color: #666;
+  font-size: 11px;
+}
+
+.ocupacion-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ocupacion-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bar-fecha {
+  width: 45px;
+  font-size: 11px;
+  color: #888;
+}
+
+.bar-track {
+  flex: 1;
+  height: 8px;
+  background: #252525;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.bar-pct {
+  width: 40px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.metricas-seccion h3 {
+  font-size: 16px;
+  margin-bottom: 16px;
+  color: #fff;
+}
+
+.servicios-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.servicio-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #252525;
+  border-radius: 8px;
+}
+
+.servicio-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.servicio-nombre {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.servicio-cantidad {
+  font-size: 12px;
+  color: #888;
+}
+
+.servicio-duracion {
+  text-align: right;
+}
+
+.duracion-valor {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f59e0b;
+  display: block;
+}
+
+.duracion-label {
+  font-size: 10px;
+  color: #666;
+}
+
+.productividad-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.productividad-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.productividad-fecha {
+  width: 50px;
+  font-size: 12px;
+  color: #888;
+}
+
+.productividad-bar {
+  flex: 1;
+  height: 8px;
+  background: #252525;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.productividad-fill {
+  height: 100%;
+  background: #f59e0b;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.productividad-servicios {
+  width: 30px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.productividad-duracion {
+  width: 50px;
+  text-align: right;
+  font-size: 12px;
+  color: #888;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.metricas-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.metricas-grid .metrica-card.destaque {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d4a 100%);
+  border-color: #f59e0b;
+}
+
+.metricas-grid .metrica-card.ocupacion-card {
+  grid-column: span 2;
+}
+
+.metricas-grid .metrica-value {
+  font-size: 24px;
+}
+
+.metricas-grid .metrica-label {
+  font-size: 11px;
+}
+
+.ocupacion-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ocupacion-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ocupacion-fecha {
+  width: 50px;
+  font-size: 12px;
+  color: #888;
+}
+
+.ocupacion-bar {
+  flex: 1;
+  height: 10px;
+  background: #252525;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.ocupacion-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.3s;
+}
+
+.ocupacion-pct {
+  width: 45px;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ocupacion-tiempo {
+  width: 100px;
+  text-align: right;
+  font-size: 11px;
+  color: #666;
 }

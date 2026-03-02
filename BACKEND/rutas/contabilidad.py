@@ -31,3 +31,30 @@ def resumen_barberia(id_barberia):
     periodo = request.args.get("periodo", "mensual")
     resumen = ctrl.obtener_resumen_barberia(id_barberia, periodo)
     return jsonify(resumen)
+
+@contabilidad_bp.route("/metricas/barbero/<int:id_barbero>", methods=["GET"])
+def metricas_barbero(id_barberia, id_barbero):
+    fecha_inicio = request.args.get("fecha_inicio")
+    fecha_fin = request.args.get("fecha_fin")
+    metricas = ctrl.obtener_metricas_barbero(id_barberia, id_barbero, fecha_inicio, fecha_fin)
+    return jsonify(metricas)
+
+@contabilidad_bp.route("/metricas/servicios", methods=["GET"])
+def metricas_servicios(id_barberia):
+    id_servicio = request.args.get("id_servicio", type=int)
+    metricas = ctrl.obtener_metricas_servicio(id_barberia, id_servicio)
+    return jsonify(metricas)
+
+@contabilidad_bp.route("/metricas/barberia", methods=["GET"])
+def metricas_barberia(id_barberia):
+    fecha_inicio = request.args.get("fecha_inicio")
+    fecha_fin = request.args.get("fecha_fin")
+    metricas = ctrl.obtener_metricas_barberia(id_barberia, fecha_inicio, fecha_fin)
+    return jsonify(metricas)
+
+@contabilidad_bp.route("/metricas/operacionales/<int:id_barbero>", methods=["GET"])
+def metricas_operacionales(id_barberia, id_barbero):
+    fecha_inicio = request.args.get("fecha_inicio")
+    fecha_fin = request.args.get("fecha_fin")
+    metricas = ctrl.obtener_metricas_operacionales(id_barberia, id_barbero, fecha_inicio, fecha_fin)
+    return jsonify(metricas)

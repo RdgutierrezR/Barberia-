@@ -10,7 +10,12 @@ def listar(id_barberia):
     fecha = request.args.get("fecha")
     id_barbero = request.args.get("id_barbero", type=int)
     estado = request.args.get("estado")
-    lista = ctrl.listar_turnos(id_barberia, fecha, id_barbero, estado)
+    usar_horario_dia = request.args.get("usar_horario_dia", "false").lower() == "true"
+    
+    if usar_horario_dia and fecha and id_barbero:
+        lista = ctrl.listar_turnos_por_horario_dia(id_barberia, id_barbero, fecha, estado)
+    else:
+        lista = ctrl.listar_turnos(id_barberia, fecha, id_barbero, estado)
     return jsonify([t.to_dict() for t in lista])
 
 @turnos_bp.route("/<int:id_turno>", methods=["GET"])

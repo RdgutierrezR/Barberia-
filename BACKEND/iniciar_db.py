@@ -7,6 +7,8 @@ from modelo.cliente import Cliente
 from modelo.turno import Turno
 from modelo.contabilidad import Contabilidad
 from modelo.horario import Horario
+from modelo.horario_dia import HorarioDia
+from werkzeug.security import generate_password_hash
 
 app = create_app()
 
@@ -23,9 +25,9 @@ with app.app_context():
         db.session.add_all([b1, b2])
         db.session.commit()
         
-        barbero1 = Barbero(id_barberia=b1.id_barberia, nombre="Juan Pérez", telefono="1111111111", correo="juan@barberia.com", contrasena="password123")
-        barbero2 = Barbero(id_barberia=b1.id_barberia, nombre="Carlos López", telefono="2222222222", correo="carlos@barberia.com", contrasena="password123")
-        barbero3 = Barbero(id_barberia=b2.id_barberia, nombre="Pedro Gómez", telefono="3333333333", correo="pedro@barberia.com", contrasena="password123")
+        barbero1 = Barbero(id_barberia=b1.id_barberia, nombre="Juan Pérez", telefono="1111111111", correo="juan@barberia.com", contrasena=generate_password_hash("password123"))
+        barbero2 = Barbero(id_barberia=b1.id_barberia, nombre="Carlos López", telefono="2222222222", correo="carlos@barberia.com", contrasena=generate_password_hash("password123"))
+        barbero3 = Barbero(id_barberia=b2.id_barberia, nombre="Pedro Gómez", telefono="3333333333", correo="pedro@barberia.com", contrasena=generate_password_hash("password123"))
         
         db.session.add_all([barbero1, barbero2, barbero3])
         db.session.commit()

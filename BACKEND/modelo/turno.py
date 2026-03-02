@@ -14,6 +14,8 @@ class Turno(db.Model):
     cita_fecha_hora = db.Column(db.DateTime, nullable=True)  # Fecha/hora específica para citas
     fecha_cita_original = db.Column(db.DateTime, nullable=True)  # Fecha/hora original de la cita para contabilidad
     fecha_fin_servicio = db.Column(db.DateTime, nullable=True)  # Fecha/hora cuando se completó el servicio
+    fecha_inicio_servicio = db.Column(db.DateTime, nullable=True)  # Fecha/hora cuando inició el servicio
+    duracion_minutos = db.Column(db.Integer, nullable=True)  # Duración real del servicio en minutos
     estado = db.Column(db.String(20), default="pendiente")
     codigo_confirmacion = db.Column(db.String(10), unique=True, nullable=True)
     notas = db.Column(db.Text, nullable=True)
@@ -37,10 +39,13 @@ class Turno(db.Model):
             "id_servicio": self.id_servicio,
             "servicio_nombre": self.servicio.nombre if self.servicio else None,
             "servicio_precio": float(self.servicio.precio) if self.servicio else None,
+            "servicio_duracion": self.servicio.duracion_minutos if self.servicio else None,
             "tipo_reserva": self.tipo_reserva,
             "cita_fecha_hora": self.cita_fecha_hora.isoformat() if self.cita_fecha_hora else None,
             "fecha_cita_original": self.fecha_cita_original.isoformat() if self.fecha_cita_original else None,
             "fecha_fin_servicio": self.fecha_fin_servicio.isoformat() if self.fecha_fin_servicio else None,
+            "fecha_inicio_servicio": self.fecha_inicio_servicio.isoformat() if self.fecha_inicio_servicio else None,
+            "duracion_minutos": self.duracion_minutos,
             "fecha_hora": self.fecha_hora.isoformat() if self.fecha_hora else None,
             "estado": self.estado,
             "codigo_confirmacion": self.codigo_confirmacion,

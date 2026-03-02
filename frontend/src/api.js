@@ -292,5 +292,79 @@ export const api = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
     return data;
+  },
+
+  getHorarioDia: async (idBarberia, idBarbero) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/horario-dia/hoy?id_barbero=${idBarbero}`, {
+      headers: headers()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+
+  setHorarioDia: async (idBarberia, data) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/horario-dia/`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || `Error: ${res.status}`);
+    return result;
+  },
+
+  getHorarioTrabajo: async (idBarberia, idBarbero, fecha = null) => {
+    let url = `${API_URL}/barberias/${idBarberia}/horario-dia/trabajo?id_barbero=${idBarbero}`;
+    if (fecha) url += `&fecha=${fecha}`;
+    const res = await fetch(url, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+
+  getMetricasBarbero: async (idBarberia, idBarbero, fechaInicio, fechaFin) => {
+    let url = `${API_URL}/barberias/${idBarberia}/contabilidad/metricas/barbero/${idBarbero}`;
+    const params = [];
+    if (fechaInicio) params.push(`fecha_inicio=${fechaInicio}`);
+    if (fechaFin) params.push(`fecha_fin=${fechaFin}`);
+    if (params.length) url += '?' + params.join('&');
+    const res = await fetch(url, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+
+  getMetricasServicios: async (idBarberia, id_servicio = null) => {
+    let url = `${API_URL}/barberias/${idBarberia}/contabilidad/metricas/servicios`;
+    if (id_servicio) url += `?id_servicio=${id_servicio}`;
+    const res = await fetch(url, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+
+  getMetricasBarberia: async (idBarberia, fechaInicio, fechaFin) => {
+    let url = `${API_URL}/barberias/${idBarberia}/contabilidad/metricas/barberia`;
+    const params = [];
+    if (fechaInicio) params.push(`fecha_inicio=${fechaInicio}`);
+    if (fechaFin) params.push(`fecha_fin=${fechaFin}`);
+    if (params.length) url += '?' + params.join('&');
+    const res = await fetch(url, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+
+  getMetricasOperacionales: async (idBarberia, idBarbero, fechaInicio, fechaFin) => {
+    let url = `${API_URL}/barberias/${idBarberia}/contabilidad/metricas/operacionales/${idBarbero}`;
+    const params = [];
+    if (fechaInicio) params.push(`fecha_inicio=${fechaInicio}`);
+    if (fechaFin) params.push(`fecha_fin=${fechaFin}`);
+    if (params.length) url += '?' + params.join('&');
+    const res = await fetch(url, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
   }
 };

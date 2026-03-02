@@ -20,6 +20,36 @@ def listar_turnos(id_barberia, fecha=None, id_barbero=None, estado=None):
         query = query.filter_by(estado=estado)
     return query.order_by(Turno.fecha_hora).all()
 
+def listar_turnos_por_horario_dia(id_barberia, id_barbero, fecha, estado=None):
+    from modelo.horario_dia import HorarioDia
+    
+    fecha_date = datetime.strptime(fecha, "%Y-%m-%d").date()
+    
+    horario_dia = HorarioDia.query.filter_by(
+        id_barberia=id_barberia,
+        id_barbero=id_barbero,
+        fecha=fecha_date,
+        activo=True
+    ).first()
+    
+    if not horario_dia:
+        return []
+    
+    hora_inicio_dt = datetime.combine(fecha_date, horario_dia.hora_inicio)
+    hora_fin_dt = datetime.combine(fecha_date, horario_dia.hora_fin)
+    
+    query = Turno.query.filter(
+        Turno.id_barberia == id_barberia,
+        Turno.id_barbero == id_barbero,
+        Turno.fecha_hora >= hora_inicio_dt,
+        Turno.fecha_hora < hora_fin_dt
+    )
+    
+    if estado:
+        query = query.filter_by(estado=estado)
+    
+    return query.order_by(Turno.fecha_hora).all()
+
 def obtener_turno(id_turno):
     return Turno.query.get(id_turno)
 
@@ -135,6 +165,7 @@ def iniciar_turno(id_turno):
     turno = Turno.query.get(id_turno)
     if turno:
         turno.estado = "en_proceso"
+        turno.fecha_inicio_servicio = datetime.now()
         db.session.commit()
     return turno
 
@@ -143,6 +174,11 @@ def completar_turno(id_turno, precio_final=None):
     if turno:
         turno.estado = "completado"
         turno.fecha_fin_servicio = datetime.now()
+        
+        if turno.fecha_inicio_servicio:
+            duracion = turno.fecha_fin_servicio - turno.fecha_inicio_servicio
+            turno.duracion_minutos = int(duracion.total_seconds() / 60)
+        
         if precio_final:
             turno.precio_final = precio_final
             registrar_contabilidad(turno.id_barberia, turno.id_barbero, turno.id_turno, precio_final, "ingreso", "Corte completado")
@@ -213,6 +249,7 @@ def verificar_conflicto_simple(id_barbero, fecha_hora_inicio, duracion_minutos, 
 
 def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servicio):
     from modelo.horario import Horario
+    from modelo.horario_dia import HorarioDia
     from datetime import time
     
     fecha_date = datetime.strptime(fecha, "%Y-%m-%d").date()
@@ -221,19 +258,32 @@ def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servic
     es_hoy = fecha_date == hoy
     ahora = datetime.now()
     
-    horario = Horario.query.filter_by(
-        id_barberia=id_barberia,
-        id_barbero=id_barbero,
-        dia_semana=dia_semana,
-        activo=True
-    ).first()
+    horario_dia = None
+    if es_hoy:
+        horario_dia = HorarioDia.query.filter_by(
+            id_barberia=id_barberia,
+            id_barbero=id_barbero,
+            fecha=fecha_date,
+            activo=True
+        ).first()
     
-    if not horario:
-        hora_inicio = time(9, 0)
-        hora_fin = time(18, 0)
+    if horario_dia:
+        hora_inicio = horario_dia.hora_inicio
+        hora_fin = horario_dia.hora_fin
     else:
-        hora_inicio = horario.hora_inicio
-        hora_fin = horario.hora_fin
+        horario = Horario.query.filter_by(
+            id_barberia=id_barberia,
+            id_barbero=id_barbero,
+            dia_semana=dia_semana,
+            activo=True
+        ).first()
+        
+        if not horario:
+            hora_inicio = time(9, 0)
+            hora_fin = time(18, 0)
+        else:
+            hora_inicio = horario.hora_inicio
+            hora_fin = horario.hora_fin
     
     hora_apertura = datetime.combine(fecha_date, hora_inicio)
     hora_cierre = datetime.combine(fecha_date, hora_fin)
@@ -482,15 +532,28 @@ def eliminar_bloqueo(id_bloqueo):
 
 def obtener_cola_diaria(id_barberia, id_barbero):
     from modelo.horario import Horario
+    from modelo.horario_dia import HorarioDia
     from datetime import time
     
     hoy = date.today()
     ahora = datetime.now()
     
+    horario_dia = HorarioDia.query.filter_by(
+        id_barberia=id_barberia,
+        id_barbero=id_barbero,
+        fecha=hoy,
+        activo=True
+    ).first()
+    
+    inicio_dia = datetime.combine(hoy, time(0, 0))
+    fin_dia = datetime.combine(hoy, time(23, 59, 59))
+    
     turnos = Turno.query.filter(
         Turno.id_barberia == id_barberia,
         Turno.id_barbero == id_barbero,
         Turno.tipo_reserva == "cola",
+        Turno.fecha_hora >= inicio_dia,
+        Turno.fecha_hora <= fin_dia,
         Turno.estado.in_(["pendiente", "confirmado", "en_proceso"])
     ).order_by(Turno.fecha_creacion).all()
     
@@ -570,6 +633,12 @@ def pasar_siguiente(id_barberia, id_barbero, forzar_cita=False):
     
     if turno_actual:
         turno_actual.estado = "completado"
+        turno_actual.fecha_fin_servicio = datetime.now()
+        
+        if turno_actual.fecha_inicio_servicio:
+            duracion = turno_actual.fecha_fin_servicio - turno_actual.fecha_inicio_servicio
+            turno_actual.duracion_minutos = int(duracion.total_seconds() / 60)
+        
         registrar_contabilidad(
             turno_actual.id_barberia, 
             turno_actual.id_barbero, 
@@ -585,6 +654,7 @@ def pasar_siguiente(id_barberia, id_barbero, forzar_cita=False):
         turno = Turno.query.get(siguiente["id_turno"])
         if turno:
             turno.estado = "en_proceso"
+            turno.fecha_inicio_servicio = datetime.now()
             db.session.commit()
             return {
                 "id_turno": turno.id_turno,
