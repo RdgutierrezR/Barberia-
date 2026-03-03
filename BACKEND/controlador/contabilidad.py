@@ -22,20 +22,20 @@ def obtener_contabilidad_barbero(id_barberia, id_barbero, fecha_inicio=None, fec
     return query.all()
 
 def obtener_resumen_barbero(id_barberia, id_barbero, periodo="mensual", fecha_inicio=None, fecha_fin=None):
-    hoy = datetime.utcnow()
+    ahora = datetime.now()
     
     if fecha_inicio and fecha_fin:
         fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
         fecha_fin_dt = datetime.strptime(fecha_fin, "%Y-%m-%d") + timedelta(days=1)
     elif periodo == "diario":
-        fecha_inicio = hoy.replace(hour=0, minute=0, second=0, microsecond=0)
-        fecha_fin_dt = hoy + timedelta(days=1)
+        fecha_inicio = ahora.replace(hour=0, minute=0, second=0, microsecond=0)
+        fecha_fin_dt = ahora + timedelta(days=1)
     elif periodo == "semanal":
-        fecha_inicio = hoy - timedelta(days=7)
-        fecha_fin_dt = hoy + timedelta(days=1)
+        fecha_inicio = ahora - timedelta(days=7)
+        fecha_fin_dt = ahora + timedelta(days=1)
     else:
-        fecha_inicio = hoy.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        fecha_fin_dt = hoy + timedelta(days=1)
+        fecha_inicio = ahora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        fecha_fin_dt = ahora + timedelta(days=1)
     
     query_filter = [
         Contabilidad.id_barberia == id_barberia,
@@ -70,13 +70,13 @@ def obtener_resumen_barbero(id_barberia, id_barbero, periodo="mensual", fecha_in
     return resumen
 
 def obtener_resumen_barberia(id_barberia, periodo="mensual"):
-    hoy = datetime.utcnow()
+    ahora = datetime.now()
     if periodo == "diario":
-        fecha_inicio = hoy.replace(hour=0, minute=0, second=0, microsecond=0)
+        fecha_inicio = ahora.replace(hour=0, minute=0, second=0, microsecond=0)
     elif periodo == "semanal":
-        fecha_inicio = hoy - timedelta(days=7)
+        fecha_inicio = ahora - timedelta(days=7)
     else:
-        fecha_inicio = hoy.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        fecha_inicio = ahora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     
     resultados = db.session.query(
         Contabilidad.tipo,
@@ -100,14 +100,14 @@ def obtener_metricas_barbero(id_barberia, id_barbero, fecha_inicio=None, fecha_f
     from modelo.turno import Turno
     from modelo.servicio import Servicio
     
-    hoy = datetime.utcnow()
+    ahora = datetime.now()
     
     if fecha_inicio and fecha_fin:
         fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
         fecha_fin_dt = datetime.strptime(fecha_fin, "%Y-%m-%d") + timedelta(days=1)
     else:
-        fecha_inicio_dt = hoy.replace(hour=0, minute=0, second=0, microsecond=0)
-        fecha_fin_dt = hoy + timedelta(days=1)
+        fecha_inicio_dt = ahora.replace(hour=0, minute=0, second=0, microsecond=0)
+        fecha_fin_dt = ahora + timedelta(days=1)
     
     turnos_completados = Turno.query.filter(
         Turno.id_barberia == id_barberia,
@@ -221,14 +221,14 @@ def obtener_metricas_servicio(id_barberia, id_servicio=None):
 def obtener_metricas_barberia(id_barberia, fecha_inicio=None, fecha_fin=None):
     from modelo.turno import Turno
     
-    hoy = datetime.utcnow()
+    ahora = datetime.now()
     
     if fecha_inicio and fecha_fin:
         fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
         fecha_fin_dt = datetime.strptime(fecha_fin, "%Y-%m-%d") + timedelta(days=1)
     else:
-        fecha_inicio_dt = hoy.replace(hour=0, minute=0, second=0, microsecond=0)
-        fecha_fin_dt = hoy + timedelta(days=1)
+        fecha_inicio_dt = ahora.replace(hour=0, minute=0, second=0, microsecond=0)
+        fecha_fin_dt = ahora + timedelta(days=1)
     
     turnos = Turno.query.filter(
         Turno.id_barberia == id_barberia,
@@ -269,7 +269,8 @@ def obtener_metricas_operacionales(id_barberia, id_barbero, fecha_inicio=None, f
     from datetime import date, timedelta
     from database import db
     
-    hoy = date.today()
+    ahora = datetime.now()
+    hoy = ahora.date()
     
     if fecha_inicio and fecha_fin:
         fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
@@ -277,23 +278,38 @@ def obtener_metricas_operacionales(id_barberia, id_barbero, fecha_inicio=None, f
         fecha_inicio_date = fecha_inicio_dt.date()
         fecha_fin_date = fecha_fin_dt.date() - timedelta(days=1)
     else:
-        fecha_inicio_dt = hoy
-        fecha_fin_dt = hoy + timedelta(days=1)
+        fecha_inicio_dt = ahora.replace(hour=0, minute=0, second=0, microsecond=0)
+        fecha_fin_dt = ahora + timedelta(days=1)
         fecha_inicio_date = hoy
         fecha_fin_date = hoy
     
     turnos_query = Turno.query.filter(
         Turno.id_barberia == id_barberia,
         Turno.id_barbero == id_barbero,
+        Turno.estado == "completado",
         Turno.fecha_hora >= fecha_inicio_dt,
         Turno.fecha_hora < fecha_fin_dt
     )
     
     turnos_all = turnos_query.all()
-    turnos_completados = [t for t in turnos_all if t.estado == "completado"]
-    turnos_cancelados = [t for t in turnos_all if t.estado == "cancelado"]
+    turnos_completados = turnos_all
     
-    total_turnos = len(turnos_all)
+    turnos_cancelados_query = Turno.query.filter(
+        Turno.id_barberia == id_barberia,
+        Turno.id_barbero == id_barbero,
+        Turno.estado == "cancelado",
+        Turno.fecha_hora >= fecha_inicio_dt,
+        Turno.fecha_hora < fecha_fin_dt
+    )
+    turnos_cancelados = turnos_cancelados_query.all()
+    
+    total_turnos = Turno.query.filter(
+        Turno.id_barberia == id_barberia,
+        Turno.id_barbero == id_barbero,
+        Turno.fecha_hora >= fecha_inicio_dt,
+        Turno.fecha_hora < fecha_fin_dt
+    ).count()
+    
     total_completados = len(turnos_completados)
     total_cancelados = len(turnos_cancelados)
     
@@ -312,6 +328,8 @@ def obtener_metricas_operacionales(id_barberia, id_barbero, fecha_inicio=None, f
     tiempo_disponible_total = 0
     ocupacion_diaria = []
     
+    MINUTOS_POR_DEFECTO = 480  # 8 horas por día
+    
     for dia in dias:
         horario_dia = HorarioDia.query.filter_by(
             id_barberia=id_barberia,
@@ -327,9 +345,9 @@ def obtener_metricas_operacionales(id_barberia, id_barbero, fecha_inicio=None, f
             if isinstance(inicio, time) and isinstance(fin, time):
                 minutos_dia = (fin.hour * 60 + fin.minute) - (inicio.hour * 60 + inicio.minute)
             else:
-                minutos_dia = 0
+                minutos_dia = MINUTOS_POR_DEFECTO
         else:
-            minutos_dia = 0
+            minutos_dia = MINUTOS_POR_DEFECTO
         
         tiempo_disponible_total += minutos_dia
         

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { FRONTEND_URL } from '../config';
+import { parsearFecha } from '../utils/fecha';
 
 function OwnerDashboard() {
   const { id } = useParams();
@@ -40,7 +41,8 @@ function OwnerDashboard() {
 
   const formatFechaColombia = (fechaStr) => {
     if (!fechaStr) return 'Sin fecha';
-    const fecha = new Date(fechaStr);
+    const fecha = parsearFecha(fechaStr);
+    if (!fecha) return 'Sin fecha';
     const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
     const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
     let hora = fecha.getHours();

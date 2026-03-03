@@ -146,14 +146,26 @@ def listar_turnos_cita(id_barberia):
 
 @turnos_bp.route("/disponibilidad/<int:id_barbero>", methods=["GET"])
 def obtener_disponibilidad(id_barberia, id_barbero):
+    import logging
+    logger = logging.getLogger(__name__)
+    
     fecha = request.args.get("fecha")
     duracion = request.args.get("duracion", type=int, default=25)
+    
+    logger.info(f"Ruta disponibilidad - id_barberia: {id_barberia}, id_barbero: {id_barbero}, fecha: {fecha}, duracion: {duracion}")
     
     if not fecha:
         return jsonify({"error": "Fecha requerida"}), 400
     
-    horarios = ctrl.obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion)
-    return jsonify({"fecha": fecha, "horarios_disponibles": horarios})
+    try:
+        horarios = ctrl.obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion)
+        logger.info(f"Horarios devueltos: {horarios}")
+        return jsonify({"fecha": fecha, "horarios_disponibles": horarios})
+    except Exception as e:
+        logger.error(f"Error en disponibilidad: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
 
 @turnos_bp.route("/bloqueos", methods=["GET"])
 @jwt_required()

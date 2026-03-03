@@ -924,9 +924,16 @@ body {
 }
 
 .hora-programada {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   color: #fff;
+}
+
+.tipo-reserva-label {
+  font-size: 9px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .cita-llegada {

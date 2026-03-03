@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
+import { getFechaLocal, formatFechaMostrar } from '../utils/fecha';
 
 function Barberia() {
   const { id } = useParams();
@@ -57,6 +58,12 @@ function Barberia() {
   }, [tipoReserva, fechaSeleccionada, barberoSeleccionado, servicioSeleccionado]);
 
   const cargarHorariosDisponibles = async () => {
+    console.log('Cargando horarios:', {
+      idBarberia: id,
+      idBarbero: barberoSeleccionado?.id_barbero,
+      fecha: fechaSeleccionada,
+      duracion: servicioSeleccionado?.duracion_minutos
+    });
     setLoadingHorarios(true);
     try {
       const data = await api.getDisponibilidad(
@@ -65,6 +72,7 @@ function Barberia() {
         fechaSeleccionada, 
         servicioSeleccionado.duracion_minutos
       );
+      console.log('Horarios recibidos:', data);
       setHorariosDisponibles(data.horarios_disponibles || []);
     } catch (err) {
       console.error('Error cargando horarios:', err);
@@ -103,8 +111,7 @@ function Barberia() {
   const handleTipoReserva = (tipo) => {
     setTipoReserva(tipo);
     if (tipo === 'cita') {
-      const hoy = new Date();
-      setFechaSeleccionada(hoy.toISOString().split('T')[0]);
+      setFechaSeleccionada(getFechaLocal());
     }
     setPaso(4);
   };
@@ -146,6 +153,9 @@ function Barberia() {
     for (let i = 0; i <= 15; i++) {
       const fecha = new Date(hoy);
       fecha.setDate(hoy.getDate() + i);
+      const anio = fecha.getFullYear();
+      const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+      const dia = String(fecha.getDate()).padStart(2, '0');
       const opcionesDia = i === 0 
         ? { weekday: 'long', day: 'numeric', month: 'long' }
         : { weekday: 'long', day: 'numeric', month: 'short' };
@@ -153,7 +163,7 @@ function Barberia() {
         ? 'Hoy - ' + fecha.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })
         : fecha.toLocaleDateString('es-CO', opcionesDia);
       fechas.push({
-        valor: fecha.toISOString().split('T')[0],
+        valor: `${anio}-${mes}-${dia}`,
         label: label.charAt(0).toUpperCase() + label.slice(1)
       });
     }
@@ -375,7 +385,7 @@ function Barberia() {
             {tipoReserva === 'cita' && (
               <div className="resumen-item">
                 <span>Fecha y hora</span>
-                <strong>{new Date(fechaSeleccionada + 'T00:00:00').toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })} a las {formatHora12h(horaSeleccionada)}</strong>
+                <strong>{formatFechaMostrar(fechaSeleccionada)} a las {formatHora12h(horaSeleccionada)}</strong>
               </div>
             )}
             <div className="resumen-item">

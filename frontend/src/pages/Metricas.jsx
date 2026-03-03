@@ -15,18 +15,28 @@ function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
     try {
       let fi, ff;
       const hoy = new Date();
+      const zona = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      
+      const getFechaLocal = (date) => {
+        const año = date.getFullYear();
+        const mes = String(date.getMonth() + 1).padStart(2, '0');
+        const dia = String(date.getDate()).padStart(2, '0');
+        return `${año}-${mes}-${dia}`;
+      };
       
       if (periodo === 'diario') {
-        fi = hoy.toISOString().split('T')[0];
+        fi = getFechaLocal(hoy);
         ff = fi;
       } else if (periodo === 'semanal') {
-        const hace7 = new Date(hoy.getTime() - 7 * 24 * 60 * 60 * 1000);
-        fi = hace7.toISOString().split('T')[0];
-        ff = hoy.toISOString().split('T')[0];
+        const hace7 = new Date(hoy);
+        hace7.setDate(hoy.getDate() - 7);
+        fi = getFechaLocal(hace7);
+        ff = getFechaLocal(hoy);
       } else {
-        const hace30 = new Date(hoy.getTime() - 30 * 24 * 60 * 60 * 1000);
-        fi = hace30.toISOString().split('T')[0];
-        ff = hoy.toISOString().split('T')[0];
+        const hace30 = new Date(hoy);
+        hace30.setDate(hoy.getDate() - 30);
+        fi = getFechaLocal(hace30);
+        ff = getFechaLocal(hoy);
       }
       
       const data = await api.getMetricasOperacionales(id_barberia, id_barbero, fi, ff);

@@ -4,6 +4,7 @@ from modelo.servicio import Servicio
 from modelo.contabilidad import Contabilidad
 from modelo.bloqueo_agenda import BloqueoAgenda
 from modelo.horario import Horario
+from modelo.barbero import Barbero
 from datetime import datetime, timedelta, time, date
 import random
 import string
@@ -179,11 +180,16 @@ def completar_turno(id_turno, precio_final=None):
             duracion = turno.fecha_fin_servicio - turno.fecha_inicio_servicio
             turno.duracion_minutos = int(duracion.total_seconds() / 60)
         
-        if precio_final:
-            turno.precio_final = precio_final
-            registrar_contabilidad(turno.id_barberia, turno.id_barbero, turno.id_turno, precio_final, "ingreso", "Corte completado")
-        else:
-            registrar_contabilidad(turno.id_barberia, turno.id_barbero, turno.id_turno, float(turno.precio_final), "ingreso", "Corte completado")
+        barbero_nombre = turno.barbero.nombre if turno.barbero else None
+        cliente_nombre = turno.cliente.nombre if turno.cliente else None
+        servicio_nombre = turno.servicio.nombre if turno.servicio else None
+        
+        monto = precio_final if precio_final else float(turno.precio_final)
+        registrar_contabilidad(
+            turno.id_barberia, turno.id_barbero, turno.id_turno,
+            monto, "ingreso", "Corte completado",
+            barbero_nombre, cliente_nombre, servicio_nombre
+        )
         db.session.commit()
     return turno
 
@@ -194,14 +200,17 @@ def cancelar_turno(id_turno):
         db.session.commit()
     return turno
 
-def registrar_contabilidad(id_barberia, id_barbero, id_turno, monto, tipo, descripcion):
+def registrar_contabilidad(id_barberia, id_barbero, id_turno, monto, tipo, descripcion, barbero_nombre=None, cliente_nombre=None, servicio_nombre=None):
     registro = Contabilidad(
         id_barberia=id_barberia,
         id_barbero=id_barbero,
         id_turno=id_turno,
         monto=monto,
         tipo=tipo,
-        descripcion=descripcion
+        descripcion=descripcion,
+        barbero_nombre=barbero_nombre,
+        cliente_nombre=cliente_nombre,
+        servicio_nombre=servicio_nombre
     )
     db.session.add(registro)
     db.session.commit()
@@ -248,29 +257,31 @@ def verificar_conflicto_simple(id_barbero, fecha_hora_inicio, duracion_minutos, 
     return False
 
 def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servicio):
+    import logging
+    logger = logging.getLogger(__name__)
+    
     from modelo.horario import Horario
     from modelo.horario_dia import HorarioDia
     from datetime import time
     
+    logger.info(f"Obteniendo horarios para barbero {id_barbero}, fecha {fecha}")
+    
     fecha_date = datetime.strptime(fecha, "%Y-%m-%d").date()
     dia_semana = fecha_date.weekday()
-    hoy = date.today()
-    es_hoy = fecha_date == hoy
-    ahora = datetime.now()
     
-    horario_dia = None
-    if es_hoy:
-        horario_dia = HorarioDia.query.filter_by(
-            id_barberia=id_barberia,
-            id_barbero=id_barbero,
-            fecha=fecha_date,
-            activo=True
-        ).first()
+    # Buscar horario del día específico primero
+    horario_dia = HorarioDia.query.filter_by(
+        id_barberia=id_barberia,
+        id_barbero=id_barbero,
+        fecha=fecha_date,
+        activo=True
+    ).first()
     
     if horario_dia:
         hora_inicio = horario_dia.hora_inicio
         hora_fin = horario_dia.hora_fin
     else:
+        # Buscar horario semanal
         horario = Horario.query.filter_by(
             id_barberia=id_barberia,
             id_barbero=id_barbero,
@@ -278,50 +289,15 @@ def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servic
             activo=True
         ).first()
         
-        if not horario:
-            hora_inicio = time(9, 0)
-            hora_fin = time(18, 0)
-        else:
+        if horario:
             hora_inicio = horario.hora_inicio
             hora_fin = horario.hora_fin
+        else:
+            hora_inicio = time(9, 0)
+            hora_fin = time(18, 0)
     
     hora_apertura = datetime.combine(fecha_date, hora_inicio)
     hora_cierre = datetime.combine(fecha_date, hora_fin)
-    
-    # Obtener turnos de cola
-    turnos_cola = Turno.query.filter(
-        Turno.id_barberia == id_barberia,
-        Turno.id_barbero == id_barbero,
-        Turno.tipo_reserva == "cola",
-        Turno.estado.in_(["pendiente", "confirmado", "en_proceso"])
-    ).order_by(Turno.fecha_creacion).all()
-    
-    # Calcular último horario ocupado por la cola
-    if es_hoy and turnos_cola:
-        # Usar la fecha_hora del primer turno
-        primer_turno = turnos_cola[0]
-        if primer_turno.fecha_hora and primer_turno.fecha_hora.date() == hoy:
-            hora_inicio_intervalo = primer_turno.fecha_hora.replace(second=0, microsecond=0)
-        else:
-            hora_inicio_intervalo = ahora.replace(second=0, microsecond=0)
-        
-        # Sumar duraciones de la cola para encontrar el primer espacio disponible
-        for turno in turnos_cola:
-            svc = Servicio.query.get(turno.id_servicio)
-            dur = svc.duracion_minutos if svc else 30
-            hora_inicio_intervalo = hora_inicio_intervalo + timedelta(minutes=dur)
-        
-        # Redondear a la siguiente media hora
-        if hora_inicio_intervalo.minute % 30 != 0:
-            hora_inicio_intervalo = hora_inicio_intervalo + timedelta(minutes=30 - hora_inicio_intervalo.minute % 30)
-    elif es_hoy:
-        # Hoy sin cola: empezar desde ahora + margen de 30 min
-        hora_inicio_intervalo = ahora.replace(second=0, microsecond=0) + timedelta(minutes=30)
-        if hora_inicio_intervalo.minute % 30 != 0:
-            hora_inicio_intervalo = hora_inicio_intervalo + timedelta(minutes=30 - hora_inicio_intervalo.minute % 30)
-    else:
-        # Otro día: empezar desde hora de apertura
-        hora_inicio_intervalo = hora_apertura
     
     # Obtener citas del día
     turnos_cita = Turno.query.filter(
@@ -329,7 +305,7 @@ def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servic
         Turno.id_barbero == id_barbero,
         Turno.tipo_reserva == "cita",
         Turno.cita_fecha_hora.isnot(None),
-        Turno.estado.in_(["pendiente", "confirmado", "en_proceso"]),
+        Turno.estado.in_(["pendiente", "confirmado"]),
         db.func.date(Turno.cita_fecha_hora) == fecha_date
     ).all()
     
@@ -343,10 +319,10 @@ def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servic
         )
     ).all()
     
+    # Generar intervalos
     intervalos = []
+    hora_actual = hora_apertura
     intervalo_minutos = 30
-    
-    hora_actual = hora_inicio_intervalo
     
     while hora_actual + timedelta(minutes=duracion_servicio) <= hora_cierre:
         hora_fin_slot = hora_actual + timedelta(minutes=duracion_servicio)
@@ -385,6 +361,7 @@ def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servic
         
         hora_actual = hora_actual + timedelta(minutes=intervalo_minutos)
     
+    logger.info(f"Intervalos encontrados: {intervalos}")
     return intervalos
 
 def crear_turno_cita(id_barberia, id_barbero, id_servicio, cita_fecha_hora, nombre_cliente, telefono, notas=None):
@@ -437,6 +414,90 @@ def crear_turno_cita(id_barberia, id_barbero, id_servicio, cita_fecha_hora, nomb
     )
     db.session.add(nuevo)
     db.session.commit()
+    
+    try:
+        from controlador.notificacion import notificar_nuevo_turno_barbero
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        barbero = Barbero.query.get(id_barbero)
+        
+        if barbero:
+            fecha_hora_str = cita_dt.strftime("%d/%m/%Y a las %I:%M %p")
+            
+            notificar_nuevo_turno_barbero(
+                barbero, nombre_cliente, servicio.nombre,
+                float(servicio.precio), fecha_hora_str, telefono
+            )
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Error sending notifications: {str(e)}")
+        import traceback
+        traceback.print_exc()
+    
+    return {"turno": nuevo, "cita_fecha_hora": cita_dt.isoformat()}, None
+
+def listar_turnos_cita(id_barberia, id_barbero=None, fecha=None):
+    
+    cliente = Cliente.query.filter_by(telefono=telefono, id_barberia=id_barberia).first()
+    if not cliente:
+        codigo_qr = str(uuid.uuid4())[:8].upper()
+        cliente = Cliente(
+            id_barberia=id_barberia,
+            nombre=nombre_cliente,
+            telefono=telefono,
+            codigo_qr=codigo_qr
+        )
+        db.session.add(cliente)
+        db.session.commit()
+    else:
+        cliente.nombre = nombre_cliente
+        db.session.commit()
+    
+    codigo = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    
+    nuevo = Turno(
+        id_barberia=id_barberia,
+        id_barbero=id_barbero,
+        id_servicio=id_servicio,
+        id_cliente=cliente.id_cliente,
+        fecha_hora=cita_dt,
+        cita_fecha_hora=cita_dt,
+        fecha_cita_original=cita_dt,
+        tipo_reserva="cita",
+        codigo_confirmacion=codigo,
+        notas=notas,
+        precio_final=servicio.precio,
+        estado="confirmado"
+    )
+    db.session.add(nuevo)
+    db.session.commit()
+    
+    try:
+        from controlador.notificacion import enviar_whatsapp, notificar_nuevo_turno_barbero
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        barbero = Barbero.query.get(id_barbero)
+        logger.info(f"Barbero encontrado para cita: {barbero}")
+        
+        if barbero:
+            fecha_hora_str = cita_dt.strftime("%d/%m/%Y a las %I:%M %p")
+            logger.info(f"Enviando notificación al barbero: {barbero.nombre}, telefono: {barbero.telefono}")
+            
+            notificar_nuevo_turno_barbero(
+                barbero, nombre_cliente, servicio.nombre,
+                float(servicio.precio), fecha_hora_str, telefono
+            )
+            # También enviar al número del owner directamente
+            logger.info("Enviando notificación al owner 3003638529")
+            enviar_whatsapp("3003638529", 
+                f"🔔 Nuevo Turno (Cita)!\n\nCliente: {nombre_cliente}\nBarbero: {barbero.nombre}\nServicio: {servicio.nombre}\nHora: {fecha_hora_str}")
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Error sending notifications: {str(e)}")
+        import traceback
+        traceback.print_exc()
     
     return {"turno": nuevo, "cita_fecha_hora": cita_dt.isoformat()}, None
 
@@ -639,13 +700,18 @@ def pasar_siguiente(id_barberia, id_barbero, forzar_cita=False):
             duracion = turno_actual.fecha_fin_servicio - turno_actual.fecha_inicio_servicio
             turno_actual.duracion_minutos = int(duracion.total_seconds() / 60)
         
+        barbero_nombre = turno_actual.barbero.nombre if turno_actual.barbero else None
+        cliente_nombre = turno_actual.cliente.nombre if turno_actual.cliente else None
+        servicio_nombre = turno_actual.servicio.nombre if turno_actual.servicio else None
+        
         registrar_contabilidad(
             turno_actual.id_barberia, 
             turno_actual.id_barbero, 
             turno_actual.id_turno, 
             float(turno_actual.precio_final), 
             "ingreso", 
-            "Corte completado"
+            "Corte completado",
+            barbero_nombre, cliente_nombre, servicio_nombre
         )
     
     siguiente = obtener_siguiente_para_atender(id_barberia, id_barbero, forzar_cita)

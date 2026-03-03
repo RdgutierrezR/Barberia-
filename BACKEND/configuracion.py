@@ -1,5 +1,8 @@
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "barberia-secreto-2024")
@@ -10,3 +13,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "jwt-barberia-2024")
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)
+    
+    TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+    TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+    TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER", "whatsapp:+14155238886")

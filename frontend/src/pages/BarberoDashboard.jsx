@@ -49,18 +49,40 @@ function BarberoDashboard() {
 
   const guardarHorarioDia = async () => {
     try {
-      const fechaHoy = new Date().toISOString().split('T')[0];
-      await api.setHorarioDia(id_barberia, {
+      if (!horaInicio || !horaFin) {
+        alert('Por favor selecciona hora de inicio y fin');
+        return;
+      }
+      
+      const fechaHoy = new Date();
+      const año = fechaHoy.getFullYear();
+      const mes = String(fechaHoy.getMonth() + 1).padStart(2, '0');
+      const dia = String(fechaHoy.getDate()).padStart(2, '0');
+      const fechaISO = `${año}-${mes}-${dia}`;
+      
+      console.log('Guardando horario:', {
+        id_barberia: id_barberia,
         id_barbero: parseInt(id_barbero),
-        fecha: fechaHoy,
+        fecha: fechaISO,
         hora_inicio: horaInicio,
         hora_fin: horaFin
       });
+      
+      const result = await api.setHorarioDia(id_barberia, {
+        id_barbero: parseInt(id_barbero),
+        fecha: fechaISO,
+        hora_inicio: horaInicio,
+        hora_fin: horaFin
+      });
+      
+      console.log('Horario guardado:', result);
+      alert('Horario actualizado correctamente');
       setMostrarSelectorHorario(false);
       cargarHorarioDia();
       cargarCola();
     } catch (err) {
       console.error('Error al guardar horario:', err);
+      alert('Error al guardar horario: ' + err.message);
     }
   };
 
@@ -252,7 +274,7 @@ function BarberoDashboard() {
                 {turnosEnEspera.map((t, i) => (
                   <div key={t.id_turno} className={`cola-item ${t.tipo_reserva}`}>
                     <div className="cola-posicion">
-                      <span className="posicion-num">{t.hora_programada ? formatHora12h(t.hora_programada) : '-'}</span>
+                      <span className="posicion-num">#{t.posicion_en_cola}</span>
                     </div>
                     <div className="cola-info">
                       <div className="cola-nombre-row">
@@ -265,7 +287,10 @@ function BarberoDashboard() {
                       <div className="cola-telefono">📱 {t.cliente_telefono}</div>
                     </div>
                     <div className="cola-hora">
-                      <span className="hora-programada">#{t.posicion_en_cola}</span>
+                      {t.hora_programada && (
+                        <span className="hora-programada">{formatHora12h(t.hora_programada)}</span>
+                      )}
+                      <span className="tipo-reserva-label">{t.tipo_reserva === 'cola' ? 'En cola' : 'Cita'}</span>
                     </div>
                   </div>
                 ))}

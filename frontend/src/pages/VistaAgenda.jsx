@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { getFechaLocal, parsearFecha, formatearFechaHora } from '../utils/fecha';
 
 function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
   const [fechaSeleccionada, setFechaSeleccionada] = useState(() => {
-    const hoy = new Date();
-    return hoy.toISOString().split('T')[0];
+    return getFechaLocal();
   });
   const [turnosCitas, setTurnosCitas] = useState([]);
   const [bloqueos, setBloqueos] = useState([]);
@@ -32,8 +32,18 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
       ]);
       setTurnosCitas(turnosData);
       setBloqueos(bloqueosData.filter(b => {
-        const fechaInicio = new Date(b.fecha_inicio).toISOString().split('T')[0];
-        const fechaFin = new Date(b.fecha_fin).toISOString().split('T')[0];
+        const f = new Date(b.fecha_inicio);
+        const anio = f.getFullYear();
+        const mes = String(f.getMonth() + 1).padStart(2, '0');
+        const dia = String(f.getDate()).padStart(2, '0');
+        const fechaInicio = `${anio}-${mes}-${dia}`;
+        
+        const f2 = new Date(b.fecha_fin);
+        const anio2 = f2.getFullYear();
+        const mes2 = String(f2.getMonth() + 1).padStart(2, '0');
+        const dia2 = String(f2.getDate()).padStart(2, '0');
+        const fechaFin = `${anio2}-${mes2}-${dia2}`;
+        
         return fechaInicio <= fechaSeleccionada && fechaFin >= fechaSeleccionada;
       }));
     } catch (err) {
@@ -75,18 +85,29 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
   };
 
   const formatFecha = (fechaStr) => {
-    const fecha = new Date(fechaStr);
-    let hora = fecha.getHours();
-    const minuto = fecha.getMinutes().toString().padStart(2, '0');
-    const ampm = hora >= 12 ? 'PM' : 'AM';
-    hora = hora % 12;
-    hora = hora ? hora : 12;
-    return `${hora}:${minuto} ${ampm}`;
+    if (!fechaStr) return '';
+    const fechaHora = fechaStr.split(' ');
+    if (fechaHora.length !== 2) return fechaStr;
+    
+    const [fecha, horaStr] = fechaHora;
+    const [anio, mes, dia] = fecha.split('-').map(Number);
+    const [hora, minuto] = horaStr.split(':').map(Number);
+    
+    const fechaObj = new Date(anio, mes - 1, dia, hora, minuto);
+    let h = fechaObj.getHours();
+    const min = fechaObj.getMinutes().toString().padStart(2, '0');
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    h = h ? h : 12;
+    return `${h}:${min} ${ampm}`;
   };
 
   const getNombreDia = (fechaStr) => {
-    const fecha = new Date(fechaStr);
-    return diasSemana[fecha.getDay()];
+    if (!fechaStr) return '';
+    const fecha = fechaStr.split(' ')[0];
+    const [anio, mes, dia] = fecha.split('-').map(Number);
+    const fechaObj = new Date(anio, mes - 1, dia);
+    return diasSemana[fechaObj.getDay()];
   };
 
   const cambiarFecha = (dias) => {
@@ -99,7 +120,10 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
     if (fecha < hoy) return;
     if (fecha > maxFecha) return;
     
-    setFechaSeleccionada(fecha.toISOString().split('T')[0]);
+    const anio = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    setFechaSeleccionada(`${anio}-${mes}-${dia}`);
   };
 
   const generarDias = () => {
@@ -108,8 +132,11 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
     for (let i = 0; i < 15; i++) {
       const fecha = new Date(hoy);
       fecha.setDate(hoy.getDate() + i);
+      const anio = fecha.getFullYear();
+      const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+      const dia = String(fecha.getDate()).padStart(2, '0');
       dias.push({
-        fecha: fecha.toISOString().split('T')[0],
+        fecha: `${anio}-${mes}-${dia}`,
         nombre: diasSemana[fecha.getDay()].substring(0, 3),
         numero: fecha.getDate(),
         esHoy: i === 0
@@ -152,7 +179,11 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
       </div>
 
       <div className="fecha-actual">
-        {diasSemana[new Date(fechaSeleccionada).getDay()]}, {new Date(fechaSeleccionada).getDate()} de {meses[new Date(fechaSeleccionada).getMonth()]}
+        {(() => {
+          const [anio, mes, dia] = fechaSeleccionada.split('-').map(Number);
+          const fecha = new Date(anio, mes - 1, dia);
+          return `${diasSemana[fecha.getDay()]}, ${dia} de ${meses[fecha.getMonth()]}`;
+        })()}
       </div>
 
       {loading ? (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
+import { parsearFecha, formatearFechaHora } from '../utils/fecha';
 
 function TurnoConfirmado() {
   const { codigo } = useParams();
@@ -52,9 +53,9 @@ function TurnoConfirmado() {
   const esCita = turno.tipo_reserva === 'cita';
   const tieneHora = turno.cita_fecha_hora;
 
-  const formatFechaHora = (fechaStr) => {
-    if (!fechaStr) return '';
-    const fecha = new Date(fechaStr);
+  const formatFechaHoraDisplay = (fechaStr) => {
+    const fecha = parsearFecha(fechaStr);
+    if (!fecha) return '';
     const dia = fecha.getDate();
     const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
     const mes = meses[fecha.getMonth()];
@@ -83,7 +84,7 @@ function TurnoConfirmado() {
             <div className="cita-info-card">
               <div className="cita-fecha">
                 <span className="cita-label">Fecha y hora</span>
-                <span className="cita-valor">{tieneHora ? formatFechaHora(turno.cita_fecha_hora) : 'Por confirmar'}</span>
+                <span className="cita-valor">{tieneHora ? formatFechaHoraDisplay(turno.cita_fecha_hora) : 'Por confirmar'}</span>
               </div>
             </div>
           </>

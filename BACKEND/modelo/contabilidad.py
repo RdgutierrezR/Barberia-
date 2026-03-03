@@ -11,36 +11,26 @@ class Contabilidad(db.Model):
     monto = db.Column(db.Numeric(10, 2), nullable=False)
     tipo = db.Column(db.String(20), nullable=False)
     descripcion = db.Column(db.Text, nullable=True)
-    fecha = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha = db.Column(db.DateTime, default=lambda: datetime.now())
+    barbero_nombre = db.Column(db.String(100), nullable=True)
+    cliente_nombre = db.Column(db.String(100), nullable=True)
+    servicio_nombre = db.Column(db.String(100), nullable=True)
 
     barberia = db.relationship("Barberia", backref="contabilidad")
     barbero = db.relationship("Barbero", backref="contabilidad")
     turno = db.relationship("Turno", backref="contabilidad")
 
     def to_dict(self):
-        fecha_fin_servicio = None
-        fecha_cita_original = None
-        cliente_nombre = None
-        servicio_nombre = None
-        
-        if self.turno:
-            fecha_fin_servicio = self.turno.fecha_fin_servicio.isoformat() if self.turno.fecha_fin_servicio else None
-            fecha_cita_original = self.turno.fecha_cita_original.isoformat() if self.turno.fecha_cita_original else None
-            cliente_nombre = self.turno.cliente.nombre if self.turno.cliente else None
-            servicio_nombre = self.turno.servicio.nombre if self.turno.servicio else None
-        
         return {
             "id_registro": self.id_registro,
             "id_barberia": self.id_barberia,
             "id_barbero": self.id_barbero,
-            "barbero_nombre": self.barbero.nombre if self.barbero else None,
+            "barbero_nombre": self.barbero_nombre,
             "id_turno": self.id_turno,
-            "cliente_nombre": cliente_nombre,
-            "servicio_nombre": servicio_nombre,
+            "cliente_nombre": self.cliente_nombre,
+            "servicio_nombre": self.servicio_nombre,
             "monto": float(self.monto),
             "tipo": self.tipo,
             "descripcion": self.descripcion,
-            "fecha": self.fecha.isoformat() if self.fecha else None,
-            "fecha_fin_servicio": fecha_fin_servicio,
-            "fecha_cita_original": fecha_cita_original
+            "fecha": self.fecha.isoformat() if self.fecha else None
         }
