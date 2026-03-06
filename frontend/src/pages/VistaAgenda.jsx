@@ -10,6 +10,7 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
   const [bloqueos, setBloqueos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mostrarModalBloqueo, setMostrarModalBloqueo] = useState(false);
+  const [errorBloqueo, setErrorBloqueo] = useState('');
   const [nuevoBloqueo, setNuevoBloqueo] = useState({
     fecha_inicio: '',
     fecha_fin: '',
@@ -53,11 +54,27 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
   };
 
   const handleCrearBloqueo = async () => {
+    setErrorBloqueo('');
     if (!nuevoBloqueo.fecha_inicio || !nuevoBloqueo.fecha_fin) {
-      alert('Por favor selecciona fecha y hora de inicio y fin');
+      setErrorBloqueo('Por favor selecciona fecha y hora de inicio y fin');
       return;
     }
+    
+    const inicio = new Date(nuevoBloqueo.fecha_inicio);
+    const fin = new Date(nuevoBloqueo.fecha_fin);
+    
+    if (fin <= inicio) {
+      setErrorBloqueo('La hora de fin debe ser mayor a la hora de inicio');
+      return;
+    }
+    
     try {
+      console.log('Creando bloqueo:', { id_barberia, data: {
+        id_barbero: parseInt(id_barbero),
+        fecha_inicio: nuevoBloqueo.fecha_inicio,
+        fecha_fin: nuevoBloqueo.fecha_fin,
+        motivo: nuevoBloqueo.motivo || 'Bloqueo de agenda'
+      }});
       await api.crearBloqueo(id_barberia, {
         id_barbero: parseInt(id_barbero),
         fecha_inicio: nuevoBloqueo.fecha_inicio,
@@ -66,11 +83,41 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
       });
       setMostrarModalBloqueo(false);
       setNuevoBloqueo({ fecha_inicio: '', fecha_fin: '', motivo: '' });
+      setErrorBloqueo('');
       cargarDatos();
       alert('Bloqueo creado exitosamente');
     } catch (err) {
-      alert(err.message);
+      console.error('Error creando bloqueo:', err);
+      setErrorBloqueo(err.message);
     }
+  };
+
+  const agregarBloqueoRapido = (horas, motivo) => {
+    const ahora = new Date();
+    const inicio = new Date(fechaSeleccionada + 'T' + '09:00');
+    
+    const [anio, mes, dia] = fechaSeleccionada.split('-').map(Number);
+    const fecha = new Date(anio, mes - 1, dia);
+    fecha.setHours(12, 0, 0, 0);
+    
+    const fin = new Date(fecha.getTime() + horas * 60 * 60 * 1000);
+    
+    const formatDateTimeLocal = (date) => {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      const h = String(date.getHours()).padStart(2, '0');
+      const min = String(date.getMinutes()).padStart(2, '0');
+      return `${y}-${m}-${d}T${h}:${min}`;
+    };
+    
+    setNuevoBloqueo({
+      fecha_inicio: formatDateTimeLocal(fecha),
+      fecha_fin: formatDateTimeLocal(fin),
+      motivo: motivo
+    });
+    setMostrarModalBloqueo(true);
+    setErrorBloqueo('');
   };
 
   const handleEliminarBloqueo = async (idBloqueo) => {
@@ -86,16 +133,23 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
 
   const formatFecha = (fechaStr) => {
     if (!fechaStr) return '';
-    const fechaHora = fechaStr.split(' ');
-    if (fechaHora.length !== 2) return fechaStr;
-    
-    const [fecha, horaStr] = fechaHora;
-    const [anio, mes, dia] = fecha.split('-').map(Number);
-    const [hora, minuto] = horaStr.split(':').map(Number);
-    
-    const fechaObj = new Date(anio, mes - 1, dia, hora, minuto);
-    let h = fechaObj.getHours();
-    const min = fechaObj.getMinutes().toString().padStart(2, '0');
+    let fecha;
+    if (fechaStr.includes('T')) {
+      const [fechaPart, horaPart] = fechaStr.split('T');
+      const [anio, mes, dia] = fechaPart.split('-').map(Number);
+      const horaLimpia = horaPart.split('.')[0];
+      const [hora, minuto] = horaLimpia.split(':').map(Number);
+      fecha = new Date(anio, mes - 1, dia, hora, minuto);
+    } else {
+      const fechaHora = fechaStr.split(' ');
+      if (fechaHora.length !== 2) return fechaStr;
+      const [fechaStr2, horaStr] = fechaHora;
+      const [anio, mes, dia] = fechaStr2.split('-').map(Number);
+      const [hora, minuto] = horaStr.split(':').map(Number);
+      fecha = new Date(anio, mes - 1, dia, hora, minuto);
+    }
+    let h = fecha.getHours();
+    const min = fecha.getMinutes().toString().padStart(2, '0');
     const ampm = h >= 12 ? 'PM' : 'AM';
     h = h % 12;
     h = h ? h : 12;
@@ -152,12 +206,14 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
       <div className="header-barbero">
         <div className="header-barbero-top">
           <div className="header-barbero-info">
-            <h1>Agenda</h1>
+            <h1>Mi Agenda</h1>
             <p>{nombreBarbero}</p>
           </div>
-          <button className="btn-primary" onClick={() => setMostrarModalBloqueo(true)}>
-            + Bloquear
-          </button>
+          <div className="header-actions">
+            <button className="btn-bloquear" onClick={() => setMostrarModalBloqueo(true)}>
+              + Bloquear
+            </button>
+          </div>
         </div>
       </div>
 
@@ -182,26 +238,32 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
         {(() => {
           const [anio, mes, dia] = fechaSeleccionada.split('-').map(Number);
           const fecha = new Date(anio, mes - 1, dia);
-          return `${diasSemana[fecha.getDay()]}, ${dia} de ${meses[fecha.getMonth()]}`;
+          return <span>{diasSemana[fecha.getDay()]}, {dia} de {meses[fecha.getMonth()]}</span>;
         })()}
       </div>
 
       {loading ? (
         <div className="loading">Cargando...</div>
       ) : (
-        <>
-          <div className="turnos-citas">
-            <h3>Citas Programadas</h3>
+        <div className="agenda-secciones">
+          <div className="seccion-card seccion-citas">
+            <div className="seccion-header">
+              <h3>Citas Programadas</h3>
+              <span className="seccion-count">{turnosCitas.length}</span>
+            </div>
+            
             {turnosCitas.length === 0 ? (
-              <p className="no-hay">No hay citas para este día</p>
+              <p className="no-hay">No hay citas programadas para este día</p>
             ) : (
               turnosCitas.map((turno) => (
                 <div key={turno.id_turno} className="cita-card">
                   <div className="cita-hora">{formatFecha(turno.cita_fecha_hora)}</div>
                   <div className="cita-info">
-                    <div className="cita-cliente">{turno.cliente_nombre}</div>
+                    <div className="cita-cliente">
+                      {turno.cliente_nombre}
+                    </div>
                     <div className="cita-servicio">{turno.servicio_nombre}</div>
-                    <div className="cita-telefono">📱 {turno.cliente_telefono}</div>
+                    <div className="cita-telefono">{turno.cliente_telefono}</div>
                   </div>
                   {turno.estado !== 'completado' ? (
                     <button 
@@ -221,25 +283,29 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
                       + Cola
                     </button>
                   ) : (
-                    <span className="cita-completado">✓ Completado</span>
+                    <span className="cita-completado">✓</span>
                   )}
                 </div>
               ))
             )}
           </div>
 
-          <div className="bloqueos-dia">
-            <h3>Bloqueos</h3>
+          <div className="seccion-card seccion-bloqueos">
+            <div className="seccion-header">
+              <h3>Bloqueos / Rescesos</h3>
+              <span className="seccion-count">{bloqueos.length}</span>
+            </div>
+            
             {bloqueos.length === 0 ? (
-              <p className="no-hay">No hay bloqueos para este día</p>
+              <p className="no-hay">No hay bloqueos programados para este día</p>
             ) : (
               bloqueos.map((bloqueo) => (
                 <div key={bloqueo.id_bloqueo} className="bloqueo-card">
-                  <div className="bloqueo-hora">
-                    {formatFecha(bloqueo.fecha_inicio)} - {formatFecha(bloqueo.fecha_fin)}
-                  </div>
                   <div className="bloqueo-info">
-                    <div className="bloqueo-motivo">{bloqueo.motivo || 'Bloqueo'}</div>
+                    <div className="bloqueo-motivo">{bloqueo.motivo || 'Bloqueo de agenda'}</div>
+                    <div className="bloqueo-rango">
+                      {formatFecha(bloqueo.fecha_inicio)} a {formatFecha(bloqueo.fecha_fin)}
+                    </div>
                   </div>
                   <button 
                     className="btn-eliminar-bloqueo"
@@ -251,19 +317,44 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
               ))
             )}
           </div>
-        </>
+        </div>
       )}
 
       {mostrarModalBloqueo && (
-        <div className="modal-overlay" onClick={() => setMostrarModalBloqueo(false)}>
+        <div className="modal-overlay" onClick={() => { setMostrarModalBloqueo(false); setErrorBloqueo(''); }}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2>Crear Bloqueo</h2>
+            
+            <div className="bloqueo-rapido">
+              <p className="bloqueo-rapido-label">Bloqueo rápido:</p>
+              <div className="bloqueo-rapido-botones">
+                <button 
+                  className="btn-bloqueo-rapido"
+                  onClick={() => agregarBloqueoRapido(1, 'Hora de receso')}
+                >
+                  1 hora
+                </button>
+                <button 
+                  className="btn-bloqueo-rapido"
+                  onClick={() => agregarBloqueoRapido(2, 'Hora de receso')}
+                >
+                  2 horas
+                </button>
+                <button 
+                  className="btn-bloqueo-rapido"
+                  onClick={() => agregarBloqueoRapido(9, 'Día completo')}
+                >
+                  Día completo
+                </button>
+              </div>
+            </div>
+            
             <div className="form-group">
               <label>Fecha y hora de inicio</label>
               <input
                 type="datetime-local"
                 value={nuevoBloqueo.fecha_inicio}
-                onChange={(e) => setNuevoBloqueo({...nuevoBloqueo, fecha_inicio: e.target.value})}
+                onChange={(e) => { setNuevoBloqueo({...nuevoBloqueo, fecha_inicio: e.target.value}); setErrorBloqueo(''); }}
               />
             </div>
             <div className="form-group">
@@ -271,8 +362,7 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
               <input
                 type="datetime-local"
                 value={nuevoBloqueo.fecha_fin}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => setNuevoBloqueo({...nuevoBloqueo, fecha_fin: e.target.value})}
+                onChange={(e) => { setNuevoBloqueo({...nuevoBloqueo, fecha_fin: e.target.value}); setErrorBloqueo(''); }}
               />
             </div>
             <div className="form-group">
@@ -284,8 +374,13 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
                 onChange={(e) => setNuevoBloqueo({...nuevoBloqueo, motivo: e.target.value})}
               />
             </div>
+            
+            {errorBloqueo && (
+              <div className="error-message">{errorBloqueo}</div>
+            )}
+            
             <div className="modal-actions">
-              <button className="btn-secondary" onClick={() => setMostrarModalBloqueo(false)}>
+              <button className="btn-secondary" onClick={() => { setMostrarModalBloqueo(false); setErrorBloqueo(''); }}>
                 Cancelar
               </button>
               <button className="btn-primary" onClick={handleCrearBloqueo}>

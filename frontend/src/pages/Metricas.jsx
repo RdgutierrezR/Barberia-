@@ -48,11 +48,14 @@ function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
   };
 
   const formatMinutos = (minutos) => {
-    if (!minutos || minutos === 0) return '0m';
-    const horas = Math.floor(minutos / 60);
-    const mins = minutos % 60;
+    if (!minutos && minutos !== 0) return '-';
+    const num = parseInt(minutos);
+    if (isNaN(num)) return '-';
+    if (num === 0) return '0m';
+    const horas = Math.floor(num / 60);
+    const mins = num % 60;
     if (horas > 0) {
-      return `${horas}h ${mins}m`;
+      return mins > 0 ? `${horas}h ${mins}m` : `${horas}h`;
     }
     return `${mins}m`;
   };
@@ -123,7 +126,7 @@ function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
             </div>
             <div className="metrica-card">
               <span className="metrica-icon">⏱️</span>
-              <span className="metrica-value">{metricas.tiempo_promedio}m</span>
+              <span className="metrica-value">{formatMinutos(metricas.tiempo_promedio)}</span>
               <span className="metrica-label">Promedio</span>
             </div>
           </div>
@@ -173,7 +176,7 @@ function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
                   <div key={idx} className="servicio-chip">
                     <span className="servicio-nombre">{servicio.servicio}</span>
                     <span className="servicio-cantidad">{servicio.cantidad}</span>
-                    <span className="servicio-duracion">{servicio.duracion_promedio}m</span>
+                    <span className="servicio-duracion">{formatMinutos(servicio.duracion_promedio)}</span>
                   </div>
                 ))}
               </div>
@@ -192,12 +195,12 @@ function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
                         className="bar-fill"
                         style={{ 
                           width: `${Math.min(dia.ocupacion_porcentaje, 100)}%`,
-                          backgroundColor: getColorOcupacion(dia.ocupacion_porcentaje)
+                          backgroundColor: getColorOcupacion(Math.min(dia.ocupacion_porcentaje, 100))
                         }}
                       ></div>
                     </div>
-                    <span className="bar-pct" style={{ color: getColorOcupacion(dia.ocupacion_porcentaje) }}>
-                      {dia.ocupacion_porcentaje}%
+                    <span className="bar-pct" style={{ color: getColorOcupacion(Math.min(dia.ocupacion_porcentaje, 100)) }}>
+                      {Math.min(dia.ocupacion_porcentaje, 100)}%
                     </span>
                   </div>
                 ))}

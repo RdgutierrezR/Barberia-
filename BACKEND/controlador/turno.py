@@ -57,8 +57,9 @@ def obtener_turno(id_turno):
 def obtener_turno_por_codigo(codigo, id_barberia):
     return Turno.query.filter_by(codigo_confirmacion=codigo, id_barberia=id_barberia).first()
 
-def obtener_posicion_cola(id_barbero):
+def obtener_posicion_cola(id_barberia, id_barbero):
     turnos_en_cola = Turno.query.filter(
+        Turno.id_barberia == id_barberia,
         Turno.id_barbero == id_barbero,
         Turno.estado.in_(["pendiente", "confirmado"])
     ).order_by(Turno.fecha_creacion).all()
@@ -68,9 +69,11 @@ def obtener_posicion_cola(id_barbero):
             return i + 1
     return len(turnos_en_cola) + 1
 
-def obtener_posicion_turno(id_barbero, id_turno_actual):
+def obtener_posicion_turno(id_barberia, id_barbero, id_turno_actual):
     turnos_en_cola = Turno.query.filter(
+        Turno.id_barberia == id_barberia,
         Turno.id_barbero == id_barbero,
+        Turno.tipo_reserva == "cola",
         Turno.estado.in_(["pendiente", "confirmado", "en_proceso"])
     ).order_by(Turno.fecha_creacion).all()
     
@@ -417,8 +420,6 @@ def crear_turno_cita(id_barberia, id_barbero, id_servicio, cita_fecha_hora, nomb
     
     try:
         from controlador.notificacion import notificar_nuevo_turno_barbero
-        import logging
-        logger = logging.getLogger(__name__)
         
         barbero = Barbero.query.get(id_barbero)
         
@@ -547,10 +548,20 @@ def agregar_cita_a_cola(id_turno):
     return {"mensaje": "Cita agregada a cola", "turno": turno}, None
 
 def crear_bloqueo(id_barberia, id_barbero, fecha_inicio, fecha_fin, motivo=None):
-    inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d %H:%M")
-    fin_dt = datetime.strptime(fecha_fin, "%Y-%m-%d %H:%M")
+    def parse_fecha(fecha_str):
+        try:
+            return datetime.strptime(fecha_str, "%Y-%m-%d %H:%M")
+        except ValueError:
+            return datetime.strptime(fecha_str.replace("T", " "), "%Y-%m-%d %H:%M")
+    
+    inicio_dt = parse_fecha(fecha_inicio)
+    fin_dt = parse_fecha(fecha_fin)
+    
+    if fin_dt <= inicio_dt:
+        return None, "La hora de fin debe ser mayor a la hora de inicio"
     
     bloqueos_existentes = BloqueoAgenda.query.filter(
+        BloqueoAgenda.id_barberia == id_barberia,
         BloqueoAgenda.id_barbero == id_barbero,
         BloqueoAgenda.activo == True,
         db.or_(
@@ -562,6 +573,23 @@ def crear_bloqueo(id_barberia, id_barbero, fecha_inicio, fecha_fin, motivo=None)
     
     if bloqueos_existentes:
         return None, "Ya existe un bloqueo en ese horario"
+    
+    citas_conflicto = Turno.query.filter(
+        Turno.id_barberia == id_barberia,
+        Turno.id_barbero == id_barbero,
+        Turno.estado.in_(["pendiente", "confirmado"]),
+        db.or_(
+            db.and_(Turno.fecha_hora >= inicio_dt, Turno.fecha_hora < fin_dt),
+            db.and_(Turno.cita_fecha_hora >= inicio_dt, Turno.cita_fecha_hora < fin_dt)
+        )
+    ).all()
+    
+    if citas_conflicto:
+        nombres = [c.servicio.nombre if c.servicio else "cita" for c in citas_conflicto[:3]]
+        msj = f"Hay {len(citas_conflicto)} cita(s) programada(s) en ese horario: {', '.join(nombres)}"
+        if len(citas_conflicto) > 3:
+            msj += f" y {len(citas_conflicto) - 3} más"
+        return None, msj
     
     bloqueo = BloqueoAgenda(
         id_barberia=id_barberia,

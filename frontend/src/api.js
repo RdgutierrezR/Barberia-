@@ -239,7 +239,12 @@ export const api = {
       headers: headers(),
       body: JSON.stringify(data)
     });
-    const result = await res.json();
+    let result;
+    try {
+      result = await res.json();
+    } catch (e) {
+      throw new Error(`Error ${res.status}: ${res.statusText}`);
+    }
     if (!res.ok) throw new Error(result.error || `Error: ${res.status}`);
     return result;
   },

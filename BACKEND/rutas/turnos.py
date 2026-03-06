@@ -31,7 +31,7 @@ def obtener_por_codigo(id_barberia, codigo):
     t = ctrl.obtener_turno_por_codigo(codigo, id_barberia)
     if t:
         result = t.to_dict()
-        posicion = ctrl.obtener_posicion_turno(t.id_barbero, t.id_turno)
+        posicion = ctrl.obtener_posicion_turno(id_barberia, t.id_barbero, t.id_turno)
         result["posicion"] = posicion["posicion"]
         result["turnos_adelante"] = posicion["turnos_adelante"]
         return jsonify(result)

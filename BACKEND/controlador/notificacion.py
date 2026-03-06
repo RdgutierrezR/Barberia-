@@ -1,14 +1,9 @@
 from twilio.rest import Client
 from configuracion import Config
-import logging
-
-logger = logging.getLogger(__name__)
 
 def get_twilio_client():
     if not Config.TWILIO_ACCOUNT_SID or not Config.TWILIO_AUTH_TOKEN:
-        logger.warning("Twilio credentials not configured")
         return None
-    logger.info(f"Twilio configured - SID: {Config.TWILIO_ACCOUNT_SID[:10]}..., Phone: {Config.TWILIO_WHATSAPP_NUMBER}")
     return Client(Config.TWILIO_ACCOUNT_SID, Config.TWILIO_AUTH_TOKEN)
 
 def formatear_telefono(telefono):
@@ -28,31 +23,26 @@ def formatear_telefono(telefono):
 
 def enviar_whatsapp(to_number, mensaje):
     if not to_number:
-        logger.error("No se puede enviar WhatsApp: número vacío")
         return False
     
     client = get_twilio_client()
     if not client:
-        logger.warning("Twilio not configured, skipping WhatsApp notification")
         return False
     
     try:
         telefono = formatear_telefono(to_number)
-        logger.info(f"Enviando WhatsApp al número: {telefono}")
-        logger.info(f"Mensaje: {mensaje}")
         message = client.messages.create(
             body=mensaje,
             from_=Config.TWILIO_WHATSAPP_NUMBER,
             to=f"whatsapp:{telefono}"
         )
-        logger.info(f"WhatsApp sent to {telefono}: {message.sid}")
         return True
-    except Exception as e:
-        logger.error(f"Error sending WhatsApp: {str(e)}")
+    except Exception:
         return False
 
 def notificar_nuevo_turno_barbero(barbero, nombre_cliente, nombre_servicio, precio, fecha_hora, telefono_cliente):
-    logger.info(f"Notificando al barbero: {barbero.nombre}, telefono: {barbero.telefono}")
+    if not barbero.telefono:
+        return False
     
     mensaje = f"""🔔 Nuevo Turno Asignado!
 
