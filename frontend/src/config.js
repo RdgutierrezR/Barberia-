@@ -1,6 +1,11 @@
-// Configuración automática para desarrollo local y red
+// Configuración automática para desarrollo local y producción
 
 const getApiUrl = () => {
+  // Producción: usar variable de entorno o URL de Render
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
   const hostname = window.location.hostname;
   
   // Si es localhost o 127.0.0.1, usar localhost:5000

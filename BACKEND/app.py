@@ -1,8 +1,9 @@
-from flask import Flask
+from flask import Flask, request
 from configuracion import Config
 from database import db
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+import os
 
 from modelo.bloqueo_agenda import BloqueoAgenda
 from modelo.horario_dia import HorarioDia
@@ -50,5 +51,6 @@ def create_app():
     return app
 
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
     app = create_app()
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=False, host="0.0.0.0", port=port)
