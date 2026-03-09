@@ -3,6 +3,11 @@
 const getApiUrl = () => {
   const hostname = window.location.hostname;
   
+  // Si es Render o Vercel (producción), usar la API en la nube
+  if (hostname.includes('onrender.com') || hostname.includes('vercel.app')) {
+    return 'https://barberia-h4vd.onrender.com/api';
+  }
+  
   // Si es localhost o 127.0.0.1, usar localhost:5000
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return 'http://localhost:5000/api';
