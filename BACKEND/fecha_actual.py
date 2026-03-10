@@ -1,10 +1,7 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 def ahora():
-    utc_now = datetime.now(timezone.utc)
-    bogota_offset = timedelta(hours=-5)
-    bogota_tz = timezone(bogota_offset)
-    return utc_now.astimezone(bogota_tz)
+    return datetime.now()
 
 def fecha_hoy():
-    return ahora().date()
+    return datetime.now().date()
