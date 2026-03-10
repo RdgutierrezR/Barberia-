@@ -3,6 +3,7 @@ from modelo.invitacion import Invitacion
 from modelo.barberia import Barberia
 from modelo.barbero import Barbero
 from werkzeug.security import generate_password_hash
+from fecha_actual import ahora
 import uuid
 
 def crear_invitacion(tipo="crear_barberia", creador_id=None):
@@ -11,12 +12,12 @@ def crear_invitacion(tipo="crear_barberia", creador_id=None):
     while Invitacion.query.filter_by(codigo=codigo).first():
         codigo = str(uuid.uuid4()).replace("-", "").upper()[:12]
     
-    from datetime import datetime, timedelta
+    from datetime import timedelta
     invitacion = Invitacion(
         codigo=codigo,
         tipo=tipo,
         creador_id=creador_id,
-        fecha_expiracion=datetime.utcnow() + timedelta(days=30)
+        fecha_expiracion=ahora() + timedelta(days=30)
     )
     
     db.session.add(invitacion)

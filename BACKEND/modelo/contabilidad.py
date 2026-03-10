@@ -1,5 +1,8 @@
 from database import db
-from datetime import datetime
+
+def _ahora():
+    from fecha_actual import ahora as _ahora_fn
+    return _ahora_fn()
 
 class Contabilidad(db.Model):
     __tablename__ = "contabilidad"
@@ -11,7 +14,7 @@ class Contabilidad(db.Model):
     monto = db.Column(db.Numeric(10, 2), nullable=False)
     tipo = db.Column(db.String(20), nullable=False)
     descripcion = db.Column(db.Text, nullable=True)
-    fecha = db.Column(db.DateTime, default=lambda: datetime.now())
+    fecha = db.Column(db.DateTime, default=_ahora)
     barbero_nombre = db.Column(db.String(100), nullable=True)
     cliente_nombre = db.Column(db.String(100), nullable=True)
     servicio_nombre = db.Column(db.String(100), nullable=True)

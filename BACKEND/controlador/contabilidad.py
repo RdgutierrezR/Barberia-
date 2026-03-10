@@ -1,7 +1,8 @@
 from database import db
 from modelo.contabilidad import Contabilidad
 from sqlalchemy import func
-from datetime import datetime, timedelta
+from datetime import timedelta
+from fecha_actual import ahora
 
 def listar_contabilidad(id_barberia, id_barbero=None, fecha_inicio=None, fecha_fin=None):
     query = Contabilidad.query.filter_by(id_barberia=id_barberia)
@@ -22,7 +23,7 @@ def obtener_contabilidad_barbero(id_barberia, id_barbero, fecha_inicio=None, fec
     return query.all()
 
 def obtener_resumen_barbero(id_barberia, id_barbero, periodo="mensual", fecha_inicio=None, fecha_fin=None):
-    ahora = datetime.now()
+    ahora = ahora()
     
     if fecha_inicio and fecha_fin:
         fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
@@ -70,7 +71,7 @@ def obtener_resumen_barbero(id_barberia, id_barbero, periodo="mensual", fecha_in
     return resumen
 
 def obtener_resumen_barberia(id_barberia, periodo="mensual"):
-    ahora = datetime.now()
+    ahora = ahora()
     if periodo == "diario":
         fecha_inicio = ahora.replace(hour=0, minute=0, second=0, microsecond=0)
     elif periodo == "semanal":
@@ -100,7 +101,7 @@ def obtener_metricas_barbero(id_barberia, id_barbero, fecha_inicio=None, fecha_f
     from modelo.turno import Turno
     from modelo.servicio import Servicio
     
-    ahora = datetime.now()
+    ahora = ahora()
     
     if fecha_inicio and fecha_fin:
         fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
@@ -221,7 +222,7 @@ def obtener_metricas_servicio(id_barberia, id_servicio=None):
 def obtener_metricas_barberia(id_barberia, fecha_inicio=None, fecha_fin=None):
     from modelo.turno import Turno
     
-    ahora = datetime.now()
+    ahora = ahora()
     
     if fecha_inicio and fecha_fin:
         fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
@@ -269,7 +270,7 @@ def obtener_metricas_operacionales(id_barberia, id_barbero, fecha_inicio=None, f
     from datetime import date, timedelta
     from database import db
     
-    ahora = datetime.now()
+    ahora = ahora()
     hoy = ahora.date()
     
     if fecha_inicio and fecha_fin:

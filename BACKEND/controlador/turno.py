@@ -6,6 +6,7 @@ from modelo.bloqueo_agenda import BloqueoAgenda
 from modelo.horario import Horario
 from modelo.barbero import Barbero
 from datetime import datetime, timedelta, time, date
+from fecha_actual import ahora as ahora_fn
 import random
 import string
 import logging
@@ -140,7 +141,7 @@ def crear_turno_cola(id_barberia, id_barbero, id_servicio, nombre_cliente, telef
     ).all()
     
     duracion_promedio = servicio.duracion_minutos
-    ahora = datetime.now()
+    ahora = ahora_fn()
     fecha_hora_turno = ahora.replace(second=0, microsecond=0)
     
     codigo = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
@@ -176,7 +177,7 @@ def iniciar_turno(id_turno):
     turno = Turno.query.get(id_turno)
     if turno:
         turno.estado = "en_proceso"
-        turno.fecha_inicio_servicio = datetime.now()
+        turno.fecha_inicio_servicio = ahora_fn()
         db.session.commit()
     return turno
 
@@ -184,7 +185,7 @@ def completar_turno(id_turno, precio_final=None):
     turno = Turno.query.get(id_turno)
     if turno:
         turno.estado = "completado"
-        turno.fecha_fin_servicio = datetime.now()
+        turno.fecha_fin_servicio = ahora_fn()
         
         if turno.fecha_inicio_servicio:
             duracion = turno.fecha_fin_servicio - turno.fecha_inicio_servicio
@@ -540,7 +541,7 @@ def agregar_cita_a_cola(id_turno):
     if turno.tipo_reserva != "cita":
         return None, "Solo se pueden agregar citas a la cola"
     
-    ahora = datetime.now()
+    ahora = ahora_fn()
     
     turno.tipo_reserva = "cola"
     turno.fecha_hora = ahora
@@ -640,7 +641,7 @@ def obtener_cola_diaria(id_barberia, id_barbero):
     from datetime import time
     
     hoy = date.today()
-    ahora = datetime.now()
+    ahora = ahora_fn()
     
     horario_dia = HorarioDia.query.filter_by(
         id_barberia=id_barberia,
@@ -705,7 +706,7 @@ def obtener_cola_diaria(id_barberia, id_barbero):
 
 def obtener_siguiente_para_atender(id_barberia, id_barbero, forzar_cita=False):
     hoy = date.today()
-    ahora = datetime.now()
+    ahora = ahora_fn()
     
     cola = obtener_cola_diaria(id_barberia, id_barbero)
     
@@ -744,7 +745,7 @@ def pasar_siguiente(id_barberia, id_barbero, forzar_cita=False):
             return pasar_siguiente(id_barberia, id_barbero, forzar_cita)
         
         turno_actual.estado = "completado"
-        turno_actual.fecha_fin_servicio = datetime.now()
+        turno_actual.fecha_fin_servicio = ahora_fn()
         
         if turno_actual.fecha_inicio_servicio:
             duracion = turno_actual.fecha_fin_servicio - turno_actual.fecha_inicio_servicio
@@ -789,7 +790,7 @@ def pasar_siguiente(id_barberia, id_barbero, forzar_cita=False):
         turno = Turno.query.get(siguiente["id_turno"])
         if turno:
             turno.estado = "en_proceso"
-            turno.fecha_inicio_servicio = datetime.now()
+            turno.fecha_inicio_servicio = ahora_fn()
             db.session.commit()
             return {
                 "id_turno": turno.id_turno,
@@ -825,7 +826,7 @@ def reordenar_turno(id_turno, nueva_posicion):
     turnos_lista.insert(nueva_posicion - 1, turno)
     
     for i, t in enumerate(turnos_lista):
-        t.fecha_creacion = datetime.utcnow() + timedelta(minutes=i)
+        t.fecha_creacion = ahora_fn() + timedelta(minutes=i)
     
     db.session.commit()
     return {"mensaje": "Turno reordenado", "nueva_posicion": nueva_posicion}

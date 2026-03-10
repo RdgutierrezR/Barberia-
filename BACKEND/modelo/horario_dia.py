@@ -1,5 +1,9 @@
 from database import db
-from datetime import datetime, date
+from datetime import date
+
+def _ahora():
+    from fecha_actual import ahora as _ahora_fn
+    return _ahora_fn()
 
 class HorarioDia(db.Model):
     __tablename__ = "horarios_dia"
@@ -11,7 +15,7 @@ class HorarioDia(db.Model):
     hora_inicio = db.Column(db.Time, nullable=False)
     hora_fin = db.Column(db.Time, nullable=False)
     activo = db.Column(db.Boolean, default=True)
-    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_creacion = db.Column(db.DateTime, default=_ahora)
 
     barberia = db.relationship("Barberia", backref="horarios_dia")
     barbero = db.relationship("Barbero", backref="horarios_dia")

@@ -2,8 +2,9 @@ from flask import Blueprint, request, jsonify
 from database import db
 from modelo.invitacion import Invitacion
 from modelo.barbero import Barbero
+from fecha_actual import ahora
 import uuid
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 invitaciones_bp = Blueprint("invitaciones", __name__, url_prefix="/api/invitaciones")
 
@@ -25,7 +26,7 @@ def generar_invitacion():
         codigo=codigo,
         tipo=tipo,
         creador_id=creador_id,
-        fecha_expiracion=datetime.utcnow() + timedelta(days=30)
+        fecha_expiracion=ahora() + timedelta(days=30)
     )
     
     db.session.add(invitacion)

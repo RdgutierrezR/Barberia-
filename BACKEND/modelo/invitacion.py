@@ -1,5 +1,8 @@
 from database import db
-from datetime import datetime, timedelta
+
+def _ahora():
+    from fecha_actual import ahora as _ahora_fn
+    return _ahora_fn()
 
 class Invitacion(db.Model):
     __tablename__ = "invitaciones"
@@ -27,6 +30,6 @@ class Invitacion(db.Model):
     def esta_activa(self):
         if self.usada:
             return False
-        if self.fecha_expiracion and self.fecha_expiracion < datetime.utcnow():
+        if self.fecha_expiracion and self.fecha_expiracion < _ahora():
             return False
         return True

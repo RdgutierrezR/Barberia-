@@ -1,5 +1,8 @@
 from database import db
-from datetime import datetime
+
+def _ahora():
+    from fecha_actual import ahora as _ahora_fn
+    return _ahora_fn()
 
 class Turno(db.Model):
     __tablename__ = "turnos"
@@ -20,7 +23,7 @@ class Turno(db.Model):
     codigo_confirmacion = db.Column(db.String(10), unique=True, nullable=True)
     notas = db.Column(db.Text, nullable=True)
     precio_final = db.Column(db.Numeric(10, 2), nullable=True)
-    fecha_creacion = db.Column(db.DateTime, default=lambda: datetime.now())
+    fecha_creacion = db.Column(db.DateTime, default=_ahora)
 
     barberia = db.relationship("Barberia", backref="turnos")
     barbero = db.relationship("Barbero", backref="turnos")
