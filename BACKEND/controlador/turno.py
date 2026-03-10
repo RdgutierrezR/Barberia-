@@ -8,6 +8,9 @@ from modelo.barbero import Barbero
 from datetime import datetime, timedelta, time, date
 import random
 import string
+import logging
+
+logger = logging.getLogger(__name__)
 
 def listar_turnos(id_barberia, fecha=None, id_barbero=None, estado=None):
     query = Turno.query.filter_by(id_barberia=id_barberia)
@@ -112,6 +115,8 @@ def crear_turno_cola(id_barberia, id_barbero, id_servicio, nombre_cliente, telef
     if servicio.id_barberia != id_barberia:
         return None, "El servicio no pertenece a esta barbería"
     
+    logger.info(f"Creando turno cola: servicio={servicio.nombre}, precio={servicio.precio}")
+    
     cliente = Cliente.query.filter_by(telefono=telefono, id_barberia=id_barberia).first()
     if not cliente:
         codigo_qr = str(uuid.uuid4())[:8].upper()
@@ -154,6 +159,8 @@ def crear_turno_cola(id_barberia, id_barbero, id_servicio, nombre_cliente, telef
     db.session.add(nuevo)
     db.session.commit()
     
+    logger.info(f"Turno creado exitosamente: id={nuevo.id_turno}, precio_final={nuevo.precio_final}")
+    
     posicion = len(turnos_activos) + 1
     
     return {"turno": nuevo, "posicion": posicion}, None
@@ -183,16 +190,24 @@ def completar_turno(id_turno, precio_final=None):
             duracion = turno.fecha_fin_servicio - turno.fecha_inicio_servicio
             turno.duracion_minutos = int(duracion.total_seconds() / 60)
         
-        barbero_nombre = turno.barbero.nombre if turno.barbero else None
-        cliente_nombre = turno.cliente.nombre if turno.cliente else None
-        servicio_nombre = turno.servicio.nombre if turno.servicio else None
+        barbero_nombre = turno.barbero.nombre if turno.barbero else "Sin nombre"
+        cliente_nombre = turno.cliente.nombre if turno.cliente else "Sin nombre"
+        servicio_nombre = turno.servicio.nombre if turno.servicio else "Sin servicio"
         
-        monto = precio_final if precio_final else float(turno.precio_final)
-        registrar_contabilidad(
-            turno.id_barberia, turno.id_barbero, turno.id_turno,
-            monto, "ingreso", "Corte completado",
-            barbero_nombre, cliente_nombre, servicio_nombre
-        )
+        # Calcular monto de forma robusta
+        monto = precio_final if precio_final else float(turno.precio_final) if turno.precio_final else 0
+        if monto == 0 and turno.servicio and turno.servicio.precio:
+            monto = float(turno.servicio.precio)
+        
+        logger.info(f"Completando turno (completar_turno) {turno.id_turno}: monto={monto}, servicio={servicio_nombre}")
+            
+        if monto > 0:
+            registrar_contabilidad(
+                turno.id_barberia, turno.id_barbero, turno.id_turno,
+                monto, "ingreso", f"Corte completado - {servicio_nombre}",
+                barbero_nombre, cliente_nombre, servicio_nombre
+            )
+            logger.info(f"Contabilidad registrada: monto={monto}")
         db.session.commit()
     return turno
 
@@ -728,19 +743,33 @@ def pasar_siguiente(id_barberia, id_barbero, forzar_cita=False):
             duracion = turno_actual.fecha_fin_servicio - turno_actual.fecha_inicio_servicio
             turno_actual.duracion_minutos = int(duracion.total_seconds() / 60)
         
-        barbero_nombre = turno_actual.barbero.nombre if turno_actual.barbero else None
-        cliente_nombre = turno_actual.cliente.nombre if turno_actual.cliente else None
-        servicio_nombre = turno_actual.servicio.nombre if turno_actual.servicio else None
+        # Obtener nombres de forma segura
+        barbero_nombre = turno_actual.barbero.nombre if turno_actual.barbero else "Sin nombre"
+        cliente_nombre = turno_actual.cliente.nombre if turno_actual.cliente else "Sin nombre"
+        servicio_nombre = turno_actual.servicio.nombre if turno_actual.servicio else "Sin servicio"
         
-        registrar_contabilidad(
-            turno_actual.id_barberia, 
-            turno_actual.id_barbero, 
-            turno_actual.id_turno, 
-            float(turno_actual.precio_final), 
-            "ingreso", 
-            "Corte completado",
-            barbero_nombre, cliente_nombre, servicio_nombre
-        )
+        # Calcular monto de forma robusta: priorizar precio_final, luego precio del servicio
+        monto = 0
+        if turno_actual.precio_final:
+            monto = float(turno_actual.precio_final)
+        elif turno_actual.servicio and turno_actual.servicio.precio:
+            monto = float(turno_actual.servicio.precio)
+        
+        logger.info(f"Completando turno {turno_actual.id_turno}: precio_final={turno_actual.precio_final}, precio_servicio={turno_actual.servicio.precio if turno_actual.servicio else None}, monto={monto}")
+        
+        if monto > 0:
+            registrar_contabilidad(
+                turno_actual.id_barberia, 
+                turno_actual.id_barbero, 
+                turno_actual.id_turno, 
+                monto, 
+                "ingreso", 
+                f"Corte completado - {servicio_nombre}",
+                barbero_nombre, cliente_nombre, servicio_nombre
+            )
+            logger.info(f"Contabilidad registrada: monto={monto}, barbero={barbero_nombre}, cliente={cliente_nombre}, servicio={servicio_nombre}")
+        else:
+            logger.warning(f"Turno {turno_actual.id_turno} sin precio, no se registró en contabilidad")
     
     siguiente = obtener_siguiente_para_atender(id_barberia, id_barbero, forzar_cita)
     
