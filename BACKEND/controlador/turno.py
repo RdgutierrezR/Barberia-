@@ -736,6 +736,13 @@ def pasar_siguiente(id_barberia, id_barbero, forzar_cita=False):
     ).first()
     
     if turno_actual:
+        # Cargar relaciones explícitamente
+        if not turno_actual.servicio:
+            logger.error(f"Turno {turno_actual.id_turno} no tiene servicio asociado")
+            turno_actual.estado = "completado"
+            db.session.commit()
+            return pasar_siguiente(id_barberia, id_barbero, forzar_cita)
+        
         turno_actual.estado = "completado"
         turno_actual.fecha_fin_servicio = datetime.now()
         
@@ -757,19 +764,24 @@ def pasar_siguiente(id_barberia, id_barbero, forzar_cita=False):
         
         logger.info(f"Completando turno {turno_actual.id_turno}: precio_final={turno_actual.precio_final}, precio_servicio={turno_actual.servicio.precio if turno_actual.servicio else None}, monto={monto}")
         
-        if monto > 0:
-            registrar_contabilidad(
-                turno_actual.id_barberia, 
-                turno_actual.id_barbero, 
-                turno_actual.id_turno, 
-                monto, 
-                "ingreso", 
-                f"Corte completado - {servicio_nombre}",
-                barbero_nombre, cliente_nombre, servicio_nombre
-            )
-            logger.info(f"Contabilidad registrada: monto={monto}, barbero={barbero_nombre}, cliente={cliente_nombre}, servicio={servicio_nombre}")
-        else:
-            logger.warning(f"Turno {turno_actual.id_turno} sin precio, no se registró en contabilidad")
+        try:
+            if monto > 0:
+                registrar_contabilidad(
+                    turno_actual.id_barberia, 
+                    turno_actual.id_barbero, 
+                    turno_actual.id_turno, 
+                    monto, 
+                    "ingreso", 
+                    f"Corte completado - {servicio_nombre}",
+                    barbero_nombre, cliente_nombre, servicio_nombre
+                )
+                logger.info(f"Contabilidad registrada: monto={monto}, barbero={barbero_nombre}, cliente={cliente_nombre}, servicio={servicio_nombre}")
+            else:
+                logger.warning(f"Turno {turno_actual.id_turno} sin precio, no se registró en contabilidad")
+        except Exception as e:
+            logger.error(f"ERROR al registrar contabilidad: {str(e)}")
+        
+        db.session.commit()
     
     siguiente = obtener_siguiente_para_atender(id_barberia, id_barbero, forzar_cita)
     
