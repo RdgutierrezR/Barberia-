@@ -157,11 +157,14 @@ Sistema de gestión de turnos (cola y citas).
 | `id_cliente` | INTEGER (FK) | Cliente (nullable) |
 | `id_servicio` | INTEGER (FK) | Servicio solicitado |
 | `fecha_hora` | DATETIME | Fecha/hora del turno |
+| `hora_programada` | VARCHAR(5) | Hora fija asignada (HH:MM) - solo para turnos en cola |
 | `tipo_reserva` | VARCHAR(20) | "cola" o "cita" |
 | `cita_fecha_hora` | DATETIME | Fecha específica para citas |
 | `fecha_cita_original` | DATETIME | Fecha original (para contabilidad) |
-| `fecha_fin_servicio` | DATETIME | Cuando se completó el servicio |
-| `estado` | VARCHAR(20) | Estado: pendiente, en_servicio, completado, cancelado |
+| `fecha_inicio_servicio` | DATETIME | Cuándo inició el servicio |
+| `fecha_fin_servicio` | DATETIME | Cuándo se completó el servicio |
+| `duracion_minutos` | INTEGER | Duración real del servicio |
+| `estado` | VARCHAR(20) | Estado: pendiente, en_proceso, completado, cancelado |
 | `codigo_confirmacion` | VARCHAR(10) | Código único de confirmación |
 | `notas` | TEXT | Notas del turno |
 | `precio_final` | NUMERIC(10,2) | Precio final cobrado |
@@ -169,9 +172,15 @@ Sistema de gestión de turnos (cola y citas).
 
 **Estados de Turno:**
 - `pendiente`: En espera
-- `en_servicio`: Actualmente atendiéndose
+- `en_proceso`: Actualmente atendiéndose
 - `completado`: Servicio terminado
 - `cancelado`: Turno cancelado
+
+**Nota sobre hora_programada:**
+- Este campo guarda la hora fija asignada al turno cuando se crea
+- No cambia aunque pase el tiempo
+- Solo aplica para turnos en cola
+- Formato: "HH:MM" (ej: "14:30", "09:00")
 
 **Relaciones:**
 - FK → `barberias(id_barberia)`
@@ -313,5 +322,7 @@ ORDER BY t.fecha_hora ASC;
 
 1. **Multi-Tenant**: Cada barbería tiene sus propios registros aislados
 2. **Eliminación Lógica**: Los registros se marcan como `activo = false` en lugar de eliminarse
-3. **Fechas**: Todas las fechas se almacenan en UTC
+3. **Fechas**: Todas las fechas usan la timezone configurada en el servidor (`TZ=America/Bogota` para Colombia)
 4. **Contraseñas**: Se almacenan hasheadas con werkzeug.security
+5. **Hora Programada**: Los turnos en cola guardan `hora_programada` para mostrar una hora fija que no cambia con el tiempo
+6. **Limpieza**: Usar `limpiar_turnos_antiguos()` o el endpoint de API para eliminar turnos completados/cancelados antiguos

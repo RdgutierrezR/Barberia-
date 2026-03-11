@@ -83,19 +83,28 @@ El sistema de cola funciona como una fila virtual:
 3. El barbero atiende en orden FIFO (primero en llegar, primero en atendido)
 4. Al terminar, pasa al siguiente
 
+**Características de la cola:**
+- Cada turno tiene una **hora fija asignada** que no cambia con el tiempo
+- La hora se calcula en intervalos de 30 minutos
+- Los turnos pendientes de días anteriores siguen en cola hasta atenderse
+
 **Pasos para usar la cola:**
 
 1. Barbero/Owner crea un turno en cola:
    - Seleccionar barbero
    - Seleccionar servicio
    - Ingresar nombre y teléfono del cliente
-   - El sistema muestra la posición en cola
+   - El sistema muestra la posición en cola y hora asignada
 
-2. El barbero marca "Siguiente" para atender al próximo cliente
+2. El barbero tiene dos opciones:
+   - **"✓ Finalizar"**: Finaliza el turno y llama al siguiente cliente
+   - **"⏭ Solo fin"**: Finaliza el turno SIN avanzar la cola (el siguiente no se llama)
 
 3. El sistema mueve automáticamente al cliente a "en servicio"
 
 4. Al terminar, el sistema registra el servicio en contabilidad
+
+5. **Cancelar turno**: Cada turno en la cola tiene un botón (✕) para cancelarlo directamente
 
 ### Citas Programadas
 
@@ -109,9 +118,19 @@ Para clientes que desean hora específica:
 
 **Estados de un Turno:**
 - `pendiente`: Esperando ser atendido
-- `en_servicio`: Actualmente en servicio
+- `en_proceso`: Actualmente en servicio
 - `completado`: Servicio terminado y pagado
 - `cancelado`: Turno cancelado
+
+---
+
+## Timezone
+
+El sistema está configurado para usar la zona horaria de Colombia (America/Bogota).
+
+- Todas las horas se muestran en hora de Colombia
+- Esto aplica tanto para el backend como el frontend
+- En producción, configurar variable de entorno `TZ=America/Bogota`
 
 ---
 

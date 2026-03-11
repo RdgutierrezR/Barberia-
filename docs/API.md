@@ -358,6 +358,30 @@ Query Parameters:
 - forzar_cita: true/false (forzar atender cita programada)
 ```
 
+### Finalizar Turno Sin Avanzar la Cola
+
+```http
+PUT /barberias/{id_barberia}/turnos/cola/{id_barbero}/finalizar
+Authorization: Bearer <token>
+```
+
+**Respuesta:**
+```json
+{
+  "mensaje": "Turno completado",
+  "turno_id": 123
+}
+```
+
+### Limpiar Turnos Antiguos
+
+```http
+POST /barberias/{id_barberia}/turnos/limpiar?dias=30
+Authorization: Bearer <token>
+```
+
+Elimina turnos completados/cancelados mayores a X días.
+
 ### Reordenar Turno
 
 ```http
@@ -398,6 +422,19 @@ Content-Type: application/json
   "notas": "Nota opcional"
 }
 ```
+
+**Respuesta:**
+```json
+{
+  "turno": {
+    "id_turno": 1,
+    "hora_programada": "14:30",
+    "posicion": 1
+  }
+}
+```
+
+**Nota**: El campo `hora_programada` se asigna automáticamente con la próxima media hora disponible.
 
 ### Crear Turno (Cita Programada)
 
@@ -617,6 +654,10 @@ Todos los endpoints que aceptan o devuelven fechas utilizan el formato ISO 8601:
 
 - Fecha: `YYYY-MM-DD`
 - Fecha-Hora: `YYYY-MM-DDTHH:MM:SS`
+
+**Timezone**: El sistema usa `America/Bogota` (UTC-5). Configurar variable `TZ=America/Bogota` en el servidor.
+
+**Campo hora_programada**: Para turnos en cola, el campo `hora_programada` usa formato `HH:MM` (ej: "14:30", "09:00").
 
 ---
 

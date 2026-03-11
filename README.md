@@ -1,85 +1,94 @@
-# BarberAPP by Rainer Gutierrez - Sistema de Gestión Multi-Tenant
+# BarberAPP - Sistema de Gestión Multi-Tenant para Barberías
 
 <p align="center">
   <img src="https://img.shields.io/badge/Stack-Flask%20%2B%20React-blue" alt="Stack">
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
-  <img src="https://img.shields.io/badge/Version-1.0.0-orange" alt="Version">
+  <img src="https://img.shields.io/badge/Version-1.1.0-orange" alt="Version">
 </p>
 
-Sistema de gestión integral para barberías con soporte multi-tenant (múltiples barberías en una sola instancia). Permite gestionar barberías, barberos, clientes, turnos, servicios y contabilidad.
+Sistema de gestión integral para barberías con soporte multi-tenant. Permite gestionar barberías, barberos, clientes, turnos, servicios, horarios y contabilidad.
 
 ## Características Principales
 
-- **Gestión Multi-Tenant**: Multiple barberías en una sola plataforma
-- **Sistema de Turnos**: Cola dinámica y citas programadas
-- **Gestión de Barberos**: Comisiones, horarios y disponibilidad
-- **Control de Acceso**: Autenticación JWT con roles (Owner, Barbero, Cliente)
-- **Contabilidad**: Registro de ingresos por servicio
+- **Gestión Multi-Tenant**: Múltiples barberías en una sola plataforma
+- **Sistema de Turnos**: 
+  - Cola dinámica con hora fija (no cambia con el tiempo)
+  - Citas programadas
+  - Intervalos de 30 minutos
+- **Gestión de Barberos**: 
+  - Comisiones configurables
+  - Horarios semanales y diarios
+  - Panel individual de trabajo
+- **Contabilidad**: 
+  - Registro automático de ingresos
+  - Métricas y reportes
+  - Por barbería y por barbero
 - **Código QR**: Acceso rápido para clientes
-- **API RESTful**: Integración fácil con otras aplicaciones
+- **Notificaciones**: WhatsApp via Twilio
+- **Timezone**: Configuración automática America/Bogota
+- **UI Responsiva**: Diseño dark adaptativo para móviles
+- **API RESTful**: Documentada y lista para integraciones
 
 ## Tecnologías
 
 ### Backend
-- **Python 3.11+**
-- **Flask** - Framework web
-- **SQLAlchemy** - ORM para base de datos
-- **Flask-JWT-Extended** - Autenticación JWT
-- **Flask-CORS** - Soporte CORS
-- **SQLite** - Base de datos (desarrollo)
+- Python 3.11+
+- Flask
+- SQLAlchemy
+- Flask-JWT-Extended
+- Flask-CORS
 
 ### Frontend
-- **React 19** - Framework UI
-- **Vite** - Build tool
-- **React Router** - Enrutamiento
-- **Axios** - Cliente HTTP
+- React 19
+- Vite
+- React Router v6
 
 ## Estructura del Proyecto
 
 ```
 Barberia/
-├── BACKEND/                    # API REST (Flask)
-│   ├── modelo/                 # Modelos de base de datos
-│   ├── controlador/            # Lógica de negocio
-│   ├── rutas/                   # Endpoints API
-│   ├── app.py                  # Aplicación principal
-│   ├── database.py             # Configuración de BD
-│   └── configuracion.py        # Configuración app
+├── BACKEND/
+│   ├── modelo/           # Modelos SQLAlchemy (10 modelos)
+│   ├── controlador/      # Lógica de negocio
+│   ├── rutas/           # Endpoints API (11 blueprints)
+│   ├── app.py           # Aplicación principal
+│   ├── database.py      # Configuración BD
+│   ├── configuracion.py # Configuración
+│   └── fecha_actual.py  # Utilidad de fechas
 │
-├── frontend/                   # Aplicación web (React)
+├── frontend/
 │   ├── src/
-│   │   ├── pages/              # Páginas de la app
-│   │   ├── api.js              # Cliente API
-│   │   └── config.js           # Configuración
-│   ├── package.json
-│   └── vite.config.js
+│   │   ├── pages/       # 10 páginas React
+│   │   ├── api.js      # Cliente API
+│   │   ├── config.js
+│   │   └── utils/fecha.js
+│   └── package.json
 │
-└── docs/                       # Documentación
-    ├── INSTALL.md
-    ├── API.md
-    ├── DATABASE.md
-    └── USER_GUIDE.md
+└── docs/
+    ├── TECHNICAL.md     # Documentación técnica
+    ├── API.md           # API endpoints
+    ├── DATABASE.md      # Modelos BD
+    ├── USER_GUIDE.md    # Guía de usuario
+    ├── INSTALL.md       # Instalación
+    └── AGENTS.md        # Guía para desarrolladores
 ```
 
-## Primeros Pasos
+## Instalación
 
 ### Requisitos Previos
+- Python 3.11+
+- Node.js 18+
+- npm
 
-- Python 3.11 o superior
-- Node.js 18 o superior
-- npm o yarn
-
-### Instalación
-
-#### Backend
+### Backend
 
 ```bash
 cd BACKEND
 
 # Crear entorno virtual
 python -m venv venv
+venv\Scripts\activate  # Windows
 source venv/bin/activate  # Linux/Mac
-# venv\Scripts\activate   # Windows
 
 # Instalar dependencias
 pip install -r requirements.txt
@@ -91,9 +100,7 @@ python iniciar_db.py
 python app.py
 ```
 
-El backend estará disponible en `http://localhost:5000`
-
-#### Frontend
+### Frontend
 
 ```bash
 cd frontend
@@ -105,7 +112,61 @@ npm install
 npm run dev
 ```
 
-La aplicación estará disponible en `http://localhost:5173`
+## Configuración de Producción
+
+### Variables de Entorno
+
+```env
+# Backend
+FLASK_APP=app.py
+FLASK_ENV=production
+DATABASE_URL=postgresql://user:pass@host/barberia
+JWT_SECRET_KEY=tu-secret-key
+TZ=America/Bogota
+
+# Twilio (opcional)
+TWILIO_ACCOUNT_SID=...
+TWILIO_AUTH_TOKEN=...
+TWILIO_WHATSAPP_NUMBER=...
+```
+
+### Despliegue Recomendado
+
+| Componente | Hosting recomendado |
+|------------|-------------------|
+| Backend | Render, Railway, Heroku |
+| Frontend | Vercel, Netlify |
+| Base de datos | PostgreSQL (prod) |
+
+## Documentación
+
+- [Documentación Técnica](./docs/TECHNICAL.md) - Arquitectura completa
+- [API Reference](./docs/API.md) - Todos los endpoints
+- [Modelo de Datos](./docs/DATABASE.md) - Esquema de BD
+- [Guía de Usuario](./docs/USER_GUIDE.md) - Cómo usar el sistema
+- [Guía de Instalación](./docs/INSTALL.md) - Pasos detallados
+
+## Funcionalidades Implementadas
+
+- [x] Autenticación JWT multi-rol
+- [x] Gestión de barberías (CRUD)
+- [x] Gestión de barberos con comisiones
+- [x] Sistema de turnos en cola
+- [x] Hora fija en cola (no cambia)
+- [x] Finalizar sin avanzar la cola
+- [x] Cancelar turnos desde la cola
+- [x] Citas programadas
+- [x] Gestión de servicios
+- [x] Horarios semanales y diarios
+- [x] Bloqueos de agenda
+- [x] Contabilidad automática
+- [x] Métricas y reportes
+- [x] Código QR para barberías
+- [x] Invitaciones para crear barberías
+- [x] Notificaciones WhatsApp
+- [x] Timezone Colombia
+- [x] UI responsiva para móviles
+- [x] Panel de métricas
 
 ## Usuarios de Prueba
 
@@ -114,63 +175,61 @@ La aplicación estará disponible en `http://localhost:5173`
 | Owner | owner@barberia.com | password123 |
 | Barbero | barbero@barberia.com | password123 |
 
-## Documentación
+## API Endpoints Principales
 
-- [Guía de Instalación](./docs/INSTALL.md)
-- [Documentación de API](./docs/API.md)
-- [Modelo de Base de Datos](./docs/DATABASE.md)
-- [Guía de Usuario](./docs/USER_GUIDE.md)
+```bash
+# Autenticación
+POST /api/auth/barbero/login
 
-## Variables de Entorno
+# Barberías
+GET    /api/barberias/
+POST   /api/barberias/
 
-### Backend (.env)
+# Turnos
+POST   /api/barberias/1/turnos/cola          # Crear en cola
+POST   /api/barberias/1/turnos/cita          # Crear cita
+PUT    /api/barberias/1/turnos/cola/1/siguiente
+PUT    /api/barberias/1/turnos/cola/1/finalizar
+
+# Contabilidad
+GET /api/barberias/1/contabilidad/resumen
+GET /api/barberias/1/contabilidad/metricas/barberia
+```
+
+## Links de Producción
+
+| Componente | Servicio | URL |
+|------------|----------|-----|
+| **Frontend** | Vercel | https://barberia-ochre-eta.vercel.app |
+| **Backend** | Render | https://barberapp.onrender.com |
+| **Base de datos** | Railway | MySQL |
+
+**Acceso directo:** https://barberia-ochre-eta.vercel.app/login
+
+---
+
+## Configuración de Producción
+
+### Variables de Entorno
 
 ```env
-FLASK_APP=app.py
-FLASK_ENV=development
-SECRET_KEY=tu-clave-secreta
-DATABASE_URL=sqlite:///barberia.db
-JWT_SECRET_KEY=tu-jwt-secret
+# Backend (Render)
+TZ=America/Bogota
+DATABASE_URL=mysql://... (de Railway)
+JWT_SECRET_KEY=...
+SECRET_KEY=...
+FLASK_ENV=production
+
+# Frontend (Vercel)
+VITE_API_URL=https://barberapp.onrender.com
 ```
 
 ## Estado del Proyecto
 
-> **Nota**: Este proyecto se encuentra en desarrollo activo. Algunas características pueden estar en proceso de implementación.
+**Versión 1.1.0** - En producción
 
-### Funcionalidades Implementadas
-- [x] Autenticación JWT
-- [x] Gestión de barberías (CRUD)
-- [x] Gestión de barberos
-- [x] Sistema de turnos (cola y citas)
-- [x] Gestión de servicios
-- [x] Sistema de horarios
-- [x] Contabilidad básica
-- [x] Código QR para barberías
-- [x] Invitaciones para crear barberías
-
-### En Desarrollo
-- [ ] Panel de administración completo
-- [ ] Reportes y estadísticas
-- [ ] Notificaciones
-- [ ] Aplicación móvil
-- [ ] Gestión de clientes
-
-## Contribuir
-
-1. Fork el proyecto
-2. Crea una rama (`git checkout -b feature/nueva-caracteristica`)
-3. Commit tus cambios (`git commit -m 'Agregar nueva característica'`)
-4. Push a la rama (`git push origin feature/nueva-caracteristica`)
-5. Abre un Pull Request
+El proyecto se encuentra en desarrollo activo con mejoras continuas.
 
 ## Licencia
 
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
-
-## Capturas de Pantalla
-
-_(Próximamente)_
-
----
-
-Desarrollado con ❤️ para la comunidad de barberías
+MIT - Desarrollado por Rainer Gutierrez

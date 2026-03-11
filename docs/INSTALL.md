@@ -202,6 +202,39 @@ python iniciar_db.py
 
 ---
 
+## Despliegue en Producción
+
+### Arquitectura Actual
+
+```
+┌─────────────────────┐     ┌─────────────────────┐
+│   Vercel (Frontend) │────▶│  Render (Backend)   │
+│ https://barberia-   │     │ https://barberapp   │
+│ ochre-eta.vercel   │     │ .onrender.com       │
+└─────────────────────┘     └──────────┬──────────┘
+                                      │
+                                      ▼
+                             ┌─────────────────────┐
+                             │ Railway (PostgreSQL)│
+                             └─────────────────────┘
+```
+
+### URLs de Producción
+
+| Componente | Servicio | URL |
+|------------|----------|-----|
+| Frontend | Vercel | https://barberia-ochre-eta.vercel.app |
+| Backend | Render | https://barberapp.onrender.com |
+| Base de datos | Railway | MySQL |
+
+### Configuración Railway
+
+1. Crear proyecto MySQL
+2. Obtener DATABASE_URL
+3. Conectar con Render
+
+---
+
 ## Siguientes Pasos
 
 1. [Documentación de API](./API.md)

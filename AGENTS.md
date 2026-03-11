@@ -1,4 +1,4 @@
-# AGENTS.md - Guías para Agentes de Código
+# AGENTS.md - Guía para Agentes de Código
 
 Este documento contiene las pautas y convenciones para trabajar en el proyecto BarberAPP.
 
@@ -7,20 +7,63 @@ Este documento contiene las pautas y convenciones para trabajar en el proyecto B
 ```
 Barberia/
 ├── BACKEND/                    # API REST (Flask + SQLAlchemy)
-│   ├── modelo/                 # Modelos de base de datos
+│   ├── modelo/                 # 10 modelos de base de datos
+│   │   ├── barberia.py
+│   │   ├── barbero.py
+│   │   ├── cliente.py
+│   │   ├── servicio.py
+│   │   ├── turno.py
+│   │   ├── horario.py
+│   │   ├── horario_dia.py
+│   │   ├── bloqueo_agenda.py
+│   │   ├── contabilidad.py
+│   │   └── invitacion.py
 │   ├── controlador/           # Lógica de negocio
-│   ├── rutas/                  # Endpoints API (Blueprints)
+│   │   ├── barberia.py
+│   │   ├── barbero.py
+│   │   ├── cliente.py
+│   │   ├── servicio.py
+│   │   ├── turno.py
+│   │   ├── horario.py
+│   │   ├── horario_dia.py
+│   │   ├── contabilidad.py
+│   │   ├── notificacion.py
+│   │   └── invitacion.py
+│   ├── rutas/                 # 11 Blueprints
+│   │   ├── barberias.py
+│   │   ├── barberos.py
+│   │   ├── clientes.py
+│   │   ├── servicios.py
+│   │   ├── turnos.py
+│   │   ├── horarios.py
+│   │   ├── horario_dia.py
+│   │   ├── contabilidad.py
+│   │   ├── auth.py
+│   │   └── invitaciones.py
 │   ├── app.py                 # Aplicación principal
 │   ├── database.py            # Configuración de BD
-│   └── configuracion.py       # Configuración de la app
+│   ├── configuracion.py       # Configuración
+│   └── fecha_actual.py        # Utilidad de fechas
 │
 ├── frontend/                   # Aplicación web (React 19 + Vite)
 │   ├── src/
-│   │   ├── pages/             # Componentes de página
-│   │   ├── api.js            # Cliente API centralizado
-│   │   └── config.js         # Configuración
-│   ├── package.json
-│   └── vite.config.js
+│   │   ├── pages/             # 10 páginas
+│   │   │   ├── Home.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── AdminPanel.jsx
+│   │   │   ├── Barberia.jsx
+│   │   │   ├── OwnerDashboard.jsx
+│   │   │   ├── BarberoDashboard.jsx
+│   │   │   ├── TurnoConfirmado.jsx
+│   │   │   ├── VistaAgenda.jsx
+│   │   │   ├── Contabilidad.jsx
+│   │   │   └── Metricas.jsx
+│   │   ├── api.js             # Cliente API centralizado
+│   │   ├── config.js
+│   │   ├── App.jsx
+│   │   └── utils/
+│   │       └── fecha.js       # Utilidad de fechas
+│   └── package.json
 │
 └── docs/                       # Documentación
 ```
@@ -67,20 +110,6 @@ source venv/bin/activate  # Linux/Mac
 python app.py
 ```
 
-### Tests
-
-**Nota:** Actualmente no hay tests formales configurados en el proyecto. Si agregas tests:
-
-```bash
-# Frontend - agregar con Vitest o Jest
-npm install vitest --save-dev
-npm run test
-
-# Backend - agregar con pytest
-pip install pytest
-pytest
-```
-
 ---
 
 ## Convenciones de Código
@@ -89,7 +118,7 @@ pytest
 
 - **Idioma**: Español para código (variables, funciones, comentarios, mensajes)
 - **Encoding**: UTF-8
-- **Lineas**: Máximo 100-120 caracteres por línea
+- **Líneas**: Máximo 100-120 caracteres por línea
 
 ---
 
@@ -209,7 +238,7 @@ function NombreComponente() {
   });
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.name]: e.target.name });
     setError('');
   };
 
@@ -292,12 +321,35 @@ export const api = {
 
 ```
 /api/barberias/:id_barberia/barberos/:id_barbero/turnos
+/api/barberias/:id_barberia/turnos/cola/:id_barbero/diaria
 ```
 
 ### Manejo de Fechas
 
 - Backend: `datetime` con `isoformat()` para serialización
 - Frontend: strings en formato ISO o Dates de JavaScript
+- **Timezone**: El sistema usa `America/Bogota` como timezone predeterminada
+- Backend: función `ahora()` en `fecha_actual.py` (respetar variable `TZ` del sistema)
+- Frontend: funciones en `utils/fecha.js` usan `timeZone: 'America/Bogota'`
+
+### Funciones de Fecha
+
+```python
+# Backend - fecha_actual.py
+from fecha_actual import ahora, fecha_hoy
+
+def crear_turno():
+    ahora()          # Retorna datetime actual
+    fecha_hoy()      # Retorna date de hoy
+```
+
+```javascript
+// Frontend - utils/fecha.js
+import { getAhoraColombia, getHoraColombia, formatFechaColombia } from './utils/fecha';
+
+const ahora = getAhoraColombia();  // Date actual en Colombia
+const hora = getHoraColombia();   // "14:30" formato HH:MM
+```
 
 ### Autenticación
 
@@ -316,12 +368,23 @@ FLASK_ENV=development
 SECRET_KEY=tu-clave-secreta
 DATABASE_URL=sqlite:///barberia.db
 JWT_SECRET_KEY=tu-jwt-secret
+TZ=America/Bogota
+```
+
+### Producción (Render/Railway/etc)
+
+```env
+# Configurar en el dashboard del hosting
+TZ=America/Bogota
+DATABASE_URL=postgresql://...
+JWT_SECRET_KEY=...
 ```
 
 ### Frontend (src/config.js)
 
 ```javascript
 export const API_URL = 'http://localhost:5000';
+// En producción: URL del servidor deployed
 ```
 
 ---
@@ -340,3 +403,45 @@ export const API_URL = 'http://localhost:5000';
 4. **CORS**: Configurado para permitir todos los origins en desarrollo (`resources={r"/api/*": {"origins": "*"}}`)
 
 5. **Base de datos**: SQLite para desarrollo. En producción configurar MySQL/PostgreSQL.
+
+6. **Timezone**: Configurar `TZ=America/Bogota` en el servidor de producción.
+
+7. **Limpieza de turnos**: Usar endpoint `POST /api/barberias/:id/turnos/limpiar?dias=30` periódicamente para eliminar turnos completados/cancelados antiguos.
+
+8. **Hora_programada**: El modelo Turno tiene un campo `hora_programada` (VARCHAR 5) que guarda la hora fija asignada al turno cuando se crea. Esta hora no cambia aunque pase el tiempo.
+
+9. **Notificaciones**: Twilio configurado en `configuracion.py` para enviar WhatsApp. Para habilitar, agregar credenciales.
+
+---
+
+## Páginas del Frontend
+
+| Página | Ruta | Descripción |
+|--------|------|-------------|
+| Home | / | Página principal |
+| Login | /login | Inicio de sesión |
+| AdminPanel | /admin | Panel de admin |
+| Barberia | /barberia/:id | Info barbería |
+| OwnerDashboard | /barberia/:id/dashboard | Panel owner |
+| BarberoDashboard | /barbero/:id_barberia/:id | Panel barbero |
+| TurnoConfirmado | /turno/:codigo | Turno confirmado |
+| VistaAgenda | - | Agenda de turnos |
+| Contabilidad | - | Reportes contables |
+| Metricas | - | Métricas y stats |
+
+---
+
+## Modelos de Base de Datos
+
+| Modelo | Tabla | Descripción |
+|--------|-------|-------------|
+| Barberia | barberias | Barberías del sistema |
+| Barbero | barberos | Usuarios barberos |
+| Cliente | clientes | Clientes registrados |
+| Servicio | servicios | Servicios ofrecidos |
+| Turno | turnos | Turnos y citas |
+| Horario | horarios | Horarios semanales |
+| HorarioDia | horarios_dia | Horarios por día |
+| BloqueoAgenda | bloqueos_agenda | Bloqueos de tiempo |
+| Contabilidad | contabilidad | Registro de ingresos |
+| Invitacion | invitaciones | Códigos de invitación |
