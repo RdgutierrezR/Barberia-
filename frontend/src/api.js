@@ -100,6 +100,16 @@ export const api = {
     return data;
   },
   
+  finalizarSolo: async (idBarberia, idBarbero) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/cola/${idBarbero}/finalizar`, {
+      method: 'PUT',
+      headers: headers()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+  
   cancelarTurno: async (idBarberia, idTurno) => {
     const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/${idTurno}/cancelar`, {
       method: 'PUT',

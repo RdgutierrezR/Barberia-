@@ -117,6 +117,28 @@ function BarberoDashboard() {
     }
   };
 
+  const finalizarSolo = async () => {
+    if (!turnoActual) return;
+    if (!confirm('¿Finalizar este turno sin llamar al siguiente?')) return;
+    try {
+      await api.finalizarSolo(id_barberia, id_barbero);
+      cargarCola();
+    } catch (err) {
+      console.error('Error:', err);
+    }
+  };
+
+  const cancelarTurno = async (idTurno) => {
+    if (!confirm('¿Estás seguro de cancelar este turno?')) return;
+    try {
+      await api.cancelarTurno(id_barberia, idTurno);
+      cargarCola();
+    } catch (err) {
+      console.error('Error al cancelar:', err);
+      alert('Error al cancelar turno');
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('barbero_token');
     localStorage.removeItem('barbero_id');
@@ -249,10 +271,14 @@ function BarberoDashboard() {
                   <div className="cliente-servicio">
                     {turnoActual.servicio_nombre} - {turnoActual.servicio_duracion} min
                   </div>
-                  <div className="cliente-codigo">{turnoActual.codigo_confirmacion}</div>
-                  <button className="btn-primary btn-finalizar" onClick={siguiente}>
-                    Finalizar y siguiente
-                  </button>
+                  <div className="botones-accion">
+                    <button className="btn-small btn-finalizar" onClick={siguiente}>
+                      ✓ Finalizar
+                    </button>
+                    <button className="btn-small btn-secondary" onClick={finalizarSolo}>
+                      ⏭ Solo fin
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="sin-cliente">
@@ -292,6 +318,13 @@ function BarberoDashboard() {
                       )}
                       <span className="tipo-reserva-label">{t.tipo_reserva === 'cola' ? 'En cola' : 'Cita'}</span>
                     </div>
+                    <button 
+                      className="btn-cancelar-turno" 
+                      onClick={() => cancelarTurno(t.id_turno)}
+                      title="Cancelar turno"
+                    >
+                      ✕
+                    </button>
                   </div>
                 ))}
                 {turnosEnEspera.length === 0 && (

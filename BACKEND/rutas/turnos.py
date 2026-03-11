@@ -52,6 +52,14 @@ def pasar_siguiente(id_barberia, id_barbero):
         return jsonify(resultado)
     return jsonify({"mensaje": "No hay mas clientes en cola"})
 
+@turnos_bp.route("/cola/<int:id_barbero>/finalizar", methods=["PUT"])
+@jwt_required()
+def finalizar_solo(id_barberia, id_barbero):
+    resultado, error = ctrl.finalizar_turno_actual(id_barberia, id_barbero)
+    if error:
+        return jsonify({"error": error}), 400
+    return jsonify(resultado)
+
 @turnos_bp.route("/cola/<int:id_barbero>/forzar", methods=["PUT"])
 @jwt_required()
 def forzar_siguiente(id_barberia, id_barbero):
@@ -207,3 +215,10 @@ def agregar_cita_a_cola(id_barberia, id_turno):
     if error:
         return jsonify({"error": error}), 400
     return jsonify({"mensaje": "Cita agregada a cola", "turno": resultado["turno"].to_dict()})
+
+@turnos_bp.route("/limpiar", methods=["POST"])
+@jwt_required()
+def limpiar_turnos(id_barberia):
+    dias = request.args.get("dias", type=int, default=7)
+    eliminados = ctrl.limpiar_turnos_antiguos(id_barberia, dias)
+    return jsonify({"mensaje": f"Se eliminaron {eliminados} turnos antiguos"})

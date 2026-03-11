@@ -1,3 +1,5 @@
+const TIMEZONE = 'America/Bogota';
+
 export const getFechaLocal = () => {
   const now = new Date();
   const anio = now.getFullYear();
@@ -14,6 +16,11 @@ export const getFechaHoraLocal = () => {
   const hora = String(now.getHours()).padStart(2, '0');
   const minuto = String(now.getMinutes()).padStart(2, '0');
   return `${anio}-${mes}-${dia} ${hora}:${minuto}`;
+};
+
+export const getAhoraColombia = () => {
+  const now = new Date();
+  return new Date(now.toLocaleString('en-US', { timeZone: TIMEZONE }));
 };
 
 export const formatFechaInput = (fecha) => {
@@ -56,9 +63,7 @@ export const formatFechaMostrar = (fechaStr) => {
 };
 
 export const getFechaColombia = () => {
-  const now = new Date();
-  now.setMinutes(now.getMinutes() + now.getTimezoneOffset());
-  return now;
+  return getAhoraColombia();
 };
 
 export const parsearFecha = (fechaStr) => {
@@ -77,7 +82,7 @@ export const parsearFecha = (fechaStr) => {
   const [anio, mes, dia] = fecha.split('-').map(Number);
   if (hora) {
     const horaLimpia = hora.split('.')[0];
-    const [horaNum, minuto] = horaLimpia.split(':').map(Number);
+    const [horaNum, minuto] = horaLimpia.split(':');
     return new Date(anio, mes - 1, dia, horaNum, minuto);
   }
   return new Date(anio, mes - 1, dia);
@@ -92,4 +97,24 @@ export const formatearFechaHora = (fechaStr) => {
   h = h % 12;
   h = h ? h : 12;
   return `${h}:${min} ${ampm}`;
+};
+
+export const formatFechaColombia = (fechaStr) => {
+  if (!fechaStr) return '';
+  const fecha = new Date(fechaStr);
+  const opciones = {
+    timeZone: TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  };
+  const [mes, dia, anio] = fecha.toLocaleDateString('es-CO', opciones).split('/');
+  return `${anio}-${mes}-${dia}`;
+};
+
+export const getHoraColombia = () => {
+  const ahora = getAhoraColombia();
+  const hora = String(ahora.getHours()).padStart(2, '0');
+  const minuto = String(ahora.getMinutes()).padStart(2, '0');
+  return `${hora}:${minuto}`;
 };
