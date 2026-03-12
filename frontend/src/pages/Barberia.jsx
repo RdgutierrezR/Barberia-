@@ -264,9 +264,9 @@ function Barberia() {
                   <h3>{s.nombre}</h3>
                   <span className="servicio-duracion-eleccion">⏱️ {s.duracion_minutos} min</span>
                 </div>
-                <div className="servicio-derecha-eleccion">
+                  <div className="servicio-derecha-eleccion">
                   <div className="servicio-precio-eleccion">
-                    ${s.precio.toLocaleString()}
+                    ${s.precio?.toLocaleString() || '0'}
                   </div>
                 </div>
               </div>

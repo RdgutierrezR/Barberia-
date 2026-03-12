@@ -299,11 +299,13 @@ def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servic
     from modelo.horario import Horario
     from modelo.horario_dia import HorarioDia
     from datetime import time
+    from fecha_actual import ahora as ahora_fn
     
     logger.info(f"Obteniendo horarios para barbero {id_barbero}, fecha {fecha}")
     
     fecha_date = datetime.strptime(fecha, "%Y-%m-%d").date()
     dia_semana = fecha_date.weekday()
+    ahora = ahora_fn()
     
     # Buscar horario del día específico primero
     horario_dia = HorarioDia.query.filter_by(
@@ -335,6 +337,17 @@ def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servic
     hora_apertura = datetime.combine(fecha_date, hora_inicio)
     hora_cierre = datetime.combine(fecha_date, hora_fin)
     
+    # Si es hoy, comenzar desde la hora actual + 1 hora de margen
+    if fecha_date == ahora.date():
+        hora_minima = ahora + timedelta(hours=1)
+        # Redondear a la siguiente media hora
+        minutos_redondeo = (hora_minima.minute % 30)
+        if minutos_redondeo > 0:
+            hora_minima = hora_minima + timedelta(minutes=30 - minutos_redondeo)
+        hora_actual = max(hora_apertura, hora_minima)
+    else:
+        hora_actual = hora_apertura
+    
     # Obtener citas del día
     turnos_cita = Turno.query.filter(
         Turno.id_barberia == id_barberia,
@@ -357,7 +370,6 @@ def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servic
     
     # Generar intervalos
     intervalos = []
-    hora_actual = hora_apertura
     intervalo_minutos = 30
     
     while hora_actual + timedelta(minutes=duracion_servicio) <= hora_cierre:

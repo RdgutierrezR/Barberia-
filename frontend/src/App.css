@@ -520,7 +520,7 @@ body {
 /* Barbero Dashboard */
 .barbero-dashboard {
   background: #0a0a0a;
-  padding: 0;
+  padding: 0 0 50px 0;
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
@@ -730,6 +730,7 @@ body {
   background: linear-gradient(145deg, #1a1a1a 0%, #141414 100%);
   border-radius: 12px;
   padding: 12px;
+  padding-bottom: 20px;
   border: 1px solid #252525;
   max-height: 50vh;
   overflow-y: auto;
@@ -1281,7 +1282,7 @@ body {
 
 /* Contabilidad Page */
 .contabilidad-page {
-  padding: 0;
+  padding: 0 0 25px 0;
   background: #0a0a0a;
   flex: 1;
   display: flex;
@@ -3264,7 +3265,7 @@ body {
 }
 
 .metricas-page {
-  padding: 0;
+  padding: 0 0 25px 0;
   background: #0a0a0a;
   flex: 1;
   display: flex;

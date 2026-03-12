@@ -152,11 +152,12 @@ def listar_turnos_cita(id_barberia):
     lista = ctrl.listar_turnos_cita(id_barberia, id_barbero, fecha)
     return jsonify([t.to_dict() for t in lista])
 
-@turnos_bp.route("/disponibilidad/<int:id_barbero>", methods=["GET"])
-def obtener_disponibilidad(id_barberia, id_barbero):
+@turnos_bp.route("/disponibilidad/<int:id_barbero_param>", methods=["GET"])
+def obtener_disponibilidad(id_barberia, id_barbero_param):
     import logging
     logger = logging.getLogger(__name__)
     
+    id_barbero = id_barbero_param
     fecha = request.args.get("fecha")
     duracion = request.args.get("duracion", type=int, default=25)
     
