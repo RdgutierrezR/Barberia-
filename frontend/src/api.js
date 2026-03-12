@@ -51,6 +51,37 @@ export const api = {
     return data;
   },
   
+  crearServicio: async (idBarberia, data) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/servicios`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || `Error: ${res.status}`);
+    return result;
+  },
+  
+  actualizarServicio: async (idBarberia, idServicio, data) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/servicios/${idServicio}`, {
+      method: 'PUT',
+      headers: headers(),
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || `Error: ${res.status}`);
+    return result;
+  },
+  
+  eliminarServicio: async (idBarberia, idServicio) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/servicios/${idServicio}`, {
+      method: 'DELETE',
+      headers: headers()
+    });
+    if (!res.ok) throw new Error(`Error: ${res.status}`);
+    return true;
+  },
+  
   crearTurnoCola: async (idBarberia, data) => {
     const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/cola`, {
       method: 'POST',

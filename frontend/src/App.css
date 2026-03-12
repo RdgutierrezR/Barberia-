@@ -1704,7 +1704,8 @@ body {
   margin-bottom: 24px;
 }
 
-.servicio-card {
+/* Tarjeta de servicio para elegir (Barberia.jsx) */
+.servicio-card-eleccion {
   background: linear-gradient(145deg, #141414 0%, #1a1a1a 100%);
   border-radius: 14px;
   padding: 16px 20px;
@@ -1714,6 +1715,110 @@ body {
   cursor: pointer;
   border: 2px solid transparent;
   transition: all 0.2s ease;
+  min-height: 60px;
+}
+
+.servicio-card-eleccion:hover {
+  background: linear-gradient(145deg, #1a1a1a 0%, #222 100%);
+}
+
+.servicio-card-eleccion.selected {
+  border-color: #fff;
+  background: linear-gradient(145deg, #1a1a1a 0%, #252525 100%);
+}
+
+.servicio-info-eleccion {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.servicio-info-eleccion h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.servicio-duracion-eleccion {
+  font-size: 12px;
+  color: #888;
+  line-height: 1;
+}
+
+.servicio-derecha-eleccion {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.servicio-precio-eleccion {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Tarjeta de servicio para CRUD (OwnerDashboard.jsx) */
+.servicio-card-crud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(145deg, #141414 0%, #1a1a1a 100%);
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1px solid #252525;
+}
+
+.servicio-info-crud {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.servicio-nombre-crud {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.servicio-precio-crud {
+  font-size: 14px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.servicio-duracion-crud {
+  font-size: 12px;
+  color: #888;
+}
+
+.servicio-actions-crud {
+  display: flex;
+  gap: 8px;
+}
+
+.servicio-actions-crud button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.servicio-card {
+  background: linear-gradient(145deg, #141414 0%, #1a1a1a 100%);
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  min-height: 60px;
 }
 
 .servicio-card:hover {
@@ -1725,22 +1830,42 @@ body {
   background: linear-gradient(145deg, #1a1a1a 0%, #252525 100%);
 }
 
-.servicio-info h3 {
+.servicio-card .servicio-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.servicio-card .servicio-info h3 {
   font-size: 15px;
   font-weight: 600;
   color: #fff;
-  margin-bottom: 4px;
+  margin: 0;
+  line-height: 1.2;
+  display: block;
+  width: 100%;
 }
 
-.servicio-duracion {
+.servicio-card .servicio-duracion {
   font-size: 12px;
-  color: #666;
+  color: #888;
+  line-height: 1;
+  display: block;
+  text-align: left;
 }
 
-.servicio-precio {
+.servicio-derecha {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.servicio-card .servicio-precio {
   font-size: 18px;
   font-weight: 700;
-  color: #fff;
+  color: #fff !important;
 }
 
 .resumen-turno {
@@ -2027,7 +2152,7 @@ body {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
 
@@ -2058,6 +2183,102 @@ body {
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 12px;
+}
+
+.owner-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px;
+  margin-bottom: 16px;
+}
+
+.owner-tab {
+  flex: 1;
+  padding: 12px;
+  background: #1a1a1a;
+  border: 1px solid #252525;
+  border-radius: 10px;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.owner-tab.active {
+  background: #252525;
+  color: #fff;
+  border-color: #333;
+}
+
+.owner-content {
+  padding-top: 8px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.section-header h2 {
+  margin-bottom: 0;
+}
+
+.btn-agregar-small {
+  padding: 6px 12px;
+  background: #252525;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.servicios-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.servicio-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(145deg, #141414 0%, #1a1a1a 100%);
+  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid #252525;
+}
+
+.servicio-info {
+  flex: 1;
+}
+
+.servicio-nombre {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.servicio-duracion {
+  font-size: 12px;
+  color: #888;
+}
+
+.servicio-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.servicio-actions button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
 }
 
 .barbero-list {
@@ -3064,6 +3285,16 @@ body {
   padding: 12px;
   background: #0f0f0f;
   margin: 0;
+}
+
+.metricas-page .metricas-periodo-texto {
+  text-align: center;
+  color: #666;
+  font-size: 13px;
+  padding-bottom: 8px;
+  background: #0f0f0f;
+  margin: 0 12px;
+  padding-top: 0;
 }
 
 .periodo-btn {

@@ -36,7 +36,7 @@ function Barberia() {
       })
       .then(data => {
         if (data.error) throw new Error(data.error);
-        setBarberos(data);
+        setBarberos(data.filter(b => b.rol !== 'owner' && b.rol !== 'admin'));
         return api.getServicios(id);
       })
       .then(data => {
@@ -257,15 +257,17 @@ function Barberia() {
             {servicios.map(s => (
               <div 
                 key={s.id_servicio}
-                className={`servicio-card ${servicioSeleccionado?.id_servicio === s.id_servicio ? 'selected' : ''}`}
+                className={`servicio-card-eleccion ${servicioSeleccionado?.id_servicio === s.id_servicio ? 'selected' : ''}`}
                 onClick={() => setServicioSeleccionado(s)}
               >
-                <div className="servicio-info">
+                <div className="servicio-info-eleccion">
                   <h3>{s.nombre}</h3>
-                  <span className="servicio-duracion">⏱️ {s.duracion_minutos} min</span>
+                  <span className="servicio-duracion-eleccion">⏱️ {s.duracion_minutos} min</span>
                 </div>
-                <div className="servicio-precio">
-                  ${s.precio.toLocaleString()}
+                <div className="servicio-derecha-eleccion">
+                  <div className="servicio-precio-eleccion">
+                    ${s.precio.toLocaleString()}
+                  </div>
                 </div>
               </div>
             ))}

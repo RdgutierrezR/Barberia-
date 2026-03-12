@@ -65,6 +65,23 @@ function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
     return fecha.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit' });
   };
 
+  const getPeriodoTexto = () => {
+    const hoy = new Date();
+    const opciones = { day: 'numeric', month: 'long', year: 'numeric' };
+    
+    if (periodo === 'diario') {
+      return `Hoy, ${hoy.toLocaleDateString('es-CO', opciones)}`;
+    } else if (periodo === 'semanal') {
+      const hace7 = new Date(hoy);
+      hace7.setDate(hoy.getDate() - 7);
+      return `${hace7.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })} - ${hoy.toLocaleDateString('es-CO', opciones)}`;
+    } else {
+      const hace30 = new Date(hoy);
+      hace30.setDate(hoy.getDate() - 30);
+      return `${hace30.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })} - ${hoy.toLocaleDateString('es-CO', opciones)}`;
+    }
+  };
+
   const getColorOcupacion = (porcentaje) => {
     if (porcentaje >= 80) return '#f59e0b';
     if (porcentaje >= 50) return '#d97706';
@@ -103,6 +120,8 @@ function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
           Mes
         </button>
       </div>
+
+      <div className="metricas-periodo-texto">{getPeriodoTexto()}</div>
 
       {loading ? (
         <div className="loading">Cargando...</div>

@@ -1,8 +1,9 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, redirect
 from controlador import servicio as ctrl
 
 servicios_bp = Blueprint("servicios", __name__, url_prefix="/api/barberias/<int:id_barberia>/servicios")
 
+@servicios_bp.route("", methods=["GET"])
 @servicios_bp.route("/", methods=["GET"])
 def listar(id_barberia):
     lista = ctrl.listar_servicios(id_barberia)
@@ -15,6 +16,7 @@ def obtener(id_barberia, id_servicio):
         return jsonify(s.to_dict())
     return jsonify({"error": "Servicio no encontrado"}), 404
 
+@servicios_bp.route("", methods=["POST"])
 @servicios_bp.route("/", methods=["POST"])
 def crear(id_barberia):
     data = request.get_json()
