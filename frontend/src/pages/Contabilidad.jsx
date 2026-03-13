@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { getAhoraColombia } from '../utils/fecha';
 
 function Contabilidad({ idBarberia, idBarbero, nombreBarbero }) {
   const [periodo, setPeriodo] = useState('mensual');
   const [mesSeleccionado, setMesSeleccionado] = useState(() => {
-    const now = new Date();
+    const now = getAhoraColombia();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
   const [diaSeleccionado, setDiaSeleccionado] = useState(() => {
-    const now = new Date();
+    const now = getAhoraColombia();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   });
   const [resumen, setResumen] = useState({ ingresos: 0, egresos: 0, balance: 0, cortes: 0 });
@@ -89,7 +90,9 @@ function Contabilidad({ idBarberia, idBarbero, nombreBarbero }) {
   };
 
   const formatFecha = (fechaStr) => {
+    if (!fechaStr) return '';
     const fecha = new Date(fechaStr);
+    if (isNaN(fecha.getTime())) return '';
     const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
     const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
     let hora = fecha.getHours();
@@ -112,9 +115,11 @@ function Contabilidad({ idBarberia, idBarbero, nombreBarbero }) {
 
   const getPeriodoLabel = () => {
     const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const ahoraColombia = getAhoraColombia();
     switch (periodo) {
       case 'diario': 
-        const fechaDia = new Date(diaSeleccionado);
+        const [anioDia, mesDia, diaDia] = diaSeleccionado.split('-').map(Number);
+        const fechaDia = new Date(anioDia, mesDia - 1, diaDia);
         return `${fechaDia.getDate()} de ${meses[fechaDia.getMonth()]} de ${fechaDia.getFullYear()}`;
       case 'semanal': return 'Últimos 7 días';
       case 'mensual': 

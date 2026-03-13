@@ -24,6 +24,9 @@ class Contabilidad(db.Model):
     turno = db.relationship("Turno", backref="contabilidad")
 
     def to_dict(self):
+        fecha_iso = self.fecha.isoformat() if self.fecha else None
+        if fecha_iso and '+' not in fecha_iso and fecha_iso[-3:] != '-05':
+            fecha_iso = fecha_iso + '-05:00'
         return {
             "id_registro": self.id_registro,
             "id_barberia": self.id_barberia,
@@ -35,5 +38,5 @@ class Contabilidad(db.Model):
             "monto": float(self.monto),
             "tipo": self.tipo,
             "descripcion": self.descripcion,
-            "fecha": self.fecha.isoformat() if self.fecha else None
+            "fecha": fecha_iso
         }

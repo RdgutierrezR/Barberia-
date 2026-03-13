@@ -4,6 +4,14 @@ def _ahora():
     from fecha_actual import ahora as _ahora_fn
     return _ahora_fn()
 
+def _agregar_timezone(fecha):
+    if not fecha:
+        return None
+    fecha_iso = fecha.isoformat()
+    if '+' not in fecha_iso and fecha_iso[-3:] != '-05':
+        fecha_iso = fecha_iso + '-05:00'
+    return fecha_iso
+
 class Turno(db.Model):
     __tablename__ = "turnos"
 
@@ -46,15 +54,15 @@ class Turno(db.Model):
             "servicio_duracion": self.servicio.duracion_minutos if self.servicio else None,
             "hora_programada": self.hora_programada,
             "tipo_reserva": self.tipo_reserva,
-            "cita_fecha_hora": self.cita_fecha_hora.isoformat() if self.cita_fecha_hora else None,
-            "fecha_cita_original": self.fecha_cita_original.isoformat() if self.fecha_cita_original else None,
-            "fecha_fin_servicio": self.fecha_fin_servicio.isoformat() if self.fecha_fin_servicio else None,
-            "fecha_inicio_servicio": self.fecha_inicio_servicio.isoformat() if self.fecha_inicio_servicio else None,
+            "cita_fecha_hora": _agregar_timezone(self.cita_fecha_hora),
+            "fecha_cita_original": _agregar_timezone(self.fecha_cita_original),
+            "fecha_fin_servicio": _agregar_timezone(self.fecha_fin_servicio),
+            "fecha_inicio_servicio": _agregar_timezone(self.fecha_inicio_servicio),
             "duracion_minutos": self.duracion_minutos,
-            "fecha_hora": self.fecha_hora.isoformat() if self.fecha_hora else None,
+            "fecha_hora": _agregar_timezone(self.fecha_hora),
             "estado": self.estado,
             "codigo_confirmacion": self.codigo_confirmacion,
             "notas": self.notas,
             "precio_final": float(self.precio_final) if self.precio_final else None,
-            "fecha_creacion": self.fecha_creacion.isoformat() if self.fecha_creacion else None
+            "fecha_creacion": _agregar_timezone(self.fecha_creacion)
         }

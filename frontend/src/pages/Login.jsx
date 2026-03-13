@@ -71,7 +71,7 @@ function Login() {
           setError('Valida el codigo de invitacion primero');
           setLoading(false);
           return;
-        }
+        } 
 
         const data = await api.registroBarberia({
           codigo_invitacion: formData.codigo_invitacion,
