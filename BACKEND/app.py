@@ -46,7 +46,15 @@ def create_app():
     
     @app.route("/health")
     def health():
-        return {"status": "OK"}
+        try:
+            db.session.execute(db.text("SELECT 1"))
+            return {"status": "OK", "database": "connected"}
+        except Exception as e:
+            return {"status": "ERROR", "database": str(e)}, 500
+    
+    @app.route("/ping")
+    def ping():
+        return {"message": "pong"}
     
     return app
 

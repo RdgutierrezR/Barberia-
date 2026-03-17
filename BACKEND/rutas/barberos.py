@@ -63,3 +63,14 @@ def eliminar(id_barberia, id_barbero):
     if ctrl.eliminar_barbero(id_barbero):
         return jsonify({"mensaje": "Barbero eliminado"})
     return jsonify({"error": "Barbero no encontrado"}), 404
+
+@barberos_bp.route("/<int:id_barbero>/contrasena", methods=["PUT"])
+@jwt_required()
+def actualizar_contrasena(id_barberia, id_barbero):
+    data = request.get_json()
+    nueva_contrasena = data.get("contrasena")
+    if not nueva_contrasena:
+        return jsonify({"error": "Se requiere la nueva contraseña"}), 400
+    if ctrl.actualizar_contrasena_barbero(id_barbero, nueva_contrasena):
+        return jsonify({"mensaje": "Contraseña actualizada"})
+    return jsonify({"error": "Barbero no encontrado"}), 404

@@ -1,6 +1,6 @@
 from database import db
 from modelo.barbero import Barbero
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 
 def listar_barberos(id_barberia):
     return Barbero.query.filter_by(id_barberia=id_barberia, activo=True).all()
@@ -53,3 +53,11 @@ def eliminar_barbero(id_barbero):
 
 def listar_todos_barberos(id_barberia):
     return Barbero.query.filter_by(id_barberia=id_barberia).all()
+
+def actualizar_contrasena_barbero(id_barbero, nueva_contrasena):
+    barbero = Barbero.query.get(id_barbero)
+    if barbero:
+        barbero.contrasena = generate_password_hash(nueva_contrasena)
+        db.session.commit()
+        return True
+    return False
