@@ -318,7 +318,6 @@ def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servic
     if horario_dia:
         hora_inicio = horario_dia.hora_inicio
         hora_fin = horario_dia.hora_fin
-        logger.info(f"DEBUG: hora_inicio={hora_inicio}, hora_fin={hora_fin}, repr_inicio={repr(hora_inicio)}, repr_fin={repr(hora_fin)}")
     else:
         # Buscar horario semanal
         horario = Horario.query.filter_by(
@@ -333,12 +332,10 @@ def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servic
             hora_fin = horario.hora_fin
         else:
             hora_inicio = time(9, 0)
-            hora_fin = time(18, 0)
+            hora_fin = time(20, 0)
     
     hora_apertura = datetime.combine(fecha_date, hora_inicio)
     hora_cierre = datetime.combine(fecha_date, hora_fin)
-    
-    logger.info(f"Hora apertura: {hora_apertura}, Hora cierre: {hora_cierre}")
     
     # Si es hoy, comenzar desde la hora actual + 1 hora de margen
     if fecha_date == ahora.date():
@@ -376,6 +373,43 @@ def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servic
     intervalo_minutos = 30
     
     while hora_actual + timedelta(minutes=duracion_servicio) <= hora_cierre:
+        hora_fin_slot = hora_actual + timedelta(minutes=duracion_servicio)
+        
+        conflicto = False
+        
+        # Verificar conflicto con citas
+        for turno in turnos_cita:
+            servicio = Servicio.query.get(turno.id_servicio)
+            if not servicio:
+                continue
+            turno_inicio = turno.cita_fecha_hora
+            turno_fin = turno_inicio + timedelta(minutes=servicio.duracion_minutos)
+            
+            if not (hora_fin_slot <= turno_inicio or hora_actual >= turno_fin):
+                conflicto = True
+                break
+        
+        # Verificar conflicto con bloqueos
+        if not conflicto:
+            for bloqueo in bloqueos:
+                bloqueo_inicio = bloqueo.fecha_inicio
+                bloqueo_fin = bloqueo.fecha_fin
+                
+                if isinstance(bloqueo_inicio, datetime):
+                    bloqueo_inicio = bloqueo_inicio.replace(tzinfo=None)
+                if isinstance(bloqueo_fin, datetime):
+                    bloqueo_fin = bloqueo_fin.replace(tzinfo=None)
+                
+                if not (hora_fin_slot <= bloqueo_inicio or hora_actual >= bloqueo_fin):
+                    conflicto = True
+                    logger.info(f"DEBUG: Conflicto con bloqueo {bloqueo_inicio}")
+                    break
+        
+        if not conflicto:
+            intervalos.append(hora_actual.strftime("%H:%M"))
+            logger.info(f"DEBUG: Agregado intervalo {hora_actual.strftime('%H:%M')}")
+        
+        hora_actual = hora_actual + timedelta(minutes=intervalo_minutos)
         hora_fin_slot = hora_actual + timedelta(minutes=duracion_servicio)
         
         conflicto = False

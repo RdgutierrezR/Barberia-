@@ -361,9 +361,9 @@ function BarberoDashboard() {
               <div className="horario-actual" onClick={() => setMostrarSelectorHorario(!mostrarSelectorHorario)}>
                 <span className="horario-icon">🕐</span>
                 <div className="horario-info">
-                  <span className="horario-label">Mi horario hoy:</span>
+                  <span className="horario-label">Mi horario hoy</span>
                   <span className="horario-horas">
-                    {horarioDia?.hora_inicio?.substring(0, 5) || horaInicio} - {horarioDia?.hora_fin?.substring(0, 5) || horaFin}
+                    {formatHora12h(horarioDia?.hora_inicio?.substring(0, 5) || horaInicio)} - {formatHora12h(horarioDia?.hora_fin?.substring(0, 5) || horaFin)}
                   </span>
                 </div>
                 <span className="horario-edit">✏️</span>

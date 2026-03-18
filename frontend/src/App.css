@@ -3211,15 +3211,15 @@ body {
   display: flex;
   align-items: center;
   background: #1a1a1a;
-  padding: 12px 16px;
+  padding: 10px 14px;
   border-radius: 12px;
   cursor: pointer;
   border: 1px solid #333;
+  gap: 10px;
 }
 
 .horario-icon {
-  font-size: 24px;
-  margin-right: 12px;
+  font-size: 18px;
 }
 
 .horario-info {
@@ -3229,14 +3229,17 @@ body {
 }
 
 .horario-label {
-  font-size: 12px;
+  font-size: 10px;
   color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1px;
 }
 
 .horario-horas {
-  font-size: 18px;
-  font-weight: 600;
-  color: #f59e0b;
+  font-size: 16px;
+  font-weight: 500;
+  color: #f97316;
 }
 
 .horario-edit {

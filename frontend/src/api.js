@@ -193,6 +193,17 @@ export const api = {
     return result;
   },
 
+  actualizarContrasenaBarbero: async (idBarberia, idBarbero, contrasena) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/barberos/${idBarbero}/contrasena`, {
+      method: 'PUT',
+      headers: headers(),
+      body: JSON.stringify({ contrasena })
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || `Error: ${res.status}`);
+    return result;
+  },
+
   validarInvitacion: async (codigo) => {
     const res = await fetch(`${API_URL}/invitaciones/validar/${codigo}`);
     const data = await res.json();

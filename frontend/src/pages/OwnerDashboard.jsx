@@ -15,8 +15,11 @@ function OwnerDashboard() {
   
   const [showModalBarbero, setShowModalBarbero] = useState(false);
   const [showModalServicio, setShowModalServicio] = useState(false);
+  const [showModalPassword, setShowModalPassword] = useState(false);
   const [editandoServicio, setEditandoServicio] = useState(null);
   const [showQR, setShowQR] = useState(false);
+  const [barberoEditandoPassword, setBarberoEditandoPassword] = useState(null);
+  const [nuevaPassword, setNuevaPassword] = useState('');
   
   const [nuevoBarbero, setNuevoBarbero] = useState({ nombre: '', telefono: '', correo: '', contrasena: '' });
   const [nuevoServicio, setNuevoServicio] = useState({ nombre: '', descripcion: '', precio: '', duracion_minutos: '' });
@@ -68,6 +71,28 @@ function OwnerDashboard() {
     try {
       await api.eliminarBarbero(id, idBarbero);
       cargarDatos();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const abrirModalPassword = (barbero) => {
+    setBarberoEditandoPassword(barbero);
+    setNuevaPassword('');
+    setShowModalPassword(true);
+  };
+
+  const guardarPassword = async () => {
+    if (!nuevaPassword || nuevaPassword.length < 4) {
+      alert('La contraseña debe tener al menos 4 caracteres');
+      return;
+    }
+    try {
+      await api.actualizarContrasenaBarbero(id, barberoEditandoPassword.id_barbero, nuevaPassword);
+      setShowModalPassword(false);
+      setBarberoEditandoPassword(null);
+      setNuevaPassword('');
+      alert('Contraseña actualizada correctamente');
     } catch (err) {
       alert(err.message);
     }
@@ -250,6 +275,7 @@ function OwnerDashboard() {
                       <div className="barbero-item-rol">{b.activo ? 'Activo' : 'Inactivo'}</div>
                     </div>
                     <div className="barbero-item-actions">
+                      <button className="btn-editar" onClick={() => abrirModalPassword(b)}>🔑</button>
                       <button className="btn-eliminar" onClick={() => eliminarBarbero(b.id_barbero)}>🗑️</button>
                     </div>
                   </div>
@@ -353,6 +379,31 @@ function OwnerDashboard() {
               <button className="btn-confirmar-modal" onClick={guardarServicio}>
                 {editandoServicio ? 'Guardar' : 'Crear'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showModalPassword && (
+        <div className="modal-overlay" onClick={() => setShowModalPassword(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>Cambiar Contraseña</h3>
+            <p style={{ marginBottom: '15px', color: '#666' }}>
+              Barbero: <strong>{barberoEditandoPassword?.nombre}</strong>
+            </p>
+            <div className="form-group">
+              <label>Nueva Contraseña</label>
+              <input
+                type="password"
+                value={nuevaPassword}
+                onChange={e => setNuevaPassword(e.target.value)}
+                placeholder="Nueva contraseña"
+                minLength={4}
+              />
+            </div>
+            <div className="modal-buttons">
+              <button className="btn-cancelar-modal" onClick={() => setShowModalPassword(false)}>Cancelar</button>
+              <button className="btn-confirmar-modal" onClick={guardarPassword}>Guardar</button>
             </div>
           </div>
         </div>
