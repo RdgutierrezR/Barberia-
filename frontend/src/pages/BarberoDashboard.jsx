@@ -16,6 +16,14 @@ function BarberoDashboard() {
   const [mostrarSelectorHorario, setMostrarSelectorHorario] = useState(false);
   const [horaInicio, setHoraInicio] = useState('09:00');
   const [horaFin, setHoraFin] = useState('18:00');
+  const [mostrarModalTurno, setMostrarModalTurno] = useState(false);
+  const [servicios, setServicios] = useState([]);
+  const [loadingServicios, setLoadingServicios] = useState(false);
+  const [formTurno, setFormTurno] = useState({
+    cliente_nombre: '',
+    cliente_telefono: '',
+    id_servicio: ''
+  });
   const nombreBarbero = localStorage.getItem('barbero_nombre') || 'Barbero';
 
   useEffect(() => {
@@ -166,6 +174,44 @@ function BarberoDashboard() {
 
   const turnoActual = colaDiaria.find(t => t.estado === 'en_proceso');
   const turnosEnEspera = colaDiaria.filter(t => t.estado !== 'en_proceso');
+
+  const abrirModalTurno = async () => {
+    setMostrarModalTurno(true);
+    setLoadingServicios(true);
+    setFormTurno({ cliente_nombre: '', cliente_telefono: '', id_servicio: '' });
+    try {
+      const data = await api.getServicios(id_barberia);
+      setServicios(data);
+    } catch (err) {
+      console.error('Error al cargar servicios:', err);
+    }
+    setLoadingServicios(false);
+  };
+
+  const crearTurnoRapido = async (e) => {
+    e.preventDefault();
+    if (!formTurno.cliente_nombre.trim()) {
+      alert('Ingresa el nombre del cliente');
+      return;
+    }
+    if (!formTurno.id_servicio) {
+      alert('Selecciona un servicio');
+      return;
+    }
+    try {
+      await api.crearTurnoCola(id_barberia, {
+        id_barbero: parseInt(id_barbero),
+        nombre_cliente: formTurno.cliente_nombre.trim(),
+        telefono: formTurno.cliente_telefono.trim() || 'Sin teléfono',
+        id_servicio: parseInt(formTurno.id_servicio)
+      });
+      alert('Turno creado exitosamente');
+      setMostrarModalTurno(false);
+      cargarCola();
+    } catch (err) {
+      alert('Error al crear turno: ' + err.message);
+    }
+  };
 
   const renderVista = () => {
     switch (vistaActual) {
@@ -349,12 +395,64 @@ function BarberoDashboard() {
               <h1>Hola, {nombreBarbero}</h1>
               <p>Barbería #{id_barberia}</p>
             </div>
-            <div className="user-avatar">✂️</div>
+            <div className="user-avatar" onClick={abrirModalTurno} style={{ cursor: 'pointer', fontSize: '24px', fontWeight: 'bold' }}>+</div>
           </div>
         </div>
       )}
 
       {renderVista()}
+
+      {mostrarModalTurno && (
+        <div className="modal-overlay" onClick={() => setMostrarModalTurno(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>+ Agendar Turno Rápido</h3>
+              <button className="modal-close" onClick={() => setMostrarModalTurno(false)}>✕</button>
+            </div>
+            <form onSubmit={crearTurnoRapido} className="modal-form">
+              <div className="form-group">
+                <label>Nombre del Cliente *</label>
+                <input
+                  type="text"
+                  value={formTurno.cliente_nombre}
+                  onChange={(e) => setFormTurno({ ...formTurno, cliente_nombre: e.target.value })}
+                  placeholder="Ej: Juan Pérez"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Teléfono</label>
+                <input
+                  type="tel"
+                  value={formTurno.cliente_telefono}
+                  onChange={(e) => setFormTurno({ ...formTurno, cliente_telefono: e.target.value })}
+                  placeholder="Ej: 3001234567"
+                />
+              </div>
+              <div className="form-group">
+                <label>Servicio *</label>
+                {loadingServicios ? (
+                  <p>Cargando servicios...</p>
+                ) : (
+                  <select
+                    value={formTurno.id_servicio}
+                    onChange={(e) => setFormTurno({ ...formTurno, id_servicio: e.target.value })}
+                    required
+                  >
+                    <option value="">Seleccionar servicio</option>
+                    {servicios.map((s) => (
+                      <option key={s.id_servicio} value={s.id_servicio}>
+                        {s.nombre} - {s.duracion} min - ${s.precio}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              <button type="submit" className="btn-primary btn-full">Crear Turno</button>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="nav-barbero">
         <button className={`nav-item ${vistaActual === 'inicio' ? 'active' : ''}`} onClick={() => setVistaActual('inicio')}>

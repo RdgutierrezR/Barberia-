@@ -15,6 +15,7 @@ Sistema de gestión integral para barberías con soporte multi-tenant. Permite g
   - Cola dinámica con hora fija (no cambia con el tiempo)
   - Citas programadas
   - Intervalos de 30 minutos
+  - Turnos rápidos (botón + en panel barbero) para clientes sin celular/internet
 - **Gestión de Barberos**: 
   - Comisiones configurables
   - Horarios semanales y diarios

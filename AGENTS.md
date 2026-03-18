@@ -412,6 +412,8 @@ export const API_URL = 'http://localhost:5000';
 
 9. **Notificaciones**: Twilio configurado en `configuracion.py` para enviar WhatsApp. Para habilitar, agregar credenciales.
 
+10. **Turnos Rápidos**: El BarberoDashboard tiene un botón "+" en el header que abre un modal para crear turnos rápidos. El barbero puede agendar clientes sin celular/internet. Campos: `nombre_cliente`, `telefono`, `id_servicio`.
+
 ---
 
 ## Páginas del Frontend
