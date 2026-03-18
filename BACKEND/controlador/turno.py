@@ -318,6 +318,7 @@ def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servic
     if horario_dia:
         hora_inicio = horario_dia.hora_inicio
         hora_fin = horario_dia.hora_fin
+        logger.info(f"DEBUG: hora_inicio={hora_inicio}, hora_fin={hora_fin}, repr_inicio={repr(hora_inicio)}, repr_fin={repr(hora_fin)}")
     else:
         # Buscar horario semanal
         horario = Horario.query.filter_by(
@@ -336,6 +337,8 @@ def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servic
     
     hora_apertura = datetime.combine(fecha_date, hora_inicio)
     hora_cierre = datetime.combine(fecha_date, hora_fin)
+    
+    logger.info(f"Hora apertura: {hora_apertura}, Hora cierre: {hora_cierre}")
     
     # Si es hoy, comenzar desde la hora actual + 1 hora de margen
     if fecha_date == ahora.date():
