@@ -3985,3 +3985,69 @@ body {
   width: 100%;
   margin-top: 8px;
 }
+
+.tipo-reserva-modal {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.tipo-btn {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: #0a0a0a;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tipo-btn.active {
+  border-color: #f97316;
+  background: rgba(249, 115, 22, 0.1);
+  color: #f97316;
+}
+
+.tipo-btn:hover:not(.active) {
+  border-color: #555;
+  color: #aaa;
+}
+
+.text-muted {
+  color: #666;
+  font-size: 13px;
+}
+
+.horarios-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.hora-btn {
+  padding: 8px 4px;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #0a0a0a;
+  color: #aaa;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hora-btn:hover {
+  border-color: #f97316;
+  color: #f97316;
+}
+
+.hora-btn.active {
+  border-color: #f97316;
+  background: rgba(249, 115, 22, 0.2);
+  color: #f97316;
+  font-weight: 600;
+}

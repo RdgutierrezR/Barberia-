@@ -19,10 +19,15 @@ function BarberoDashboard() {
   const [mostrarModalTurno, setMostrarModalTurno] = useState(false);
   const [servicios, setServicios] = useState([]);
   const [loadingServicios, setLoadingServicios] = useState(false);
+  const [tipoReserva, setTipoReserva] = useState('hoy');
+  const [horariosDisponibles, setHorariosDisponibles] = useState([]);
+  const [loadingHorarios, setLoadingHorarios] = useState(false);
   const [formTurno, setFormTurno] = useState({
     cliente_nombre: '',
     cliente_telefono: '',
-    id_servicio: ''
+    id_servicio: '',
+    fecha: '',
+    hora: ''
   });
   const nombreBarbero = localStorage.getItem('barbero_nombre') || 'Barbero';
 
@@ -165,6 +170,31 @@ function BarberoDashboard() {
     return `${h}:${minuto} ${ampm}`;
   };
 
+  const formatFechaCompleta = (fechaStr) => {
+    if (!fechaStr) return '';
+    const fecha = new Date(fechaStr + 'T00:00:00');
+    const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    return `${dias[fecha.getDay()]} ${fecha.getDate()} de ${meses[fecha.getMonth()]}`;
+  };
+
+  const getFechasDisponibles = () => {
+    const fechas = [];
+    const hoy = new Date();
+    for (let i = 0; i <= 15; i++) {
+      const fecha = new Date(hoy);
+      fecha.setDate(hoy.getDate() + i);
+      const anio = fecha.getFullYear();
+      const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+      const dia = String(fecha.getDate()).padStart(2, '0');
+      fechas.push({
+        valor: `${anio}-${mes}-${dia}`,
+        label: formatFechaCompleta(`${anio}-${mes}-${dia}`)
+      });
+    }
+    return fechas;
+  };
+
   const getFechaHoy = () => {
     const hoy = new Date();
     const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -175,10 +205,29 @@ function BarberoDashboard() {
   const turnoActual = colaDiaria.find(t => t.estado === 'en_proceso');
   const turnosEnEspera = colaDiaria.filter(t => t.estado !== 'en_proceso');
 
-  const abrirModalTurno = async () => {
+  const abrirModalTurno = async (tipo = 'hoy') => {
+    const hoy = new Date();
+    const anio = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoy.getDate()).padStart(2, '0');
+    const fechaHoy = `${anio}-${mes}-${dia}`;
+    
+    const horaActual = hoy.getHours();
+    const minutos = Math.ceil(hoy.getMinutes() / 30) * 30;
+    const horaProxima = `${String(horaActual).padStart(2, '0')}:${String(minutos % 60).padStart(2, '0')}`;
+    
     setMostrarModalTurno(true);
+    setTipoReserva(tipo);
     setLoadingServicios(true);
-    setFormTurno({ cliente_nombre: '', cliente_telefono: '', id_servicio: '' });
+    setFormTurno({ 
+      cliente_nombre: '', 
+      cliente_telefono: '', 
+      id_servicio: '', 
+      fecha: tipo === 'hoy' ? fechaHoy : '', 
+      hora: tipo === 'hoy' ? horaProxima : '' 
+    });
+    setHorariosDisponibles([]);
+    
     try {
       const data = await api.getServicios(id_barberia);
       setServicios(data);
@@ -186,6 +235,35 @@ function BarberoDashboard() {
       console.error('Error al cargar servicios:', err);
     }
     setLoadingServicios(false);
+  };
+
+  const cargarHorariosDisponibles = async () => {
+    if (!formTurno.id_servicio || !formTurno.fecha) return;
+    
+    const servicio = servicios.find(s => s.id_servicio === parseInt(formTurno.id_servicio));
+    if (!servicio) return;
+    
+    setLoadingHorarios(true);
+    try {
+      const data = await api.getDisponibilidad(id_barberia, id_barbero, formTurno.fecha, servicio.duracion_minutos);
+      setHorariosDisponibles(data.horarios_disponibles || []);
+    } catch (err) {
+      console.error('Error al cargar horarios:', err);
+      setHorariosDisponibles([]);
+    }
+    setLoadingHorarios(false);
+  };
+
+  const cargarHorariosDisponibles默认 = async (fecha) => {
+    setLoadingHorarios(true);
+    try {
+      const data = await api.getDisponibilidad(id_barberia, id_barbero, fecha, 30);
+      setHorariosDisponibles(data.horarios_disponibles || []);
+    } catch (err) {
+      console.error('Error al cargar horarios:', err);
+      setHorariosDisponibles([]);
+    }
+    setLoadingHorarios(false);
   };
 
   const crearTurnoRapido = async (e) => {
@@ -198,14 +276,29 @@ function BarberoDashboard() {
       alert('Selecciona un servicio');
       return;
     }
+    if (tipoReserva === 'cita' && (!formTurno.fecha || !formTurno.hora)) {
+      alert('Selecciona fecha y hora para la cita');
+      return;
+    }
     try {
-      await api.crearTurnoCola(id_barberia, {
-        id_barbero: parseInt(id_barbero),
-        nombre_cliente: formTurno.cliente_nombre.trim(),
-        telefono: formTurno.cliente_telefono.trim() || 'Sin teléfono',
-        id_servicio: parseInt(formTurno.id_servicio)
-      });
-      alert('Turno creado exitosamente');
+      if (tipoReserva === 'hoy') {
+        await api.crearTurnoCola(id_barberia, {
+          id_barbero: parseInt(id_barbero),
+          nombre_cliente: formTurno.cliente_nombre.trim(),
+          telefono: formTurno.cliente_telefono.trim() || 'Sin teléfono',
+          id_servicio: parseInt(formTurno.id_servicio)
+        });
+        alert('Turno creado exitosamente');
+      } else {
+        await api.crearTurnoCita(id_barberia, {
+          id_barbero: parseInt(id_barbero),
+          nombre_cliente: formTurno.cliente_nombre.trim(),
+          telefono: formTurno.cliente_telefono.trim() || 'Sin teléfono',
+          id_servicio: parseInt(formTurno.id_servicio),
+          cita_fecha_hora: `${formTurno.fecha} ${formTurno.hora}`
+        });
+        alert('Cita creada exitosamente');
+      }
       setMostrarModalTurno(false);
       cargarCola();
     } catch (err) {
@@ -395,7 +488,7 @@ function BarberoDashboard() {
               <h1>Hola, {nombreBarbero}</h1>
               <p>Barbería #{id_barberia}</p>
             </div>
-            <div className="user-avatar" onClick={abrirModalTurno} style={{ cursor: 'pointer', fontSize: '24px', fontWeight: 'bold' }}>+</div>
+            <div className="user-avatar" onClick={() => abrirModalTurno('hoy')} style={{ cursor: 'pointer', fontSize: '24px', fontWeight: 'bold' }}>+</div>
           </div>
         </div>
       )}
@@ -406,50 +499,117 @@ function BarberoDashboard() {
         <div className="modal-overlay" onClick={() => setMostrarModalTurno(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>+ Agendar Turno Rápido</h3>
+              <h3>+ Nuevo Turno</h3>
               <button className="modal-close" onClick={() => setMostrarModalTurno(false)}>✕</button>
             </div>
-            <form onSubmit={crearTurnoRapido} className="modal-form">
-              <div className="form-group">
-                <label>Nombre del Cliente *</label>
-                <input
-                  type="text"
-                  value={formTurno.cliente_nombre}
-                  onChange={(e) => setFormTurno({ ...formTurno, cliente_nombre: e.target.value })}
-                  placeholder="Ej: Juan Pérez"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Teléfono</label>
-                <input
-                  type="tel"
-                  value={formTurno.cliente_telefono}
-                  onChange={(e) => setFormTurno({ ...formTurno, cliente_telefono: e.target.value })}
-                  placeholder="Ej: 3001234567"
-                />
-              </div>
-              <div className="form-group">
-                <label>Servicio *</label>
-                {loadingServicios ? (
-                  <p>Cargando servicios...</p>
-                ) : (
+            
+            <div className="tipo-reserva-modal">
+              <button 
+                className={`tipo-btn ${tipoReserva === 'hoy' ? 'active' : ''}`}
+                onClick={() => { setTipoReserva('hoy'); setFormTurno({...formTurno, fecha: '', hora: ''}); setHorariosDisponibles([]); }}
+              >
+                📅 Para hoy
+              </button>
+              <button 
+                className={`tipo-btn ${tipoReserva === 'cita' ? 'active' : ''}`}
+                onClick={() => { setTipoReserva('cita'); setFormTurno({...formTurno, fecha: '', hora: ''}); setHorariosDisponibles([]); }}
+              >
+                📆 Agendar
+              </button>
+            </div>
+            
+            {tipoReserva === 'cita' && (
+              <div className="modal-seccion">
+                <div className="form-group">
+                  <label>1. Selecciona el día</label>
                   <select
-                    value={formTurno.id_servicio}
-                    onChange={(e) => setFormTurno({ ...formTurno, id_servicio: e.target.value })}
-                    required
+                    value={formTurno.fecha}
+                    onChange={(e) => {
+                      setFormTurno({ ...formTurno, fecha: e.target.value, hora: '' });
+                      if (e.target.value) {
+                        cargarHorariosDisponibles默认(e.target.value);
+                      }
+                    }}
                   >
-                    <option value="">Seleccionar servicio</option>
-                    {servicios.map((s) => (
-                      <option key={s.id_servicio} value={s.id_servicio}>
-                        {s.nombre} - {s.duracion} min - ${s.precio}
-                      </option>
+                    <option value="">Seleccionar fecha</option>
+                    {getFechasDisponibles().map(f => (
+                      <option key={f.valor} value={f.valor}>{f.label}</option>
                     ))}
                   </select>
+                </div>
+                
+                {formTurno.fecha && (
+                  <div className="form-group">
+                    <label>2. Elige un horario</label>
+                    {loadingHorarios ? (
+                      <p>Cargando...</p>
+                    ) : horariosDisponibles.length === 0 ? (
+                      <p className="text-muted">No hay horarios disponibles</p>
+                    ) : (
+                      <div className="horarios-grid">
+                        {horariosDisponibles.map((hora) => (
+                          <button
+                            key={hora}
+                            type="button"
+                            className={`hora-btn ${formTurno.hora === hora ? 'active' : ''}`}
+                            onClick={() => setFormTurno({ ...formTurno, hora })}
+                          >
+                            {formatHora12h(hora)}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
-              <button type="submit" className="btn-primary btn-full">Crear Turno</button>
-            </form>
+            )}
+            
+            {(tipoReserva === 'hoy' || (tipoReserva === 'cita' && formTurno.fecha && formTurno.hora)) && (
+              <form onSubmit={crearTurnoRapido} className="modal-form">
+                <div className="form-group">
+                  <label>Nombre del Cliente *</label>
+                  <input
+                    type="text"
+                    value={formTurno.cliente_nombre}
+                    onChange={(e) => setFormTurno({ ...formTurno, cliente_nombre: e.target.value })}
+                    placeholder="Ej: Juan Pérez"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Teléfono</label>
+                  <input
+                    type="tel"
+                    value={formTurno.cliente_telefono}
+                    onChange={(e) => setFormTurno({ ...formTurno, cliente_telefono: e.target.value })}
+                    placeholder="Ej: 3001234567"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Servicio *</label>
+                  {loadingServicios ? (
+                    <p>Cargando...</p>
+                  ) : (
+                    <select
+                      value={formTurno.id_servicio}
+                      onChange={(e) => setFormTurno({ ...formTurno, id_servicio: e.target.value })}
+                      required
+                    >
+                      <option value="">Seleccionar</option>
+                      {servicios.map((s) => (
+                        <option key={s.id_servicio} value={s.id_servicio}>
+                          {s.nombre} - {s.duracion_minutos} min
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+                
+                <button type="submit" className="btn-primary btn-full">
+                  {tipoReserva === 'hoy' ? 'Crear Turno para Hoy' : 'Confirmar Cita'}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       )}
