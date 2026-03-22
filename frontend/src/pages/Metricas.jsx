@@ -5,17 +5,20 @@ function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
   const [metricas, setMetricas] = useState(null);
   const [loading, setLoading] = useState(true);
   const [periodo, setPeriodo] = useState('diario');
+  const [diaSeleccionado, setDiaSeleccionado] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  });
 
   useEffect(() => {
     cargarMetricas();
-  }, [periodo]);
+  }, [periodo, diaSeleccionado]);
 
   const cargarMetricas = async () => {
     setLoading(true);
     try {
       let fi, ff;
       const hoy = new Date();
-      const zona = Intl.DateTimeFormat().resolvedOptions().timeZone;
       
       const getFechaLocal = (date) => {
         const año = date.getFullYear();
@@ -25,8 +28,8 @@ function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
       };
       
       if (periodo === 'diario') {
-        fi = getFechaLocal(hoy);
-        ff = fi;
+        fi = diaSeleccionado;
+        ff = diaSeleccionado;
       } else if (periodo === 'semanal') {
         const hace7 = new Date(hoy);
         hace7.setDate(hoy.getDate() - 7);
@@ -70,7 +73,13 @@ function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
     const opciones = { day: 'numeric', month: 'long', year: 'numeric' };
     
     if (periodo === 'diario') {
-      return `Hoy, ${hoy.toLocaleDateString('es-CO', opciones)}`;
+      const [anio, mes, dia] = diaSeleccionado.split('-').map(Number);
+      const fecha = new Date(anio, mes - 1, dia);
+      const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+      const esHoy = diaSeleccionado === hoyStr;
+      return esHoy 
+        ? `Hoy, ${fecha.toLocaleDateString('es-CO', opciones)}`
+        : fecha.toLocaleDateString('es-CO', opciones);
     } else if (periodo === 'semanal') {
       const hace7 = new Date(hoy);
       hace7.setDate(hoy.getDate() - 7);
@@ -120,6 +129,17 @@ function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
           Mes
         </button>
       </div>
+
+      {periodo === 'diario' && (
+        <div className="dia-selector">
+          <input 
+            type="date" 
+            value={diaSeleccionado}
+            onChange={(e) => setDiaSeleccionado(e.target.value)}
+            className="date-input"
+          />
+        </div>
+      )}
 
       <div className="metricas-periodo-texto">{getPeriodoTexto()}</div>
 
