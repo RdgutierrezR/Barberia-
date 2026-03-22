@@ -69,7 +69,6 @@ def forzar_siguiente(id_barberia, id_barbero):
     return jsonify({"mensaje": "No hay mas clientes en cola"})
 
 @turnos_bp.route("/cola/<int:id_barbero>/diaria", methods=["GET"])
-@jwt_required()
 def cola_diaria(id_barberia, id_barbero):
     lista = ctrl.obtener_cola_diaria(id_barberia, id_barbero)
     return jsonify(lista)

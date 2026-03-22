@@ -7,6 +7,7 @@ from modelo.horario import Horario
 from modelo.barbero import Barbero
 from datetime import datetime, timedelta, time, date
 from fecha_actual import ahora as ahora_fn
+from sqlalchemy import or_, and_
 import random
 import string
 import logging
@@ -675,12 +676,16 @@ LIMITE_TURNOS_COLA = 50
 
 def obtener_cola_diaria(id_barberia, id_barbero):
     ahora = ahora_fn()
+    fecha_hoy = ahora.date()
     
     turnos = Turno.query.filter(
         Turno.id_barberia == id_barberia,
         Turno.id_barbero == id_barbero,
-        Turno.tipo_reserva == "cola",
-        Turno.estado.in_(["pendiente", "confirmado", "en_proceso"])
+        Turno.estado.in_(["pendiente", "confirmado", "en_proceso"]),
+        or_(
+            Turno.tipo_reserva == "cola",
+            and_(Turno.tipo_reserva == "cita", Turno.cita_fecha_hora >= datetime.combine(fecha_hoy, datetime.min.time()))
+        )
     ).order_by(Turno.fecha_creacion).limit(LIMITE_TURNOS_COLA).all()
     
     if not turnos:
@@ -696,7 +701,15 @@ def obtener_cola_diaria(id_barberia, id_barbero):
         servicio = Servicio.query.get(turno.id_servicio)
         duracion_servicio = servicio.duracion_minutos if servicio else 30
         
-        hora_programada = turno.hora_programada if turno.hora_programada else (ahora + timedelta(minutes=30 * posicion)).strftime("%H:%M")
+        if turno.tipo_reserva == "cola":
+            hora_programada = turno.hora_programada if turno.hora_programada else (ahora + timedelta(minutes=30 * posicion)).strftime("%H:%M")
+            tipo_mostrar = "cola"
+        else:
+            if turno.cita_fecha_hora and turno.cita_fecha_hora.date() == fecha_hoy:
+                hora_programada = turno.cita_fecha_hora.strftime("%H:%M")
+            else:
+                hora_programada = turno.hora_programada if turno.hora_programada else ""
+            tipo_mostrar = "cita"
         
         resultado.append({
             "id_turno": turno.id_turno,
@@ -706,7 +719,7 @@ def obtener_cola_diaria(id_barberia, id_barbero):
             "servicio_nombre": servicio.nombre if servicio else "Servicio",
             "servicio_duracion": duracion_servicio,
             "servicio_precio": float(servicio.precio) if servicio and servicio.precio else 0,
-            "tipo_reserva": "cola",
+            "tipo_reserva": tipo_mostrar,
             "estado": turno.estado,
             "codigo_confirmacion": turno.codigo_confirmacion,
             "posicion_en_cola": posicion,
