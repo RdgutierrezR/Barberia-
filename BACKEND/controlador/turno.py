@@ -337,16 +337,42 @@ def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servic
     hora_apertura = datetime.combine(fecha_date, hora_inicio)
     hora_cierre = datetime.combine(fecha_date, hora_fin)
     
-    # Si es hoy, comenzar desde la hora actual + 1 hora de margen
+    # Calcular hora minima considerando la cola
+    hora_minima = hora_apertura
+    
     if fecha_date == ahora.date():
-        hora_minima = ahora + timedelta(hours=1)
+        # Obtener turnos de cola pendientes para calcular hora fin de la cola
+        turnos_cola = Turno.query.filter(
+            Turno.id_barberia == id_barberia,
+            Turno.id_barbero == id_barbero,
+            Turno.tipo_reserva == "cola",
+            Turno.estado.in_(["pendiente", "confirmado", "en_proceso"])
+        ).order_by(Turno.fecha_creacion).all()
+        
+        # Calcular tiempo total de la cola
+        tiempo_cola = timedelta(minutes=0)
+        for turno in turnos_cola:
+            servicio = Servicio.query.get(turno.id_servicio)
+            duracion = servicio.duracion_minutos if servicio else 30
+            tiempo_cola += timedelta(minutes=duracion)
+        
+        # Calcular hora fin de atender toda la cola
+        hora_fin_cola = ahora + tiempo_cola + timedelta(minutes=15)  # 15 min buffer
+        
+        # Usar el mayor entre: hora actual + 1h, hora fin cola
+        hora_minima_sugerida = ahora + timedelta(hours=1)
+        hora_minima = max(hora_apertura, hora_minima_sugerida, hora_fin_cola)
+        
         # Redondear a la siguiente media hora
         minutos_redondeo = (hora_minima.minute % 30)
         if minutos_redondeo > 0:
             hora_minima = hora_minima + timedelta(minutes=30 - minutos_redondeo)
-        hora_actual = max(hora_apertura, hora_minima)
+        
+        logger.info(f"DEBUG: Turnos en cola: {len(turnos_cola)}, tiempo_cola: {tiempo_cola}, hora_fin_cola: {hora_fin_cola}, hora_minima: {hora_minima}")
     else:
-        hora_actual = hora_apertura
+        hora_minima = hora_apertura
+    
+    hora_actual = hora_minima
     
     # Obtener citas del día
     turnos_cita = Turno.query.filter(
