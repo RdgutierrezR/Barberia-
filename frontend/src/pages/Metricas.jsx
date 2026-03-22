@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { BarChart3, Timer, Calendar, Check, X } from 'lucide-react';
 
 function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
   const [metricas, setMetricas] = useState(null);
@@ -105,7 +106,7 @@ function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
             <h1>Métricas</h1>
             <p>{nombreBarbero}</p>
           </div>
-          <div className="user-avatar">📊</div>
+          <div className="user-avatar"><BarChart3 size={24} /></div>
         </div>
       </div>
 
@@ -149,12 +150,12 @@ function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
         <div className="metricas-content">
           <div className="metricas-resumen">
             <div className="metrica-card">
-              <span className="metrica-icon">✅</span>
+              <span className="metrica-icon"><Check size={16} color="#22c55e" /></span>
               <span className="metrica-value">{metricas.total_completados}</span>
               <span className="metrica-label">Completados</span>
             </div>
             <div className="metrica-card">
-              <span className="metrica-icon">❌</span>
+              <span className="metrica-icon"><X size={16} color="#ef4444" /></span>
               <span className="metrica-value">{metricas.total_cancelados}</span>
               <span className="metrica-label">Cancelados</span>
             </div>
@@ -164,7 +165,7 @@ function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
               <span className="metrica-label">Tasa Cancel.</span>
             </div>
             <div className="metrica-card">
-              <span className="metrica-icon">⏱️</span>
+                <span className="metrica-icon"><Timer size={16} /></span>
               <span className="metrica-value">{formatMinutos(metricas.tiempo_promedio)}</span>
               <span className="metrica-label">Promedio</span>
             </div>
@@ -193,7 +194,7 @@ function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
             </div>
             <div className="ocupacion-detalles">
               <div className="ocupacion-fila">
-                <span>📅 Tiempo trabajado</span>
+                  <span><Calendar size={14} /> Tiempo trabajado</span>
                 <span className="valor">{formatMinutos(metricas.tiempo_total_minutos)}</span>
               </div>
               <div className="ocupacion-fila">

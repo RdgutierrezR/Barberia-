@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
+import { Scissors } from 'lucide-react';
 
 function Home() {
   const navigate = useNavigate();
@@ -96,7 +97,7 @@ function Home() {
   return (
     <div className="page home-page">
       <div className="hero">
-        <div className="hero-icon">✂️</div>
+        <div className="hero-icon"><Scissors size={28} /></div>
         <h1>BarberApp</h1>
         <p>Escanea el código QR de tu barbería para comenzar</p>
       </div>
@@ -114,7 +115,7 @@ function Home() {
               className="barberia-card"
               onClick={() => navigate(`/barberia/${b.id_barberia}`)}
             >
-              <div className="barberia-icon">✂️</div>
+              <div className="barberia-icon"><Scissors size={20} /></div>
               <div className="barberia-info">
                 <h3>{b.nombre}</h3>
                 <p>{b.direccion || 'Ver ubicación'}</p>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { getAhoraColombia } from '../utils/fecha';
+import { DollarSign, TrendingUp, TrendingDown, Scissors, Banknote } from 'lucide-react';
 
 function Contabilidad({ idBarberia, idBarbero, nombreBarbero }) {
   const [periodo, setPeriodo] = useState('mensual');
@@ -138,7 +139,7 @@ function Contabilidad({ idBarberia, idBarbero, nombreBarbero }) {
             <h1>Contabilidad</h1>
             <p>{nombreBarbero}</p>
           </div>
-          <div className="user-avatar">💰</div>
+          <div className="user-avatar"><DollarSign size={24} /></div>
         </div>
       </div>
 
@@ -201,22 +202,22 @@ function Contabilidad({ idBarberia, idBarbero, nombreBarbero }) {
 
       <div className="resumen-cards">
         <div className="resumen-card">
-          <span className="resumen-icon">✂️</span>
+          <span className="resumen-icon"><Scissors size={20} /></span>
           <span className="resumen-label">Cortes</span>
           <span className="resumen-value">{resumen.cortes || historial.filter(h => h.tipo === 'ingreso').length}</span>
         </div>
         <div className="resumen-card ingresos">
-          <span className="resumen-icon">📈</span>
+          <span className="resumen-icon"><TrendingUp size={20} color="#22c55e" /></span>
           <span className="resumen-label">Ingresos</span>
           <span className="resumen-value">{formatPeso(resumen.ingresos)}</span>
         </div>
         <div className="resumen-card egresos">
-          <span className="resumen-icon">📉</span>
+          <span className="resumen-icon"><TrendingDown size={20} color="#ef4444" /></span>
           <span className="resumen-label">Egresos</span>
           <span className="resumen-value">{formatPeso(resumen.egresos)}</span>
         </div>
         <div className="resumen-card balance">
-          <span className="resumen-icon">💵</span>
+          <span className="resumen-icon"><Banknote size={20} /></span>
           <span className="resumen-label">Balance</span>
           <span className="resumen-value">{formatPeso(resumen.balance)}</span>
         </div>

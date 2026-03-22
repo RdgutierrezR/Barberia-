@@ -1605,6 +1605,36 @@ body {
   font-size: 13px;
   color: #666;
   margin: 4px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.cola-info-barberia {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50px;
+  padding: 10px 20px;
+  margin: 16px auto 0;
+}
+
+.cola-info-barberia .cola-icono {
+  color: #888;
+}
+
+.cola-info-barberia .cola-texto {
+  font-size: 14px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.cola-info-barberia .cola-numero {
+  font-weight: 700;
 }
 
 .step-header {

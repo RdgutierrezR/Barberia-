@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { getFechaLocal, formatFechaMostrar } from '../utils/fecha';
+import { Scissors, MapPin, Phone, User, Timer, Calendar, Clock, Users, Sparkles } from 'lucide-react';
 
 function Barberia() {
   const { id } = useParams();
@@ -21,6 +22,7 @@ function Barberia() {
   const [telefono, setTelefono] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [colaCount, setColaCount] = useState(0);
   const serviciosRef = useRef(null);
 
   useEffect(() => {
@@ -56,6 +58,21 @@ function Barberia() {
       cargarHorariosDisponibles();
     }
   }, [tipoReserva, fechaSeleccionada, barberoSeleccionado, servicioSeleccionado]);
+
+  useEffect(() => {
+    if (barberoSeleccionado && id) {
+      api.getColaDiaria(id, barberoSeleccionado.id_barbero)
+        .then(data => {
+          if (Array.isArray(data)) {
+            setColaCount(data.length);
+          }
+        })
+        .catch(err => {
+          console.error('Error cargando cola:', err);
+          setColaCount(0);
+        });
+    }
+  }, [barberoSeleccionado, id]);
 
   const cargarHorariosDisponibles = async () => {
     console.log('Cargando horarios:', {
@@ -195,12 +212,12 @@ function Barberia() {
           {barberia.logo_url ? (
             <img src={barberia.logo_url} alt={barberia.nombre} />
           ) : (
-            <span>✂️</span>
+            <Scissors size={36} />
           )}
         </div>
         <h1>{barberia.nombre}</h1>
-        {barberia.direccion && <p className="barberia-direccion">📍 {barberia.direccion}</p>}
-        {barberia.telefono && <p className="barberia-telefono">📞 {barberia.telefono}</p>}
+        {barberia.direccion && <p className="barberia-direccion"><MapPin size={14} /> {barberia.direccion}</p>}
+        {barberia.telefono && <p className="barberia-telefono"><Phone size={14} /> {barberia.telefono}</p>}
       </div>
 
       {paso === 1 && (
@@ -224,7 +241,7 @@ function Barberia() {
                     {b.foto_url ? (
                       <img src={b.foto_url} alt={b.nombre} />
                     ) : (
-                      <span>👤</span>
+                      <User size={24} />
                     )}
                   </div>
                   <h3>{b.nombre}</h3>
@@ -262,7 +279,7 @@ function Barberia() {
               >
                 <div className="servicio-info-eleccion">
                   <h3>{s.nombre}</h3>
-                  <span className="servicio-duracion-eleccion">⏱️ {s.duracion_minutos} min</span>
+                  <span className="servicio-duracion-eleccion"><Timer size={14} /> {s.duracion_minutos} min</span>
                 </div>
                   <div className="servicio-derecha-eleccion">
                   <div className="servicio-precio-eleccion">
@@ -296,7 +313,7 @@ function Barberia() {
               className={`tipo-card ${tipoReserva === 'hoy' ? 'selected' : ''}`}
               onClick={() => handleTipoReserva('hoy')}
             >
-              <span className="tipo-icon">📅</span>
+              <span className="tipo-icon"><Calendar size={32} /></span>
               <h3>Para hoy</h3>
               <p>Te agrego a la cola</p>
             </div>
@@ -304,10 +321,17 @@ function Barberia() {
               className={`tipo-card ${tipoReserva === 'cita' ? 'selected' : ''}`}
               onClick={() => handleTipoReserva('cita')}
             >
-              <span className="tipo-icon">⏰</span>
+              <span className="tipo-icon"><Clock size={32} /></span>
               <h3>Agendar</h3>
               <p>Elige fecha y hora</p>
             </div>
+          </div>
+
+          <div className="cola-info-barberia">
+            <span className="cola-icono">{colaCount === 0 ? <Sparkles size={18} /> : <Users size={18} />}</span>
+            <span className="cola-texto">
+              {colaCount === 0 ? 'Sin personas en espera' : <><span className="cola-numero">{colaCount}</span> {colaCount === 1 ? 'persona' : 'personas'} en espera</>}
+            </span>
           </div>
         </div>
       )}

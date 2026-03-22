@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { getFechaLocal, parsearFecha, formatearFechaHora } from '../utils/fecha';
+import { Check, X } from 'lucide-react';
 
 function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
   const [fechaSeleccionada, setFechaSeleccionada] = useState(() => {
@@ -283,7 +284,7 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
                       + Cola
                     </button>
                   ) : (
-                    <span className="cita-completado">✓</span>
+                      <span className="cita-completado"><Check size={14} /></span>
                   )}
                 </div>
               ))
@@ -311,7 +312,7 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
                     className="btn-eliminar-bloqueo"
                     onClick={() => handleEliminarBloqueo(bloqueo.id_bloqueo)}
                   >
-                    ✕
+                        <X size={14} />
                   </button>
                 </div>
               ))

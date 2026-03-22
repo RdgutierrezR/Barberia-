@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
+import { Scissors, Check } from 'lucide-react';
 
 function Login() {
   const navigate = useNavigate();
@@ -103,7 +104,7 @@ function Login() {
     <div className="login-page">
       <div className="login-container">
         <div className="login-header">
-          <div className="login-logo">✂️</div>
+          <div className="login-logo"><Scissors size={48} /></div>
           <h1>BarberApp</h1>
           <p>{modo === 'login' ? 'Inicia sesion en tu cuenta' : 'Crea tu barberia'}</p>
         </div>
@@ -152,7 +153,7 @@ function Login() {
                       cursor: codigoValidado ? 'default' : 'pointer'
                     }}
                   >
-                    {codigoValidado ? '✓' : 'Validar'}
+                    {codigoValidado ? <Check size={16} /> : 'Validar'}
                   </button>
                 </div>
               </div>

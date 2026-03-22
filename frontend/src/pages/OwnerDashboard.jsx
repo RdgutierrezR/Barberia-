@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { FRONTEND_URL } from '../config';
+import { Home, Users, Edit2, Trash2, User } from 'lucide-react';
 
 function OwnerDashboard() {
   const { id } = useParams();
@@ -170,13 +171,13 @@ function OwnerDashboard() {
           className={`owner-tab ${activeTab === 'inicio' ? 'active' : ''}`}
           onClick={() => setActiveTab('inicio')}
         >
-          🏠 Inicio
+          <Home size={16} /> Inicio
         </button>
         <button 
           className={`owner-tab ${activeTab === 'barberos' ? 'active' : ''}`}
           onClick={() => setActiveTab('barberos')}
         >
-          👥 Barberos
+          <Users size={16} /> Barberos
         </button>
       </div>
 
@@ -225,8 +226,8 @@ function OwnerDashboard() {
                       <div className="servicio-duracion-crud">{s.duracion_minutos} min</div>
                     </div>
                     <div className="servicio-actions-crud">
-                      <button onClick={() => editarServicio(s)}>✏️</button>
-                      <button onClick={() => eliminarServicio(s.id_servicio)}>🗑️</button>
+                      <button onClick={() => editarServicio(s)}><Edit2 size={14} /></button>
+                      <button onClick={() => eliminarServicio(s.id_servicio)}><Trash2 size={14} /></button>
                     </div>
                   </div>
                 ))
@@ -269,14 +270,14 @@ function OwnerDashboard() {
               ) : (
                 barberos.map(b => (
                   <div key={b.id_barbero} className="barbero-item">
-                    <div className="barbero-item-foto">👤</div>
+                    <div className="barbero-item-foto"><User size={24} /></div>
                     <div className="barbero-item-info">
                       <div className="barbero-item-nombre">{b.nombre}</div>
                       <div className="barbero-item-rol">{b.activo ? 'Activo' : 'Inactivo'}</div>
                     </div>
                     <div className="barbero-item-actions">
                       <button className="btn-editar" onClick={() => abrirModalPassword(b)}>🔑</button>
-                      <button className="btn-eliminar" onClick={() => eliminarBarbero(b.id_barbero)}>🗑️</button>
+                      <button className="btn-eliminar" onClick={() => eliminarBarbero(b.id_barbero)}><Trash2 size={14} /></button>
                     </div>
                   </div>
                 ))

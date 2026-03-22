@@ -4,6 +4,7 @@ import { api } from '../api';
 import Contabilidad from './Contabilidad';
 import VistaAgenda from './VistaAgenda';
 import Metricas from './Metricas';
+import { Settings, Edit2, Smartphone, Check, SkipForward, X, Home, BarChart3, Calendar, DollarSign, LogOut, Plus, Clock } from 'lucide-react';
 
 function BarberoDashboard() {
   const { id_barberia, id_barbero } = useParams();
@@ -341,7 +342,7 @@ function BarberoDashboard() {
                   <h1>Ajustes</h1>
                   <p>{nombreBarbero}</p>
                 </div>
-                <div className="user-avatar">⚙️</div>
+                <div className="user-avatar"><Settings size={24} /></div>
               </div>
             </div>
             <div className="ajustes-placeholder">
@@ -359,14 +360,14 @@ function BarberoDashboard() {
 
             <div className="horario-dia-selector">
               <div className="horario-actual" onClick={() => setMostrarSelectorHorario(!mostrarSelectorHorario)}>
-                <span className="horario-icon">🕐</span>
+                <span className="horario-icon"><Clock size={16} /></span>
                 <div className="horario-info">
                   <span className="horario-label">Mi horario hoy</span>
                   <span className="horario-horas">
                     {formatHora12h(horarioDia?.hora_inicio?.substring(0, 5) || horaInicio)} - {formatHora12h(horarioDia?.hora_fin?.substring(0, 5) || horaFin)}
                   </span>
                 </div>
-                <span className="horario-edit">✏️</span>
+                <span className="horario-edit"><Edit2 size={14} /></span>
               </div>
               
               {mostrarSelectorHorario && (
@@ -404,18 +405,18 @@ function BarberoDashboard() {
                       {turnoActual.hora_programada ? formatHora12h(turnoActual.hora_programada) : '-'}
                     </span>
                   </div>
-                  <div className="cliente-info-badge">
-                    <span>📱</span> {turnoActual.cliente_telefono}
-                  </div>
+                    <div className="cliente-info-badge">
+                      <Smartphone size={14} /> {turnoActual.cliente_telefono}
+                    </div>
                   <div className="cliente-servicio">
                     {turnoActual.servicio_nombre} - {turnoActual.servicio_duracion} min
                   </div>
                   <div className="botones-accion">
                     <button className="btn-small btn-finalizar" onClick={siguiente}>
-                      ✓ Finalizar
+                      <Check size={14} /> Finalizar
                     </button>
                     <button className="btn-small btn-secondary" onClick={finalizarSolo}>
-                      ⏭ Solo fin
+                      <SkipForward size={14} /> Solo fin
                     </button>
                   </div>
                 </div>
@@ -449,7 +450,7 @@ function BarberoDashboard() {
                         </span>
                       </div>
                       <div className="cola-servicio">{t.servicio_nombre}</div>
-                      <div className="cola-telefono">📱 {t.cliente_telefono}</div>
+                      <div className="cola-telefono"><Smartphone size={12} /> {t.cliente_telefono}</div>
                     </div>
                     <div className="cola-hora">
                       {t.hora_programada && (
@@ -462,7 +463,7 @@ function BarberoDashboard() {
                       onClick={() => cancelarTurno(t.id_turno)}
                       title="Cancelar turno"
                     >
-                      ✕
+                      <X size={14} />
                     </button>
                   </div>
                 ))}
@@ -499,8 +500,8 @@ function BarberoDashboard() {
         <div className="modal-overlay" onClick={() => setMostrarModalTurno(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>+ Nuevo Turno</h3>
-              <button className="modal-close" onClick={() => setMostrarModalTurno(false)}>✕</button>
+              <h3><Plus size={18} /> Nuevo Turno</h3>
+              <button className="modal-close" onClick={() => setMostrarModalTurno(false)}><X size={18} /></button>
             </div>
             
             <div className="tipo-reserva-modal">
@@ -508,13 +509,13 @@ function BarberoDashboard() {
                 className={`tipo-btn ${tipoReserva === 'hoy' ? 'active' : ''}`}
                 onClick={() => { setTipoReserva('hoy'); setFormTurno({...formTurno, fecha: '', hora: ''}); setHorariosDisponibles([]); }}
               >
-                📅 Para hoy
+                <Calendar size={16} /> Para hoy
               </button>
               <button 
                 className={`tipo-btn ${tipoReserva === 'cita' ? 'active' : ''}`}
                 onClick={() => { setTipoReserva('cita'); setFormTurno({...formTurno, fecha: '', hora: ''}); setHorariosDisponibles([]); }}
               >
-                📆 Agendar
+                <Calendar size={16} /> Agendar
               </button>
             </div>
             
@@ -616,27 +617,27 @@ function BarberoDashboard() {
 
       <div className="nav-barbero">
         <button className={`nav-item ${vistaActual === 'inicio' ? 'active' : ''}`} onClick={() => setVistaActual('inicio')}>
-          <span className="nav-item-icon">🏠</span>
+          <span className="nav-item-icon"><Home size={20} /></span>
           <span>Inicio</span>
         </button>
         <button className={`nav-item ${vistaActual === 'metricas' ? 'active' : ''}`} onClick={() => setVistaActual('metricas')}>
-          <span className="nav-item-icon">📊</span>
+          <span className="nav-item-icon"><BarChart3 size={20} /></span>
           <span>Métricas</span>
         </button>
         <button className={`nav-item ${vistaActual === 'agenda' ? 'active' : ''}`} onClick={() => setVistaActual('agenda')}>
-          <span className="nav-item-icon">📅</span>
+          <span className="nav-item-icon"><Calendar size={20} /></span>
           <span>Agenda</span>
         </button>
         <button className={`nav-item ${vistaActual === 'contabilidad' ? 'active' : ''}`} onClick={() => setVistaActual('contabilidad')}>
-          <span className="nav-item-icon">💰</span>
+          <span className="nav-item-icon"><DollarSign size={20} /></span>
           <span>Contabilidad</span>
         </button>
         <button className={`nav-item ${vistaActual === 'ajustes' ? 'active' : ''}`} onClick={() => setVistaActual('ajustes')}>
-          <span className="nav-item-icon">⚙️</span>
+          <span className="nav-item-icon"><Settings size={20} /></span>
           <span>Ajustes</span>
         </button>
         <button className="nav-item nav-item-logout" onClick={logout}>
-          <span className="nav-item-icon">🚪</span>
+          <span className="nav-item-icon"><LogOut size={20} /></span>
           <span>Salir</span>
         </button>
       </div>

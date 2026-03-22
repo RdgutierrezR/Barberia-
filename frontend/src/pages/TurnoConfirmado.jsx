@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { parsearFecha, formatearFechaHora } from '../utils/fecha';
+import { Calendar, MapPin } from 'lucide-react';
 
 function TurnoConfirmado() {
   const { codigo } = useParams();
@@ -73,7 +74,7 @@ function TurnoConfirmado() {
       <div className="turno-confirmado">
         {esCita ? (
           <>
-            <div className="check-icon">📅</div>
+            <div className="check-icon"><Calendar size={32} /></div>
             <h1>Turno Agendado!</h1>
             
             <div className="codigo-turno">
@@ -90,7 +91,7 @@ function TurnoConfirmado() {
           </>
         ) : (
           <>
-            <div className="check-icon">📍</div>
+            <div className="check-icon"><MapPin size={32} /></div>
             <h1>En la Cola!</h1>
             
             <div className="codigo-turno">
