@@ -62,7 +62,8 @@ def obtener_resumen_barbero(id_barberia, id_barbero, periodo="mensual", fecha_in
                 Contabilidad.id_barberia == id_barberia,
                 Contabilidad.id_barbero == id_barbero,
                 Contabilidad.tipo == "ingreso",
-                Contabilidad.fecha >= (fecha_inicio_dt if (fecha_inicio and fecha_fin) else fecha_inicio)
+                Contabilidad.fecha >= (fecha_inicio_dt if (fecha_inicio and fecha_fin) else fecha_inicio),
+                Contabilidad.fecha < fecha_fin_dt
             ).count()
         elif tipo == "egreso":
             resumen["egresos"] = float(total) if total else 0
