@@ -157,8 +157,9 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ correo, contrasena, id_barberia: idBarberia })
     });
-    if (!res.ok) throw new Error(`Error: ${res.status}`);
-    return res.json();
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
   },
 
   registroBarberia: async (data) => {
