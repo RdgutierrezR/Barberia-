@@ -7,12 +7,38 @@ from modelo.horario import Horario
 from modelo.barbero import Barbero
 from datetime import datetime, timedelta, time, date
 from fecha_actual import ahora as ahora_fn
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, func as sql_func
 import random
 import string
 import logging
 
 logger = logging.getLogger(__name__)
+
+def calcular_hora_estimada(turnos_ordenados):
+    if not turnos_ordenados:
+        return []
+    
+    # Hora base = turno más antiguo (pero cálculo por posicion)
+    turno_base = min(turnos_ordenados, key=lambda t: t.fecha_creacion or ahora_fn())
+
+    if turno_base.fecha_creacion:
+        hora_base = turno_base.fecha_creacion.replace(second=0, microsecond=0)
+    else:
+        hora_base = ahora_fn().replace(second=0, microsecond=0)
+
+    resultados = []
+    hora_actual = hora_base
+
+    for i, turno in enumerate(turnos_ordenados):
+
+        if i != 0:
+            servicio_anterior = Servicio.query.get(turnos_ordenados[i-1].id_servicio)
+            duracion = servicio_anterior.duracion_minutos if servicio_anterior else 30
+            hora_actual = hora_actual + timedelta(minutes=duracion)
+
+        resultados.append((turno.id_turno, hora_actual.strftime("%H:%M")))
+
+    return resultados
 
 def listar_turnos(id_barberia, fecha=None, id_barbero=None, estado=None):
     query = Turno.query.filter_by(id_barberia=id_barberia)
@@ -80,7 +106,7 @@ def obtener_posicion_turno(id_barberia, id_barbero, id_turno_actual):
         Turno.id_barbero == id_barbero,
         Turno.tipo_reserva == "cola",
         Turno.estado.in_(["pendiente", "confirmado", "en_proceso"])
-    ).order_by(Turno.fecha_creacion).all()
+    ).order_by(sql_func.coalesce(Turno.posicion, 999999), Turno.fecha_creacion).all()
     
     posicion = 0
     turnos_adelante = 0
@@ -151,10 +177,12 @@ def crear_turno_cola(id_barberia, id_barbero, id_servicio, nombre_cliente, telef
         if ultimo.hora_programada:
             hora_parts = ultimo.hora_programada.split(':')
             hora = int(hora_parts[0])
-            minuto = int(hora_parts[1]) + 30
+            minuto = int(hora_parts[1])
+            duracion_servicio = servicio.duracion_minutos
+            minuto += duracion_servicio
             if minuto >= 60:
-                hora += 1
-                minuto -= 60
+                hora += minuto // 60
+                minuto = minuto % 60
             hora_programada = f"{hora:02d}:{minuto:02d}"
         else:
             hora_programada = ahora.strftime("%H:%M")
@@ -162,6 +190,8 @@ def crear_turno_cola(id_barberia, id_barbero, id_servicio, nombre_cliente, telef
         hora_programada = ahora.strftime("%H:%M")
     
     codigo = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    
+    posicion = len(turnos_activos) + 1
     
     nuevo = Turno(
         id_barberia=id_barberia,
@@ -173,14 +203,13 @@ def crear_turno_cola(id_barberia, id_barbero, id_servicio, nombre_cliente, telef
         codigo_confirmacion=codigo,
         notas=notas,
         precio_final=servicio.precio,
-        estado="pendiente"
+        estado="pendiente",
+        posicion=posicion
     )
     db.session.add(nuevo)
     db.session.commit()
     
-    logger.info(f"Turno creado exitosamente: id={nuevo.id_turno}, precio_final={nuevo.precio_final}")
-    
-    posicion = len(turnos_activos) + 1
+    logger.info(f"Turno creado exitosamente: id={nuevo.id_turno}, precio_final={nuevo.precio_final}, posicion={posicion}")
     
     return {"turno": nuevo, "posicion": posicion}, None
 
@@ -234,6 +263,19 @@ def cancelar_turno(id_turno):
     turno = Turno.query.get(id_turno)
     if turno:
         turno.estado = "cancelado"
+        db.session.commit()
+        
+        # Actualizar posiciones de turnos restantes
+        turnos_restantes = Turno.query.filter(
+            Turno.id_barberia == turno.id_barberia,
+            Turno.id_barbero == turno.id_barbero,
+            Turno.estado.in_(["pendiente", "confirmado"]),
+            Turno.tipo_reserva == "cola"
+        ).order_by(sql_func.coalesce(Turno.posicion, 999999), Turno.fecha_creacion).all()
+        
+        for i, t in enumerate(turnos_restantes):
+            t.posicion = i + 1
+        
         db.session.commit()
     return turno
 
@@ -682,17 +724,17 @@ def obtener_cola_diaria(id_barberia, id_barbero):
         Turno.id_barberia == id_barberia,
         Turno.id_barbero == id_barbero,
         Turno.estado.in_(["pendiente", "confirmado", "en_proceso"]),
-        or_(
-            Turno.tipo_reserva == "cola",
-            and_(Turno.tipo_reserva == "cita", Turno.cita_fecha_hora >= datetime.combine(fecha_hoy, datetime.min.time()))
-        )
-    ).order_by(Turno.fecha_creacion).limit(LIMITE_TURNOS_COLA).all()
+        Turno.tipo_reserva == "cola"
+    ).order_by(sql_func.coalesce(Turno.posicion, 999999), Turno.fecha_creacion).limit(LIMITE_TURNOS_COLA).all()
     
     if not turnos:
         return []
     
     resultado = []
     posicion = 1
+    
+    horas_estimadas = calcular_hora_estimada(turnos)
+    horas_dict = {h[0]: h[1] for h in horas_estimadas}
     
     for turno in turnos:
         if not turno.cliente:
@@ -702,13 +744,13 @@ def obtener_cola_diaria(id_barberia, id_barbero):
         duracion_servicio = servicio.duracion_minutos if servicio else 30
         
         if turno.tipo_reserva == "cola":
-            hora_programada = turno.hora_programada if turno.hora_programada else (ahora + timedelta(minutes=30 * posicion)).strftime("%H:%M")
+            hora_estimada = horas_dict.get(turno.id_turno, "")
             tipo_mostrar = "cola"
         else:
             if turno.cita_fecha_hora and turno.cita_fecha_hora.date() == fecha_hoy:
-                hora_programada = turno.cita_fecha_hora.strftime("%H:%M")
+                hora_estimada = turno.cita_fecha_hora.strftime("%H:%M")
             else:
-                hora_programada = turno.hora_programada if turno.hora_programada else ""
+                hora_estimada = ""
             tipo_mostrar = "cita"
         
         resultado.append({
@@ -723,7 +765,8 @@ def obtener_cola_diaria(id_barberia, id_barbero):
             "estado": turno.estado,
             "codigo_confirmacion": turno.codigo_confirmacion,
             "posicion_en_cola": posicion,
-            "hora_programada": hora_programada,
+            "posicion": turno.posicion,
+            "hora_estimada": hora_estimada,
             "fecha_hora": turno.fecha_hora.isoformat() if turno.fecha_hora else None,
             "fecha_creacion": turno.fecha_creacion.isoformat() if turno.fecha_creacion else None
         })
@@ -833,6 +876,19 @@ def pasar_siguiente(id_barberia, id_barbero, forzar_cita=False):
             logger.error(f"ERROR al registrar contabilidad: {str(e)}")
         
         db.session.commit()
+        
+        # Actualizar posiciones de turnos restantes
+        turnos_restantes = Turno.query.filter(
+            Turno.id_barberia == id_barberia,
+            Turno.id_barbero == id_barbero,
+            Turno.estado.in_(["pendiente", "confirmado"]),
+            Turno.tipo_reserva == "cola"
+        ).order_by(sql_func.coalesce(Turno.posicion, 999999), Turno.fecha_creacion).all()
+        
+        for i, t in enumerate(turnos_restantes):
+            t.posicion = i + 1
+        
+        db.session.commit()
     
     siguiente = obtener_siguiente_para_atender(id_barberia, id_barbero, forzar_cita)
     
@@ -900,6 +956,19 @@ def finalizar_turno_actual(id_barberia, id_barbero):
     
     db.session.commit()
     
+    # Actualizar posiciones de turnos restantes
+    turnos_restantes = Turno.query.filter(
+        Turno.id_barberia == id_barberia,
+        Turno.id_barbero == id_barbero,
+        Turno.estado.in_(["pendiente", "confirmado"]),
+        Turno.tipo_reserva == "cola"
+    ).order_by(sql_func.coalesce(Turno.posicion, 999999), Turno.fecha_creacion).all()
+    
+    for i, t in enumerate(turnos_restantes):
+        t.posicion = i + 1
+    
+    db.session.commit()
+    
     return {"mensaje": "Turno completado", "turno_id": turno_actual.id_turno}, None
 
 def reordenar_turno(id_turno, nueva_posicion):
@@ -915,22 +984,47 @@ def reordenar_turno(id_turno, nueva_posicion):
         Turno.id_barbero == id_barbero,
         Turno.estado.in_(["pendiente", "confirmado"]),
         Turno.tipo_reserva == "cola"
-    ).order_by(Turno.fecha_creacion).all()
+    ).order_by(sql_func.coalesce(Turno.posicion, 999999), Turno.fecha_creacion).all()
     
-    turnos_lista = [t for t in todos_turnos if t.id_turno != id_turno]
+    # Asignar posiciones si no las tienen
+    for i, t in enumerate(todos_turnos):
+        if t.posicion is None:
+            t.posicion = i + 1
+    db.session.commit()
     
+    # Recargar con posiciones asignadas
+    todos_turnos = Turno.query.filter(
+        Turno.id_barberia == id_barberia,
+        Turno.id_barbero == id_barbero,
+        Turno.estado.in_(["pendiente", "confirmado"]),
+        Turno.tipo_reserva == "cola"
+    ).order_by(Turno.posicion).all()
+    
+    # Validar rango
     if nueva_posicion <= 0:
         nueva_posicion = 1
-    if nueva_posicion > len(turnos_lista) + 1:
-        nueva_posicion = len(turnos_lista) + 1
     
-    turnos_lista.insert(nueva_posicion - 1, turno)
+    if nueva_posicion > len(todos_turnos):
+        nueva_posicion = len(todos_turnos)
     
-    for i, t in enumerate(turnos_lista):
-        t.fecha_creacion = ahora_fn() + timedelta(minutes=i)
+    # Buscar turno destino
+    turno_destino = next(
+        (t for t in todos_turnos if t.posicion == nueva_posicion),
+        None
+    )
+    
+    if turno_destino and turno_destino.id_turno != turno.id_turno:
+        # Swap real
+        posicion_original = turno.posicion
+        turno.posicion = turno_destino.posicion
+        turno_destino.posicion = posicion_original
     
     db.session.commit()
-    return {"mensaje": "Turno reordenado", "nueva_posicion": nueva_posicion}
+    
+    return {
+        "mensaje": "Turno intercambiado",
+        "nueva_posicion": nueva_posicion
+    }, None
 
 def marcar_llegada_cita(id_turno):
     turno = Turno.query.get(id_turno)
@@ -939,3 +1033,35 @@ def marcar_llegada_cita(id_turno):
         db.session.commit()
         return True
     return False
+
+def asignar_posiciones_turnos(id_barberia):
+    """Asigna posiciones a turnos existentes que no la tengan"""
+    # Obtener todas las barberías y barberos con turnos activos
+    turnos_activos = Turno.query.filter(
+        Turno.id_barberia == id_barberia,
+        Turno.estado.in_(["pendiente", "confirmado", "en_proceso"]),
+        Turno.tipo_reserva == "cola"
+    ).all()
+    
+    # Agrupar por barbero
+    grupos = {}
+    for turno in turnos_activos:
+        if turno.id_barbero not in grupos:
+            grupos[turno.id_barbero] = []
+        grupos[turno.id_barbero].append(turno)
+    
+    total_actualizados = 0
+    
+    # Asignar posiciones a cada grupo
+    for id_barbero, turnos in grupos.items():
+        # Ordenar por fecha_creacion
+        turnos_ordenados = sorted(turnos, key=lambda t: t.fecha_creacion or t.id_turno)
+        
+        for i, turno in enumerate(turnos_ordenados, 1):
+            if turno.posicion is None:
+                turno.posicion = i
+                total_actualizados += 1
+    
+    db.session.commit()
+    
+    return {"mensaje": f"Se asignaron posiciones a {total_actualizados} turnos"}

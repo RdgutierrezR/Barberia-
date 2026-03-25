@@ -320,7 +320,7 @@ export const api = {
     return data;
   },
 
-  reordernarTurno: async (idBarberia, idTurno, nuevaPosicion) => {
+  reordenarTurno: async (idBarberia, idTurno, nuevaPosicion) => {
     const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/cola/reordenar`, {
       method: 'PUT',
       headers: headers(),
@@ -420,6 +420,16 @@ export const api = {
     if (fechaFin) params.push(`fecha_fin=${fechaFin}`);
     if (params.length) url += '?' + params.join('&');
     const res = await fetch(url, { headers: headers() });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+
+  asignarPosiciones: async (idBarberia) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/asignar-posiciones`, {
+      method: 'POST',
+      headers: headers()
+    });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
     return data;

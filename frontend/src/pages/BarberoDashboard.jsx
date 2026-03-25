@@ -30,6 +30,8 @@ function BarberoDashboard() {
     fecha: '',
     hora: ''
   });
+  const [dragTurno, setDragTurno] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
   const nombreBarbero = localStorage.getItem('barbero_nombre') || 'Barbero';
 
   useEffect(() => {
@@ -150,6 +152,15 @@ function BarberoDashboard() {
     } catch (err) {
       console.error('Error al cancelar:', err);
       alert('Error al cancelar turno');
+    }
+  };
+
+  const reorderTurno = async (idTurno, nuevaPosicion) => {
+    try {
+      await api.reordenarTurno(id_barberia, idTurno, nuevaPosicion);
+      cargarCola();
+    } catch (err) {
+      console.error('Error al reordenar:', err);
     }
   };
 
@@ -346,7 +357,23 @@ function BarberoDashboard() {
               </div>
             </div>
             <div className="ajustes-placeholder">
-              <p>Próximamente: Configuración de perfil</p>
+              <button 
+                className="btn-primary"
+                onClick={async () => {
+                  try {
+                    const result = await api.asignarPosiciones(id_barberia);
+                    alert(result.mensaje);
+                    cargarCola();
+                  } catch (err) {
+                    alert('Error: ' + err.message);
+                  }
+                }}
+              >
+                Reparar Posiciones de Turnos
+              </button>
+              <p style={{fontSize: '12px', color: '#888', marginTop: '8px'}}>
+                Úsalo si las posiciones de los turnos no coinciden
+              </p>
             </div>
           </div>
         );
@@ -402,14 +429,14 @@ function BarberoDashboard() {
                   <div className="cliente-actual-header">
                     <div className="cliente-nombre">{turnoActual.cliente_nombre}</div>
                     <span className={`tipo-badge ${turnoActual.tipo_reserva}`}>
-                      {turnoActual.hora_programada ? formatHora12h(turnoActual.hora_programada) : '-'}
+                      {turnoActual.servicio_duracion} min
                     </span>
                   </div>
                     <div className="cliente-info-badge">
                       <Smartphone size={14} /> {turnoActual.cliente_telefono}
                     </div>
                   <div className="cliente-servicio">
-                    {turnoActual.servicio_nombre} - {turnoActual.servicio_duracion} min
+                    {turnoActual.servicio_nombre}
                   </div>
                   <div className="botones-accion">
                     <button className="btn-small btn-finalizar" onClick={siguiente}>
@@ -438,7 +465,32 @@ function BarberoDashboard() {
               <h2>AGENDA DE HOY</h2>
               <div className="cola-list">
                 {turnosEnEspera.map((t, i) => (
-                  <div key={t.id_turno} className={`cola-item ${t.tipo_reserva}`}>
+                  <div 
+                    key={t.id_turno} 
+                    className={`cola-item ${t.tipo_reserva} ${dragTurno?.id_turno === t.id_turno ? 'dragging' : ''} ${dragOverIndex === i ? 'drag-over' : ''}`}
+                    draggable={t.tipo_reserva === 'cola'}
+                    onDragStart={(e) => {
+                      setDragTurno(t);
+                      e.dataTransfer.effectAllowed = 'move';
+                    }}
+                    onDragEnd={() => {
+                      setDragTurno(null);
+                      setDragOverIndex(null);
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = 'move';
+                    }}
+                    onDragEnter={() => setDragOverIndex(i)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (dragTurno && dragTurno.id_turno !== t.id_turno && t.tipo_reserva === 'cola') {
+                        reorderTurno(dragTurno.id_turno, t.posicion);
+                      }
+                      setDragTurno(null);
+                      setDragOverIndex(null);
+                    }}
+                  >
                     <div className="cola-posicion">
                       <span className="posicion-num">#{t.posicion_en_cola}</span>
                     </div>
@@ -453,8 +505,8 @@ function BarberoDashboard() {
                       <div className="cola-telefono"><Smartphone size={12} /> {t.cliente_telefono}</div>
                     </div>
                     <div className="cola-hora">
-                      {t.hora_programada && (
-                        <span className="hora-programada">{formatHora12h(t.hora_programada)}</span>
+                      {t.hora_estimada && (
+                        <span className="hora-programada">{formatHora12h(t.hora_estimada)}</span>
                       )}
                       <span className="tipo-reserva-label">{t.tipo_reserva === 'cola' ? 'En cola' : 'Cita'}</span>
                     </div>

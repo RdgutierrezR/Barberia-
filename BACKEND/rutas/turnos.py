@@ -222,3 +222,9 @@ def limpiar_turnos(id_barberia):
     dias = request.args.get("dias", type=int, default=7)
     eliminados = ctrl.limpiar_turnos_antiguos(id_barberia, dias)
     return jsonify({"mensaje": f"Se eliminaron {eliminados} turnos antiguos"})
+
+@turnos_bp.route("/asignar-posiciones", methods=["POST"])
+@jwt_required()
+def asignar_posiciones(id_barberia):
+    resultado = ctrl.asignar_posiciones_turnos(id_barberia)
+    return jsonify(resultado)

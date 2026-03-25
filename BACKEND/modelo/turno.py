@@ -33,6 +33,7 @@ class Turno(db.Model):
     notas = db.Column(db.Text, nullable=True)
     precio_final = db.Column(db.Numeric(10, 2), nullable=True)
     fecha_creacion = db.Column(db.DateTime, default=_ahora)
+    posicion = db.Column(db.Integer, nullable=True)  # Posición en la cola
 
     barberia = db.relationship("Barberia", backref="turnos")
     barbero = db.relationship("Barbero", backref="turnos")
@@ -53,6 +54,7 @@ class Turno(db.Model):
             "servicio_precio": float(self.servicio.precio) if self.servicio else None,
             "servicio_duracion": self.servicio.duracion_minutos if self.servicio else None,
             "hora_programada": self.hora_programada,
+            "posicion": self.posicion,
             "tipo_reserva": self.tipo_reserva,
             "cita_fecha_hora": _agregar_timezone(self.cita_fecha_hora),
             "fecha_cita_original": _agregar_timezone(self.fecha_cita_original),

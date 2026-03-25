@@ -1,8 +1,12 @@
 from twilio.rest import Client
 from configuracion import Config
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_twilio_client():
     if not Config.TWILIO_ACCOUNT_SID or not Config.TWILIO_AUTH_TOKEN:
+        logger.warning("Twilio no configurado: credentials vacías")
         return None
     return Client(Config.TWILIO_ACCOUNT_SID, Config.TWILIO_AUTH_TOKEN)
 
@@ -23,21 +27,26 @@ def formatear_telefono(telefono):
 
 def enviar_whatsapp(to_number, mensaje):
     if not to_number:
+        logger.error("enviar_whatsapp: número vacío")
         return False
     
     client = get_twilio_client()
     if not client:
+        logger.error("enviar_whatsapp: client Twilio es None")
         return False
     
     try:
         telefono = formatear_telefono(to_number)
+        logger.info(f"Enviando WhatsApp a {telefono}: {mensaje[:50]}...")
         message = client.messages.create(
             body=mensaje,
             from_=Config.TWILIO_WHATSAPP_NUMBER,
             to=f"whatsapp:{telefono}"
         )
+        logger.info(f"WhatsApp enviado exitosamente: SID={message.sid}")
         return True
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error al enviar WhatsApp: {str(e)}")
         return False
 
 def notificar_nuevo_turno_barbero(barbero, nombre_cliente, nombre_servicio, precio, fecha_hora, telefono_cliente):

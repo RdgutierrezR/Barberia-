@@ -753,11 +753,57 @@ body {
   background: linear-gradient(90deg, #1a1a1a 0%, #151515 100%);
   border-radius: 10px;
   border: 1px solid #222;
+  transition: all 0.2s ease;
+  cursor: grab;
+  position: relative;
 }
 
 .cola-item:hover {
   border-color: #333;
   background: linear-gradient(90deg, #1f1f1f 0%, #1a1a1a 100%);
+}
+
+.cola-item.dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+  border: 2px dashed #f59e0b;
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+  cursor: grabbing;
+  z-index: 100;
+}
+
+.cola-item.drag-over {
+  border: 2px solid #10b981;
+  background: linear-gradient(90deg, #0d2620 0%, #0a1f1a 100%);
+  transform: translateY(5px);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+}
+
+.cola-item.drag-over::after {
+  content: '⬇ soltar aquí';
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #10b981;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  animation: pulse 1s infinite;
+}
+
+@keyframes swapFlash {
+  0% { background: linear-gradient(90deg, #1a1a1a 0%, #151515 100%); }
+  50% { background: linear-gradient(90deg, #065f46 0%, #064e3b 100%); }
+  100% { background: linear-gradient(90deg, #1a1a1a 0%, #151515 100%); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 .cola-posicion {
@@ -803,11 +849,19 @@ body {
   background: linear-gradient(90deg, #1a1a1a 0%, #151515 100%);
   border-radius: 10px;
   border: 1px solid #222;
+  transition: all 0.2s ease;
+  cursor: grab;
 }
 
 .cola-item:hover {
   border-color: #333;
   background: linear-gradient(90deg, #1f1f1f 0%, #1a1a1a 100%);
+}
+
+.cola-item.dragging {
+  opacity: 0.5;
+  border: 2px dashed #f59e0b;
+  cursor: grabbing;
 }
 
 .cola-posicion {
