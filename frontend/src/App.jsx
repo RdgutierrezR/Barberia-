@@ -8,11 +8,26 @@ import AdminPanel from './pages/AdminPanel'
 import OwnerDashboard from './pages/OwnerDashboard'
 import './App.css'
 
+function RedirectBySession() {
+  const token = localStorage.getItem('barbero_token')
+  const rol = localStorage.getItem('barbero_rol')
+  const barberiaId = localStorage.getItem('barberia_id')
+  const barberoId = localStorage.getItem('barbero_id')
+
+  if (token && barberiaId) {
+    if (rol === 'admin') return <Navigate to="/admin" replace />
+    if (rol === 'owner') return <Navigate to={`/barberia/${barberiaId}/dashboard`} replace />
+    if (rol === 'barbero') return <Navigate to={`/barbero/${barberiaId}/${barberoId}`} replace />
+  }
+
+  return <Navigate to="/login" replace />
+}
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<RedirectBySession />} />
         <Route path="/login" element={<Login />} />
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="/barberia/:id" element={<Barberia />} />
