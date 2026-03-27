@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
+import { useAuthInit } from '../hooks/useAuthInit';
 import Contabilidad from './Contabilidad';
 import VistaAgenda from './VistaAgenda';
 import Metricas from './Metricas';
@@ -32,25 +33,65 @@ function BarberoDashboard() {
   });
   const [dragTurno, setDragTurno] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
+  const [datosInicialesCargados, setDatosInicialesCargados] = useState(false);
+  const intervalRef = useRef(null);
+  const abortControllersRef = useRef([]);
+  const mountedRef = useRef(true);
+  
+  const { inicializado, tokenValido, crearAbortController } = useAuthInit();
   const nombreBarbero = localStorage.getItem('barbero_nombre') || 'Barbero';
 
-  useEffect(() => {
-    if (!id_barberia || !id_barbero) return;
+  const logout = () => {
+    localStorage.removeItem('barbero_token');
+    localStorage.removeItem('barbero_id');
+    localStorage.removeItem('barbero_nombre');
+    localStorage.removeItem('barberia_id');
+    navigate('/login', { replace: true });
+  };
+
+  const cargarCola = async () => {
+    if (!mountedRef.current) return;
     
-    const token = localStorage.getItem('barbero_token');
-    if (!token) {
-      navigate('/login');
-      return;
+    const controller = crearAbortController();
+    abortControllersRef.current.push(controller);
+    
+    try {
+      const data = await api.getColaDiaria(id_barberia, id_barbero);
+      if (!mountedRef.current) return;
+      
+      if (Array.isArray(data)) {
+        setColaDiaria(data);
+        setError(null);
+        setDatosInicialesCargados(true);
+      } else {
+        logout();
+        return;
+      }
+      setLoading(false);
+    } catch (err) {
+      if (!mountedRef.current) return;
+      if (err.name === 'AbortError' || err.message.includes('canceled')) return;
+      
+      console.error('Error:', err.message);
+      if (err.message.includes('401') || err.message.includes('token') || err.message.includes('JWT')) {
+        logout();
+      } else {
+        setError(err.message);
+      }
+      setLoading(false);
     }
-    cargarCola();
-    cargarHorarioDia();
-    const interval = setInterval(cargarCola, 5000);
-    return () => clearInterval(interval);
-  }, [id_barberia, id_barbero]);
+  };
 
   const cargarHorarioDia = async () => {
+    if (!mountedRef.current) return;
+    
+    const controller = crearAbortController();
+    abortControllersRef.current.push(controller);
+    
     try {
       const data = await api.getHorarioDia(id_barberia, id_barbero);
+      if (!mountedRef.current) return;
+      
       setHorarioDia(data);
       if (data.hora_inicio) {
         setHoraInicio(data.hora_inicio.substring(0, 5));
@@ -59,9 +100,55 @@ function BarberoDashboard() {
         setHoraFin(data.hora_fin.substring(0, 5));
       }
     } catch (err) {
+      if (!mountedRef.current) return;
+      if (err.name === 'AbortError' || err.message.includes('canceled')) return;
       console.error('Error al cargar horario:', err);
     }
   };
+
+  useEffect(() => {
+    mountedRef.current = true;
+    
+    if (!inicializado) return;
+    
+    if (!tokenValido) {
+      navigate('/login');
+      return;
+    }
+
+    if (!id_barberia || !id_barbero) return;
+
+    cargarCola();
+    cargarHorarioDia();
+
+    return () => {
+      mountedRef.current = false;
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      const controllers = abortControllersRef.current;
+      controllers.forEach(controller => {
+        try { controller.abort(); } catch {/* empty */}
+      });
+    };
+  }, [inicializado, tokenValido, id_barberia, id_barbero, navigate, cargarCola, cargarHorarioDia]);
+
+  useEffect(() => {
+    if (datosInicialesCargados && !intervalRef.current) {
+      intervalRef.current = setInterval(() => {
+        if (mountedRef.current) {
+          cargarCola();
+        }
+      }, 5000);
+    }
+    
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [datosInicialesCargados, id_barberia, id_barbero, cargarCola]);
 
   const guardarHorarioDia = async () => {
     try {
@@ -99,28 +186,6 @@ function BarberoDashboard() {
     } catch (err) {
       console.error('Error al guardar horario:', err);
       alert('Error al guardar horario: ' + err.message);
-    }
-  };
-
-  const cargarCola = async () => {
-    try {
-      const data = await api.getColaDiaria(id_barberia, id_barbero);
-      if (Array.isArray(data)) {
-        setColaDiaria(data);
-        setError(null);
-      } else {
-        logout();
-        return;
-      }
-      setLoading(false);
-    } catch (err) {
-      console.error('Error:', err.message);
-      if (err.message.includes('401') || err.message.includes('token') || err.message.includes('JWT')) {
-        logout();
-      } else {
-        setError(err.message);
-      }
-      setLoading(false);
     }
   };
 
@@ -162,14 +227,6 @@ function BarberoDashboard() {
     } catch (err) {
       console.error('Error al reordenar:', err);
     }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('barbero_token');
-    localStorage.removeItem('barbero_id');
-    localStorage.removeItem('barbero_nombre');
-    localStorage.removeItem('barberia_id');
-    navigate('/login', { replace: true });
   };
 
   const formatHora12h = (hora24) => {

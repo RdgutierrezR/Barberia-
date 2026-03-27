@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
+import { useAuthInit } from '../hooks/useAuthInit';
 import { FRONTEND_URL } from '../config';
 import { Home, Users, Edit2, Trash2, User } from 'lucide-react';
 
@@ -13,6 +14,10 @@ function OwnerDashboard() {
   const [servicios, setServicios] = useState([]);
   const [turnos, setTurnos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(true);
+  const abortControllersRef = useRef([]);
+  
+  const { inicializado, tokenValido, crearAbortController } = useAuthInit();
   
   const [showModalBarbero, setShowModalBarbero] = useState(false);
   const [showModalServicio, setShowModalServicio] = useState(false);
@@ -25,17 +30,21 @@ function OwnerDashboard() {
   const [nuevoBarbero, setNuevoBarbero] = useState({ nombre: '', telefono: '', correo: '', contrasena: '' });
   const [nuevoServicio, setNuevoServicio] = useState({ nombre: '', descripcion: '', precio: '', duracion_minutos: '' });
 
-  useEffect(() => {
-    const token = localStorage.getItem('barbero_token');
-    const rol = localStorage.getItem('barbero_rol');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-    cargarDatos();
-  }, [id]);
+  const logout = () => {
+    localStorage.removeItem('barbero_token');
+    localStorage.removeItem('barbero_id');
+    localStorage.removeItem('barbero_nombre');
+    localStorage.removeItem('barberia_id');
+    localStorage.removeItem('barbero_rol');
+    navigate('/login');
+  };
 
   const cargarDatos = async () => {
+    if (!mountedRef.current) return;
+    
+    const controller = crearAbortController();
+    abortControllersRef.current.push(controller);
+    
     try {
       const [b, bs, s, t] = await Promise.all([
         api.getBarberia(id),
@@ -43,15 +52,40 @@ function OwnerDashboard() {
         api.getServicios(id),
         api.getTurnos(id)
       ]);
+      if (!mountedRef.current) return;
+      
       setBarberia(b);
       setBarberos(bs.filter(b => b.rol !== 'owner' && b.rol !== 'admin'));
       setServicios(s);
       setTurnos(t);
     } catch (err) {
+      if (!mountedRef.current) return;
+      if (err.name === 'AbortError' || err.message.includes('canceled')) return;
       console.error(err);
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    mountedRef.current = true;
+    
+    if (!inicializado) return;
+    
+    if (!tokenValido) {
+      navigate('/login');
+      return;
+    }
+    
+    cargarDatos();
+
+    return () => {
+      mountedRef.current = false;
+      const controllers = abortControllersRef.current;
+      controllers.forEach(c => {
+        try { c.abort(); } catch {/* empty */}
+      });
+    };
+  }, [inicializado, tokenValido, id, navigate, cargarDatos]);
 
   const agregarBarbero = async () => {
     if (!nuevoBarbero.nombre || !nuevoBarbero.telefono || !nuevoBarbero.correo || !nuevoBarbero.contrasena) {
@@ -137,15 +171,6 @@ function OwnerDashboard() {
     } catch (err) {
       alert(err.message);
     }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('barbero_token');
-    localStorage.removeItem('barbero_id');
-    localStorage.removeItem('barbero_nombre');
-    localStorage.removeItem('barberia_id');
-    localStorage.removeItem('barbero_rol');
-    navigate('/login');
   };
 
   const formatCurrency = (value) => {
