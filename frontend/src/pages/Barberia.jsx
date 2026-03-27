@@ -138,6 +138,7 @@ function Barberia() {
     setLoading(true);
     
     try {
+      let resultado;
       if (tipoReserva === 'hoy') {
         const data = {
           id_barbero: barberoSeleccionado.id_barbero,
@@ -145,8 +146,7 @@ function Barberia() {
           nombre_cliente: nombre,
           telefono: telefono
         };
-        const resultado = await api.crearTurnoCola(id, data);
-        navigate(`/turno/${resultado.turno.codigo_confirmacion}`);
+        resultado = await api.crearTurnoCola(id, data);
       } else {
         const data = {
           id_barbero: barberoSeleccionado.id_barbero,
@@ -155,9 +155,12 @@ function Barberia() {
           nombre_cliente: nombre,
           telefono: telefono
         };
-        const resultado = await api.crearTurnoCita(id, data);
-        navigate(`/turno/${resultado.turno.codigo_confirmacion}`);
+        resultado = await api.crearTurnoCita(id, data);
       }
+      console.log('[DEBUG] Navegando a turno con barberia:', id);
+      navigate(`/turno/${resultado.turno.codigo_confirmacion}?barberia=${id}`, {
+        state: { turno: resultado.turno, posicion: resultado.posicion, id_barberia: id }
+      });
     } catch (err) {
       setError(err.message);
       setLoading(false);

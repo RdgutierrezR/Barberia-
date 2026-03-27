@@ -1,55 +1,88 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api';
-import { parsearFecha, formatearFechaHora } from '../utils/fecha';
+import { parsearFecha } from '../utils/fecha';
 import { Calendar, MapPin } from 'lucide-react';
 
 function TurnoConfirmado() {
   const { codigo } = useParams();
   const navigate = useNavigate();
-  const [turno, setTurno] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const [turno, setTurno] = useState(() => location.state?.turno || null);
+  const [loading, setLoading] = useState(!location.state?.turno);
   const [cancelando, setCancelando] = useState(false);
 
   useEffect(() => {
-    const buscarTurno = async () => {
-      const barberiaGuardada = localStorage.getItem('barberia_actual');
-      const barberiaId = barberiaGuardada || 1;
-      
-      try {
-        const t = await api.getTurnoPorCodigo(barberiaId, codigo);
-        if (!t.error) {
-          setTurno(t);
-          setLoading(false);
-          return;
-        }
-      } catch (e) {}
-      setLoading(false);
-    };
-    buscarTurno();
+    let cancelado = false;
+    const params = new URLSearchParams(window.location.search);
+    const barberiaUrl = params.get('barberia');
+    const barberiaGuardada = localStorage.getItem('barberia_actual');
+    const barberiaId = barberiaUrl || location.state?.id_barberia || barberiaGuardada || 1;
     
-    const interval = setInterval(buscarTurno, 5000);
-    return () => clearInterval(interval);
+    console.log('[DEBUG] Buscando turno:', { 
+      codigo, 
+      barberiaUrl, 
+      barberiaState: location.state?.id_barberia,
+      barberiaLocal: barberiaGuardada, 
+      barberiaId 
+    });
+
+    const buscarTurno = async (reintentos = 3) => {
+      for (let i = 0; i < reintentos; i++) {
+        if (cancelado) return;
+        try {
+          const t = await api.getTurnoPorCodigo(barberiaId, codigo);
+          if (!cancelado && !t.error) {
+            setTurno(t);
+            setLoading(false);
+            return true;
+          }
+        } catch {
+          if (cancelado) return;
+          if (i < reintentos - 1) {
+            await new Promise(r => setTimeout(r, 1500 * (i + 1)));
+          }
+        }
+      }
+      if (!cancelado && !turno) setLoading(false);
+      return false;
+    };
+
+    if (location.state?.turno) {
+      buscarTurno(1);
+    } else {
+      buscarTurno(5);
+    }
+
+    const interval = setInterval(() => buscarTurno(1), 8000);
+    return () => { cancelado = true; clearInterval(interval); };
   }, [codigo]);
 
   const handleCancelar = async () => {
     if (!confirm('¿Estás seguro de cancelar tu turno?')) return;
     
-    const barberiaId = localStorage.getItem('barberia_actual') || 1;
+    const barberiaId = location.state?.id_barberia || localStorage.getItem('barberia_actual') || 1;
     setCancelando(true);
     
     try {
       await api.cancelarTurno(barberiaId, turno.id_turno);
       localStorage.removeItem('barberia_actual');
       navigate(`/barberia/${turno.id_barberia}`);
-    } catch (e) {
+    } catch {
       alert('Error al cancelar turno');
       setCancelando(false);
     }
   };
 
-  if (loading) return <div className="page"><div className="loading">Buscando turno...</div></div>;
-  if (!turno) return <div className="page"><div className="error">Turno no encontrado</div></div>;
+  if (loading) return <div className="page"><div className="loading">Confirmando tu turno...</div></div>;
+  if (!turno) return (
+    <div className="page">
+      <div className="error">
+        <p>No pudimos encontrar tu turno</p>
+        <button className="btn-primary" onClick={() => window.location.reload()}>Reintentar</button>
+      </div>
+    </div>
+  );
 
   const esCita = turno.tipo_reserva === 'cita';
   const tieneHora = turno.cita_fecha_hora;
