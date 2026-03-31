@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuthInit } from '../hooks/useAuthInit';
@@ -34,9 +34,14 @@ function BarberoDashboard() {
   const [dragTurno, setDragTurno] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const [datosInicialesCargados, setDatosInicialesCargados] = useState(false);
+  const [loadingAction, setLoadingAction] = useState(false);
   const intervalRef = useRef(null);
   const abortControllersRef = useRef([]);
   const mountedRef = useRef(true);
+  const isUpdatingRef = useRef(false);
+  const lastUserActionRef = useRef(0);
+  const pausePollingRef = useRef(false);
+  const requestIdRef = useRef(0);
   
   const { inicializado, tokenValido, crearAbortController } = useAuthInit();
   const nombreBarbero = localStorage.getItem('barbero_nombre') || 'Barbero';
@@ -49,15 +54,21 @@ function BarberoDashboard() {
     navigate('/login', { replace: true });
   };
 
-  const cargarCola = async () => {
-    if (!mountedRef.current) return;
+  const cargarCola = useCallback(async () => {
+    if (!mountedRef.current || isUpdatingRef.current || pausePollingRef.current) return;
     
+    const ahora = Date.now();
+    if (ahora - lastUserActionRef.current < 5000) return;
+    
+    const requestId = ++requestIdRef.current;
     const controller = crearAbortController();
     abortControllersRef.current.push(controller);
     
     try {
       const data = await api.getColaDiaria(id_barberia, id_barbero);
       if (!mountedRef.current) return;
+      
+      if (requestId !== requestIdRef.current) return;
       
       if (Array.isArray(data)) {
         setColaDiaria(data);
@@ -80,9 +91,9 @@ function BarberoDashboard() {
       }
       setLoading(false);
     }
-  };
+  }, [id_barberia, id_barbero, crearAbortController, logout]);
 
-  const cargarHorarioDia = async () => {
+  const cargarHorarioDia = useCallback(async () => {
     if (!mountedRef.current) return;
     
     const controller = crearAbortController();
@@ -104,26 +115,20 @@ function BarberoDashboard() {
       if (err.name === 'AbortError' || err.message.includes('canceled')) return;
       console.error('Error al cargar horario:', err);
     }
-  };
+  }, [id_barberia, id_barbero, crearAbortController]);
 
   useEffect(() => {
     mountedRef.current = true;
-    console.log('Effect triggered:', { inicializado, tokenValido, id_barberia, id_barbero });
     
     if (!inicializado) return;
     
     if (!tokenValido) {
-      console.log('Token inválido, redirigiendo a login');
       navigate('/login');
       return;
     }
 
-    if (!id_barberia || !id_barbero) {
-      console.log('Faltan IDs:', { id_barberia, id_barbero });
-      return;
-    }
+    if (!id_barberia || !id_barbero) return;
 
-    console.log('Cargando cola...');
     cargarCola();
 
     return () => {
@@ -136,7 +141,7 @@ function BarberoDashboard() {
         try { controller.abort(); } catch {/* empty */}
       });
     };
-  }, [inicializado, tokenValido, id_barberia, id_barbero, navigate, cargarCola]);
+  }, [inicializado, tokenValido, id_barberia, id_barbero, navigate]);
 
   useEffect(() => {
     if (!id_barberia || !id_barbero) return;
@@ -161,7 +166,7 @@ function BarberoDashboard() {
         if (mountedRef.current) {
           cargarCola();
         }
-      }, 5000);
+      }, 10000);
     }
     
     return () => {
@@ -170,7 +175,7 @@ function BarberoDashboard() {
         intervalRef.current = null;
       }
     };
-  }, [datosInicialesCargados, id_barberia, id_barbero, cargarCola]);
+  }, [datosInicialesCargados, id_barberia, id_barbero]);
 
   const guardarHorarioDia = async () => {
     try {
@@ -214,22 +219,29 @@ function BarberoDashboard() {
   };
 
   const siguiente = async () => {
+    setLoadingAction(true);
     try {
       await api.pasarSiguiente(id_barberia, id_barbero);
       cargarCola();
     } catch (err) {
       console.error('Error:', err);
+    } finally {
+      setLoadingAction(false);
     }
   };
 
   const finalizarSolo = async () => {
     if (!turnoActual) return;
     if (!confirm('¿Finalizar este turno sin llamar al siguiente?')) return;
+    
+    setLoadingAction(true);
     try {
       await api.finalizarSolo(id_barberia, id_barbero);
       cargarCola();
     } catch (err) {
       console.error('Error:', err);
+    } finally {
+      setLoadingAction(false);
     }
   };
 
@@ -245,11 +257,14 @@ function BarberoDashboard() {
   };
 
   const reorderTurno = async (idTurno, nuevaPosicion) => {
+    setLoadingAction(true);
     try {
       await api.reordenarTurno(id_barberia, idTurno, nuevaPosicion);
       cargarCola();
     } catch (err) {
       console.error('Error al reordenar:', err);
+    } finally {
+      setLoadingAction(false);
     }
   };
 
@@ -520,11 +535,11 @@ function BarberoDashboard() {
                     {turnoActual.servicio_nombre}
                   </div>
                   <div className="botones-accion">
-                    <button className="btn-small btn-finalizar" onClick={siguiente}>
-                      <Check size={14} /> Finalizar
+                    <button className="btn-small btn-finalizar" onClick={siguiente} disabled={loadingAction}>
+                      {loadingAction ? '...' : <><Check size={14} /> Finalizar</>}
                     </button>
-                    <button className="btn-small btn-secondary" onClick={finalizarSolo}>
-                      <SkipForward size={14} /> Solo fin
+                    <button className="btn-small btn-secondary" onClick={finalizarSolo} disabled={loadingAction}>
+                      {loadingAction ? '...' : <><SkipForward size={14} /> Solo fin</>}
                     </button>
                   </div>
                 </div>
@@ -533,8 +548,8 @@ function BarberoDashboard() {
                   <p>No hay cliente en servicio</p>
                   {turnosEnEspera.length > 0 && (
                     <div className="botones-siguiente">
-                      <button className="btn-primary" onClick={siguiente}>
-                        Llamar siguiente
+                      <button className="btn-primary" onClick={siguiente} disabled={loadingAction}>
+                        {loadingAction ? 'Cargando...' : 'Llamar siguiente'}
                       </button>
                     </div>
                   )}
