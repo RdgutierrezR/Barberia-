@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 export function useAuthInit() {
   const [inicializado, setInicializado] = useState(false);
@@ -32,11 +32,11 @@ export function useAuthInit() {
     };
   }, []);
 
-  const crearAbortController = () => {
+  const crearAbortController = useCallback(() => {
     const controller = new AbortController();
     abortControllersRef.current.push(controller);
     return controller;
-  };
+  }, []);
 
   return { inicializado, tokenValido, crearAbortController, mountedRef };
 }

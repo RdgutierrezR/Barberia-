@@ -108,18 +108,23 @@ function BarberoDashboard() {
 
   useEffect(() => {
     mountedRef.current = true;
+    console.log('Effect triggered:', { inicializado, tokenValido, id_barberia, id_barbero });
     
     if (!inicializado) return;
     
     if (!tokenValido) {
+      console.log('Token inválido, redirigiendo a login');
       navigate('/login');
       return;
     }
 
-    if (!id_barberia || !id_barbero) return;
+    if (!id_barberia || !id_barbero) {
+      console.log('Faltan IDs:', { id_barberia, id_barbero });
+      return;
+    }
 
+    console.log('Cargando cola...');
     cargarCola();
-    cargarHorarioDia();
 
     return () => {
       mountedRef.current = false;
@@ -131,7 +136,24 @@ function BarberoDashboard() {
         try { controller.abort(); } catch {/* empty */}
       });
     };
-  }, [inicializado, tokenValido, id_barberia, id_barbero, navigate, cargarCola, cargarHorarioDia]);
+  }, [inicializado, tokenValido, id_barberia, id_barbero, navigate, cargarCola]);
+
+  useEffect(() => {
+    if (!id_barberia || !id_barbero) return;
+
+    cargarHorarioDia();
+  }, [id_barberia, id_barbero]);
+
+  useEffect(() => {
+    if (horarioDia) {
+      if (horarioDia.hora_inicio) {
+        setHoraInicio(horarioDia.hora_inicio.substring(0, 5));
+      }
+      if (horarioDia.hora_fin) {
+        setHoraFin(horarioDia.hora_fin.substring(0, 5));
+      }
+    }
+  }, [horarioDia]);
 
   useEffect(() => {
     if (datosInicialesCargados && !intervalRef.current) {
@@ -184,7 +206,9 @@ function BarberoDashboard() {
       cargarHorarioDia();
       cargarCola();
     } catch (err) {
-      console.error('Error al guardar horario:', err);
+      console.error('Error completo:', err);
+      console.error('Response:', err.response);
+      console.error('Status:', err.status);
       alert('Error al guardar horario: ' + err.message);
     }
   };
