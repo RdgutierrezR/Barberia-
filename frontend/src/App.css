@@ -1599,6 +1599,348 @@ body {
   padding: 20px;
 }
 
+.btn-volver {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1f1f1f;
+  border: 1px solid #333;
+  color: #aaa;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-bottom: 12px;
+  transition: all 0.2s;
+}
+
+.btn-volver:hover {
+  background: #2a2a2a;
+  color: #fff;
+}
+
+.dia-detalle-header {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #14532d 0%, #166534 50%, #15803d 100%);
+  border: 2px solid #22c55e;
+  border-radius: 50px;
+  padding: 12px 20px;
+  margin-bottom: 12px;
+}
+
+.dia-detalle-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.dia-detalle-nombre {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.dia-detalle-cortes {
+  font-size: 10px;
+  color: #86efac;
+}
+
+.dia-detalle-total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.dia-detalle-total .total-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  color: #86efac;
+}
+
+.dia-detalle-total .total-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.mapa-calor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mapa-semana {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.dia-tarjeta-semana {
+  aspect-ratio: 1 / 1.1;
+  border-radius: 8px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.15s;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.dia-tarjeta-semana:hover {
+  transform: scale(1.02);
+  z-index: 1;
+}
+
+.dia-tarjeta-semana-nombre {
+  font-size: 10px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.dia-tarjeta-semana-cantidad {
+  font-size: 8px;
+  margin-bottom: 1px;
+}
+
+.dia-tarjeta-semana-total {
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.mapa-mensual {
+  width: 100%;
+  overflow: hidden;
+}
+
+.heatmap-mini-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.stat-mini {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-mini.mejor {
+  background: linear-gradient(135deg, #166534 0%, #15803d 100%);
+  border: 1px solid #22c55e;
+}
+
+.stat-mini.peor {
+  background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%);
+  border: 1px solid #ef4444;
+}
+
+.stat-mini .stat-label {
+  font-size: 8px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.stat-mini.mejor .stat-label { color: #86efac; }
+.stat-mini.peor .stat-label { color: #fca5a5; }
+
+.stat-mini .stat-dia {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.stat-mini .stat-monto {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.stat-mini.mejor .stat-monto { color: #4ade80; }
+.stat-mini.peor .stat-monto { color: #f87171; }
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 6px 12px;
+  background: #0f0f0f;
+  border-radius: 6px;
+}
+
+.legend-label {
+  font-size: 9px;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.legend-colors {
+  display: flex;
+  gap: 3px;
+}
+
+.legend-colors span {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.mapa-mensual-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.heatmap-mini-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.stat-mini {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.stat-mini.mejor {
+  background: linear-gradient(135deg, #166534 0%, #15803d 100%);
+  border: 1px solid #22c55e;
+}
+
+.stat-mini.peor {
+  background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%);
+  border: 1px solid #ef4444;
+}
+
+.stat-mini .stat-label {
+  font-size: 7px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.stat-mini.mejor .stat-label { color: #86efac; }
+.stat-mini.peor .stat-label { color: #fca5a5; }
+
+.stat-mini .stat-dia {
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.stat-mini .stat-monto {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.stat-mini.mejor .stat-monto { color: #4ade80; }
+.stat-mini.peor .stat-monto { color: #f87171; }
+
+.semana-encabezados {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 9px;
+  color: #888;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.semana-fila {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.dia-tarjeta {
+  aspect-ratio: 1 / 1.1;
+  border-radius: 8px;
+  padding: 3px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.15s;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.dia-tarjeta:hover {
+  transform: scale(1.02);
+  z-index: 1;
+}
+
+.dia-vacio {
+  background: transparent;
+  cursor: default;
+}
+
+.dia-tarjeta-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.badge-mejor {
+  font-size: 10px;
+  color: #fbbf24;
+}
+
+.dia-mejor {
+  box-shadow: 0 0 0 2px #fbbf24;
+}
+
+.dia-peor {
+  box-shadow: 0 0 0 2px #ef4444;
+}
+
+.dia-numero {
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.dia-tarjeta-cortes {
+  font-size: 7px;
+  text-align: center;
+  margin-top: -2px;
+}
+
+.dia-tarjeta-total {
+  font-size: 8px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.dia-tarjeta-vacio {
+  font-size: 8px;
+  color: #444;
+  text-align: center;
+}
+
 .agenda-placeholder, .ajustes-placeholder {
   background: linear-gradient(145deg, #1a1a1a 0%, #141414 100%);
   border-radius: 16px;
