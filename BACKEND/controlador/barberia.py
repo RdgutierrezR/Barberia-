@@ -1,5 +1,6 @@
 from database import db
 from modelo.barberia import Barberia
+from datetime import time
 
 def listar_barberias():
     return Barberia.query.filter_by(activa=True).all()
@@ -25,7 +26,7 @@ def crear_barberia(nombre, direccion=None, telefono=None, correo=None, logo_url=
     db.session.commit()
     return nuevo
 
-def actualizar_barberia(id_barberia, nombre=None, direccion=None, telefono=None, correo=None, logo_url=None):
+def actualizar_barberia(id_barberia, nombre=None, direccion=None, telefono=None, correo=None, logo_url=None, hora_apertura=None, hora_cierre=None):
     barberia = Barberia.query.get(id_barberia)
     if barberia:
         if nombre: barberia.nombre = nombre
@@ -33,6 +34,8 @@ def actualizar_barberia(id_barberia, nombre=None, direccion=None, telefono=None,
         if telefono: barberia.telefono = telefono
         if correo: barberia.correo = correo
         if logo_url: barberia.logo_url = logo_url
+        if hora_apertura: barberia.hora_apertura = hora_apertura if isinstance(hora_apertura, time) else time.fromisoformat(hora_apertura)
+        if hora_cierre: barberia.hora_cierre = hora_cierre if isinstance(hora_cierre, time) else time.fromisoformat(hora_cierre)
         db.session.commit()
     return barberia
 

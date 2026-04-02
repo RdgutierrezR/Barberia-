@@ -43,7 +43,9 @@ def actualizar(id_barberia):
         data.get("direccion"),
         data.get("telefono"),
         data.get("correo"),
-        data.get("logo_url")
+        data.get("logo_url"),
+        data.get("hora_apertura"),
+        data.get("hora_cierre")
     )
     if b:
         return jsonify(b.to_dict())

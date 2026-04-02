@@ -206,6 +206,13 @@ function BarberoDashboard() {
       });
       
       console.log('Horario guardado:', result);
+      
+      await api.actualizarBarberia(id_barberia, {
+        hora_apertura: horaInicio,
+        hora_cierre: horaFin
+      });
+      
+      console.log('Horario global de barbería actualizado');
       alert('Horario actualizado correctamente');
       setMostrarSelectorHorario(false);
       cargarHorarioDia();

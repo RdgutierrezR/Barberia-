@@ -28,6 +28,17 @@ export const api = {
     return res.json();
   },
   
+  actualizarBarberia: async (id, data) => {
+    const res = await fetch(`${API_URL}/barberias/${id}`, {
+      method: 'PUT',
+      headers: headers(),
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || `Error: ${res.status}`);
+    return json;
+  },
+  
   getBarberos: async (idBarberia) => {
     const res = await fetch(`${API_URL}/barberias/${idBarberia}/barberos/`);
     const data = await res.json();

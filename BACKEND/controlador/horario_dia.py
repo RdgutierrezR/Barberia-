@@ -1,6 +1,7 @@
 from database import db
 from modelo.horario_dia import HorarioDia
 from modelo.horario import Horario
+from modelo.barberia import Barberia
 from datetime import datetime, date, time
 
 def obtener_o_crear_horario_hoy(id_barberia, id_barbero):
@@ -128,6 +129,15 @@ def obtener_horario_trabajo(id_barberia, id_barbero, fecha=None):
             "hora_inicio": horario_semanal.hora_inicio,
             "hora_fin": horario_semanal.hora_fin,
             "fuente": "horario_semanal"
+        }
+    
+    # Buscar horario global de la barbería
+    barberia = Barberia.query.get(id_barberia)
+    if barberia and barberia.hora_apertura and barberia.hora_cierre:
+        return {
+            "hora_inicio": barberia.hora_apertura,
+            "hora_fin": barberia.hora_cierre,
+            "fuente": "barberia"
         }
     
     return {

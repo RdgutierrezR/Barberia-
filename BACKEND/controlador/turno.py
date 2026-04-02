@@ -5,6 +5,7 @@ from modelo.contabilidad import Contabilidad
 from modelo.bloqueo_agenda import BloqueoAgenda
 from modelo.horario import Horario
 from modelo.barbero import Barbero
+from modelo.barberia import Barberia
 from datetime import datetime, timedelta, time, date
 from fecha_actual import ahora as ahora_fn
 from sqlalchemy import or_, and_, func as sql_func
@@ -374,8 +375,15 @@ def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servic
             hora_inicio = horario.hora_inicio
             hora_fin = horario.hora_fin
         else:
-            hora_inicio = time(9, 0)
-            hora_fin = time(20, 0)
+            # Buscar horario global de la barbería
+            barberia = Barberia.query.get(id_barberia)
+            if barberia and barberia.hora_apertura and barberia.hora_cierre:
+                hora_inicio = barberia.hora_apertura
+                hora_fin = barberia.hora_cierre
+            else:
+                # Default: 9 AM - 8 PM
+                hora_inicio = time(9, 0)
+                hora_fin = time(20, 0)
     
     hora_apertura = datetime.combine(fecha_date, hora_inicio)
     hora_cierre = datetime.combine(fecha_date, hora_fin)
