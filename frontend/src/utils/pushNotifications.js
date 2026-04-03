@@ -9,8 +9,10 @@ export const getVapidPublicKey = async () => {
     console.log('[PUSH] Obteniendo clave VAPID de:', `${API_URL}/push/public-key`);
     const res = await fetch(`${API_URL}/push/public-key`);
     const data = await res.json();
-    console.log('[PUSH] Clave VAPID obtenida:', data.public_key ? 'OK' : 'VACIA');
-    vapidPublicKey = data.public_key;
+    console.log('[PUSH] Clave VAPID obtenida:', data.publicKey ? 'OK' : 'VACIA');
+    console.log("[PUSH] Data completa:", data);
+    vapidPublicKey = data.publicKey;
+    console.log("[PUSH] Public key:", vapidPublicKey);
     return vapidPublicKey;
   } catch (e) {
     console.error('[PUSH] Error obteniendo VAPID key:', e);
@@ -102,6 +104,8 @@ export const suscribirseAPush = async (token) => {
       return null;
     }
     console.log("[PUSH] Clave VAPID obtenida");
+    console.log("[PUSH] Clave VAPID:", publicKey);
+    console.log("[PUSH] Intentando subscribe");
 
     console.log("[PUSH] Suscribiendo al PushManager...");
     const subscription = await registration.pushManager.subscribe({

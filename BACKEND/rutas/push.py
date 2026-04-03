@@ -18,7 +18,7 @@ VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "")
 def get_public_key():
     if not VAPID_PUBLIC_KEY:
         return jsonify({"error": "Clave VAPID no configurada"}), 500
-    return jsonify({"public_key": VAPID_PUBLIC_KEY})
+    return jsonify({"publicKey": VAPID_PUBLIC_KEY})
 
 @push_bp.route("/subscribe", methods=["POST"])
 @jwt_required()
