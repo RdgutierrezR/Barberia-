@@ -60,15 +60,18 @@ export const suscribirseAPush = async (token) => {
   }
 
   try {
+    console.log('[PUSH] Obteniendo clave VAPID...');
     const publicKey = await getVapidPublicKey();
     if (!publicKey) {
       console.error('[PUSH] No se pudo obtener la clave VAPID');
       return null;
     }
+    console.log('[PUSH] Clave VAPID obtenida');
 
     let registration;
     try {
       registration = await navigator.serviceWorker.getRegistration();
+      console.log('[PUSH] Registration existente:', registration);
       if (!registration) {
         console.log('[PUSH] Registrando service worker...');
         registration = await navigator.serviceWorker.register('/sw.js');
@@ -84,13 +87,17 @@ export const suscribirseAPush = async (token) => {
       return null;
     }
     
+    console.log('[PUSH] Suscribiendo al push manager...');
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(publicKey)
     });
 
-    console.log('[PUSH] Suscripción creada:', subscription);
+    console.log('[PUSH] Suscripción creada exitosamente');
+    console.log('[PUSH] Endpoint:', subscription.endpoint);
+    console.log('[PUSH] Keys:', subscription.toJSON().keys);
 
+    console.log('[PUSH] Enviando al backend...');
     const res = await fetch(`${API_URL}/push/subscribe`, {
       method: 'POST',
       headers: {
@@ -102,11 +109,14 @@ export const suscribirseAPush = async (token) => {
       })
     });
 
+    const result = await res.json();
+    console.log('[PUSH] Respuesta del backend:', res.status, result);
+
     if (res.ok) {
       console.log('[PUSH] Suscripción guardada en backend');
       return subscription;
     } else {
-      console.error('[PUSH] Error guardando suscripción:', await res.text());
+      console.error('[PUSH] Error guardando suscripción:', result);
       return null;
     }
   } catch (e) {

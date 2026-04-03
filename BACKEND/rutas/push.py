@@ -31,7 +31,11 @@ def subscribe():
     subscription = data.get("subscription")
     
     if not subscription:
+        logging.warning("[PUSH] Suscripción requerida pero no recibida")
         return jsonify({"error": "Suscripción requerida"}), 400
+    
+    logging.info(f"[PUSH] Recibida suscripción para barbería {id_barberia}, barbero {id_barbero}")
+    logging.info(f"[PUSH] Subscription keys: {subscription.get('keys', {})}")
     
     sub = PushSubscription(
         barberia_id=id_barberia,
@@ -41,7 +45,7 @@ def subscribe():
     db.session.add(sub)
     db.session.commit()
     
-    logging.info(f"Nueva suscripción push para barbería {id_barberia}, barbero {id_barbero}")
+    logging.info(f"[PUSH] Nueva suscripción guardada con ID: {sub.id}")
     
     return jsonify({"mensaje": "Suscripción guardada", "id": sub.id}), 201
 

@@ -15,14 +15,18 @@ VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "")
 logger = logging.getLogger(__name__)
 
 def enviar_notificacion_push(barberia_id, barbero_id, titulo, mensaje):
+    logging.info(f"[PUSH] Intentando enviar notificación a barberia={barberia_id}, barbero={barbero_id}, titulo={titulo}")
+    
     if not VAPID_PUBLIC_KEY or not VAPID_PRIVATE_KEY:
-        logger.warning("VAPID keys no configuradas, saltando notificación push")
+        logger.warning("[PUSH] VAPID keys no configuradas, saltando notificación push")
         return 0
     
     subs = PushSubscription.query.filter_by(
         barberia_id=barberia_id,
         barbero_id=barbero_id
     ).all()
+    
+    logging.info(f"[PUSH] Suscripciones encontradas: {len(subs)}")
     
     if not subs:
         logger.info(f"No hay suscripciones push para barbero {barbero_id}")
@@ -38,9 +42,14 @@ def enviar_notificacion_push(barberia_id, barbero_id, titulo, mensaje):
         "timestamp": timestamp
     })
     
+    logging.info(f"[PUSH] Cuerpo del mensaje: {body}")
+    
     enviados = 0
     for sub in subs:
         try:
+            logging.info(f"[PUSH] Enviando a subscripción {sub.id}")
+            logging.info(f"[PUSH] Subscription keys: {sub.subscription.get('keys', {})}")
+            
             webpush(
                 sub.subscription,
                 data=body,
@@ -48,10 +57,10 @@ def enviar_notificacion_push(barberia_id, barbero_id, titulo, mensaje):
                 vapid_public_key=VAPID_PUBLIC_KEY,
                 ttl=3600
             )
-            logger.info(f"Notificación push enviada a subscripción {sub.id}")
+            logger.info(f"[PUSH] Notificación push enviada exitosamente a subscripción {sub.id}")
             enviados += 1
         except Exception as e:
-            logger.error(f"Error enviando push a subscripción {sub.id}: {e}")
+            logger.error(f"[PUSH] Error enviando push a subscripción {sub.id}: {e}")
     
     return enviados
 
