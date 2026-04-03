@@ -97,6 +97,18 @@ export const suscribirseAPush = async (token) => {
       return null;
     }
 
+    console.log("[PUSH] Service Worker activo:", registration.active);
+    console.log("[PUSH] Service Worker state:", registration.active?.state);
+    console.log("[PUSH] Service Worker scope:", registration.scope);
+    console.log("[PUSH] Notification permission:", Notification.permission);
+
+    await navigator.serviceWorker.getRegistrations().then(regs => {
+      regs.forEach(reg => {
+        console.log("[PUSH] Actualizando SW:", reg.scope);
+        reg.update();
+      });
+    });
+
     console.log("[PUSH] Obteniendo clave VAPID...");
     const publicKey = await getVapidPublicKey();
     if (!publicKey) {
