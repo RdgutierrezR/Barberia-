@@ -21,7 +21,14 @@ export default defineConfig({
           { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' }
         ]
       },
-      devOptions: { enabled: true }
+      devOptions: { enabled: true },
+      strategies: 'generateSW',
+      runtimeCaching: [{
+        urlPattern: ({ url }) => url.pathname.startsWith('/api/'),
+        handler: 'NetworkOnly'
+      }],
+      swDest: 'dist/sw.js',
+      swSrc: 'public/sw.js'
     })
   ],
   server: {

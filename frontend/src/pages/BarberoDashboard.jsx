@@ -6,6 +6,8 @@ import Contabilidad from './Contabilidad';
 import VistaAgenda from './VistaAgenda';
 import Metricas from './Metricas';
 import { Settings, Edit2, Smartphone, Check, SkipForward, X, Home, BarChart3, Calendar, DollarSign, LogOut, Plus, Clock } from 'lucide-react';
+import { solicitarPermisoNotificaciones, tienePermisoNotificaciones, notificarNuevoTurno } from '../utils/notificaciones';
+import { pushSoportado, solicitarPermisoPush, suscribirseAPush } from '../utils/pushNotifications';
 
 function BarberoDashboard() {
   const { id_barberia, id_barbero } = useParams();
@@ -35,10 +37,11 @@ function BarberoDashboard() {
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const [datosInicialesCargados, setDatosInicialesCargados] = useState(false);
   const [loadingAction, setLoadingAction] = useState(false);
+  const [ultimoIdTurno, setUltimoIdTurno] = useState(0);
+  const ultimoTurnoNotificadoRef = useRef(0);
   const intervalRef = useRef(null);
   const abortControllersRef = useRef([]);
   const mountedRef = useRef(true);
-  const isUpdatingRef = useRef(false);
   const lastUserActionRef = useRef(0);
   const pausePollingRef = useRef(false);
   const requestIdRef = useRef(0);
@@ -55,7 +58,7 @@ function BarberoDashboard() {
   };
 
   const cargarCola = useCallback(async () => {
-    if (!mountedRef.current || isUpdatingRef.current || pausePollingRef.current) return;
+    if (!mountedRef.current || pausePollingRef.current) return;
     
     const ahora = Date.now();
     if (ahora - lastUserActionRef.current < 5000) return;
@@ -71,6 +74,24 @@ function BarberoDashboard() {
       if (requestId !== requestIdRef.current) return;
       
       if (Array.isArray(data)) {
+        const maxId = data.length > 0 ? Math.max(...data.map(t => t.id_turno)) : 0;
+        
+        if (datosInicialesCargados && maxId > ultimoTurnoNotificadoRef.current && tienePermisoNotificaciones()) {
+          const ultimoNuevo = data.find(t => t.id_turno === maxId);
+          if (ultimoNuevo) {
+            console.log('[NOTIF] Nuevo turno detectado:', ultimoNuevo.cliente_nombre, 'ID:', maxId);
+            notificarNuevoTurno(ultimoNuevo.cliente_nombre, ultimoNuevo.servicio_nombre);
+            ultimoTurnoNotificadoRef.current = maxId;
+          }
+        }
+        
+        if (maxId > ultimoIdTurno) {
+          setUltimoIdTurno(maxId);
+          if (!datosInicialesCargados) {
+            ultimoTurnoNotificadoRef.current = maxId;
+          }
+        }
+        
         setColaDiaria(data);
         setError(null);
         setDatosInicialesCargados(true);
@@ -128,6 +149,21 @@ function BarberoDashboard() {
     }
 
     if (!id_barberia || !id_barbero) return;
+
+    console.log('[PUSH] Iniciando suscripción, pushSoportado:', pushSoportado());
+    solicitarPermisoNotificaciones();
+
+    if (pushSoportado()) {
+      const token = localStorage.getItem('barbero_token');
+      console.log('[PUSH] Token existe:', !!token);
+      if (token) {
+        suscribirseAPush(token)
+          .then(sub => console.log('[PUSH] Suscripción resultado:', sub ? 'OK' : 'FALLO'))
+          .catch(e => console.log('[PUSH] Error:', e.message));
+      }
+    } else {
+      console.log('[PUSH] Push no soportado en este dispositivo');
+    }
 
     cargarCola();
 
