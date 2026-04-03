@@ -105,13 +105,16 @@ export const suscribirseAPush = async (token) => {
     }
     console.log("[PUSH] Clave VAPID obtenida");
     console.log("[PUSH] Clave VAPID:", publicKey);
-    console.log("[PUSH] Intentando subscribe");
+    console.log("[PUSH] Convirtiendo clave VAPID...");
+    console.log("[PUSH] Intentando subscribe...");
 
     console.log("[PUSH] Suscribiendo al PushManager...");
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(publicKey)
     });
+
+    console.log("[PUSH] Subscription:", subscription);
 
     console.log("[PUSH] Suscripción creada exitosamente");
     console.log("[PUSH] Endpoint:", subscription.endpoint);
