@@ -151,6 +151,7 @@ function BarberoDashboard() {
     if (!id_barberia || !id_barbero) return;
 
     console.log('[PUSH] Iniciando suscripción, pushSoportado:', pushSoportado());
+    console.log('[PUSH] Permission actual:', Notification.permission);
     solicitarPermisoNotificaciones();
 
     if (pushSoportado()) {
@@ -512,6 +513,29 @@ function BarberoDashboard() {
               </button>
               <p style={{fontSize: '12px', color: '#888', marginTop: '8px'}}>
                 Úsalo si las posiciones de los turnos no coinciden
+              </p>
+              <hr style={{margin: '16px 0', borderColor: '#444'}} />
+              <button 
+                className="btn-secondary"
+                onClick={async () => {
+                  console.log('[DEBUG-PUSH] Iniciando manualmente...');
+                  const token = localStorage.getItem('barbero_token');
+                  if (!token) {
+                    alert('No hay token');
+                    return;
+                  }
+                  try {
+                    const result = await suscribirseAPush(token);
+                    alert(result ? 'Suscripción exitosa' : 'Suscripción fallida');
+                  } catch (err) {
+                    alert('Error: ' + err.message);
+                  }
+                }}
+              >
+                Debug Push
+              </button>
+              <p style={{fontSize: '12px', color: '#888', marginTop: '8px'}}>
+                Verifica logs en consola [PUSH]
               </p>
             </div>
           </div>

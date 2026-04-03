@@ -54,50 +54,66 @@ export const solicitarPermisoPush = async () => {
 };
 
 export const suscribirseAPush = async (token) => {
+  console.log("[PUSH] ========== INICIANDO SUSCRIPCION ==========");
+  
   if (!pushSoportado()) {
-    console.log('[PUSH] Push no soportado');
+    console.log("[PUSH] Push no soportado en este navegador");
     return null;
   }
+  console.log("[PUSH] Push soportado");
 
   try {
-    console.log('[PUSH] Obteniendo clave VAPID...');
-    const publicKey = await getVapidPublicKey();
-    if (!publicKey) {
-      console.error('[PUSH] No se pudo obtener la clave VAPID');
+    console.log("[PUSH] Verificando Notification.permission...");
+    let permission = Notification.permission;
+    console.log("[PUSH] Permission actual:", permission);
+
+    if (permission === 'default') {
+      console.log("[PUSH] Solicitando permiso...");
+      permission = await Notification.requestPermission();
+      console.log("[PUSH] Permission solicitado:", permission);
+    }
+
+    if (permission !== 'granted') {
+      console.log("[PUSH] Permiso denegado o no otorgado:", permission);
       return null;
     }
-    console.log('[PUSH] Clave VAPID obtenida');
+    console.log("[PUSH] Permiso garantizado");
 
+    console.log("[PUSH] Obteniendo service worker listo...");
     let registration;
     try {
-      registration = await navigator.serviceWorker.getRegistration();
-      console.log('[PUSH] Registration existente:', registration);
-      if (!registration) {
-        console.log('[PUSH] Registrando service worker...');
-        registration = await navigator.serviceWorker.register('/sw.js');
-        console.log('[PUSH] SW registrado:', registration);
-      }
+      registration = await navigator.serviceWorker.ready;
+      console.log("[PUSH] Service worker listo:", registration.active?.scriptURL || 'sin URL');
     } catch (swError) {
-      console.error('[PUSH] Error con SW:', swError);
+      console.log("[PUSH] SW.ready falló, intentando registrar:", swError.message);
       registration = await navigator.serviceWorker.register('/sw.js');
+      console.log("[PUSH] SW registrado manualmente:", registration);
     }
-    
+
     if (!registration) {
-      console.error('[PUSH] No se pudo obtener registration');
+      console.error("[PUSH] No se pudo obtener registration");
       return null;
     }
-    
-    console.log('[PUSH] Suscribiendo al push manager...');
+
+    console.log("[PUSH] Obteniendo clave VAPID...");
+    const publicKey = await getVapidPublicKey();
+    if (!publicKey) {
+      console.error("[PUSH] No se pudo obtener la clave VAPID");
+      return null;
+    }
+    console.log("[PUSH] Clave VAPID obtenida");
+
+    console.log("[PUSH] Suscribiendo al PushManager...");
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(publicKey)
     });
 
-    console.log('[PUSH] Suscripción creada exitosamente');
-    console.log('[PUSH] Endpoint:', subscription.endpoint);
-    console.log('[PUSH] Keys:', subscription.toJSON().keys);
+    console.log("[PUSH] Suscripción creada exitosamente");
+    console.log("[PUSH] Endpoint:", subscription.endpoint);
+    console.log("[PUSH] Keys:", subscription.toJSON().keys);
 
-    console.log('[PUSH] Enviando al backend...');
+    console.log("[PUSH] Enviando suscripción al backend...");
     const res = await fetch(`${API_URL}/push/subscribe`, {
       method: 'POST',
       headers: {
@@ -110,17 +126,17 @@ export const suscribirseAPush = async (token) => {
     });
 
     const result = await res.json();
-    console.log('[PUSH] Respuesta del backend:', res.status, result);
+    console.log("[PUSH] Respuesta del backend:", res.status, result);
 
     if (res.ok) {
-      console.log('[PUSH] Suscripción guardada en backend');
+      console.log("[PUSH] ✓ Suscripción guardada en backend");
       return subscription;
     } else {
-      console.error('[PUSH] Error guardando suscripción:', result);
+      console.error("[PUSH] Error guardando suscripción:", result);
       return null;
     }
   } catch (e) {
-    console.error('[PUSH] Error en suscripción:', e);
+    console.error("[PUSH] Error en suscripción:", e);
     return null;
   }
 };
