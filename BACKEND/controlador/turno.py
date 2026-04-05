@@ -212,6 +212,12 @@ def crear_turno_cola(id_barberia, id_barbero, id_servicio, nombre_cliente, telef
     
     logger.info(f"Turno creado exitosamente: id={nuevo.id_turno}, precio_final={nuevo.precio_final}, posicion={posicion}")
     
+    try:
+        from controlador.notificacion_push import notificar_nuevo_turno
+        notificar_nuevo_turno(id_barberia, id_barbero, nombre_cliente, servicio.nombre)
+    except Exception as e:
+        logger.error(f"Error enviando notificación push: {e}")
+    
     return {"turno": nuevo, "posicion": posicion}, None
 
 def confirmar_turno(id_turno):
@@ -597,6 +603,9 @@ def crear_turno_cita(id_barberia, id_barbero, id_servicio, cita_fecha_hora, nomb
                     barberia.telefono,
                     f"🔔 Nuevo Turno (Cita)!\n\nCliente: {nombre_cliente}\nBarbero: {barbero.nombre}\nServicio: {servicio.nombre}\nHora: {fecha_hora_str}"
                 )
+            
+            from controlador.notificacion_push import notificar_nuevo_turno
+            notificar_nuevo_turno(id_barberia, id_barbero, nombre_cliente, servicio.nombre)
     except Exception as e:
         import logging
         logging.getLogger(__name__).error(f"Error sending notifications: {str(e)}")

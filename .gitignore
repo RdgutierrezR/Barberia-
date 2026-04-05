@@ -6,3 +6,7 @@ __pycache__/
 node_modules/
 dist/
 build/
+vapid_private.pem
+vapid_public.txt
+*.pem
+*.key

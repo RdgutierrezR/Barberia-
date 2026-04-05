@@ -1,9 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from controlador import turno as ctrl
-from controlador.notificacion_push import notificar_nuevo_turno
-from modelo.servicio import Servicio
-import logging
 
 turnos_bp = Blueprint("turnos", __name__, url_prefix="/api/barberias/<int:id_barberia>/turnos")
 
@@ -112,19 +109,12 @@ def crear_turno_cola(id_barberia):
         data["id_barbero"],
         data["id_servicio"],
         data["nombre_cliente"],
-        data.get("telefono"),
+        data["telefono"],
         data.get("notas")
     )
     
     if error:
         return jsonify({"error": error}), 400
-    
-    try:
-        servicio = Servicio.query.get(data["id_servicio"])
-        nombre_servicio = servicio.nombre if servicio and servicio.nombre else "Servicio"
-        notificar_nuevo_turno(id_barberia, data["id_barbero"], data["nombre_cliente"], nombre_servicio)
-    except Exception as e:
-        logging.warning(f"Error enviando notificación push: {e}")
     
     return jsonify({
         "turno": resultado["turno"].to_dict(),
@@ -141,19 +131,12 @@ def crear_turno_cita(id_barberia):
         data["id_servicio"],
         data["cita_fecha_hora"],
         data["nombre_cliente"],
-        data.get("telefono"),
+        data["telefono"],
         data.get("notas")
     )
     
     if error:
         return jsonify({"error": error}), 400
-    
-    try:
-        servicio = Servicio.query.get(data["id_servicio"])
-        nombre_servicio = servicio.nombre if servicio and servicio.nombre else "Servicio"
-        notificar_nuevo_turno(id_barberia, data["id_barbero"], data["nombre_cliente"], nombre_servicio)
-    except Exception as e:
-        logging.warning(f"Error enviando notificación push: {e}")
     
     return jsonify({
         "turno": resultado["turno"].to_dict(),

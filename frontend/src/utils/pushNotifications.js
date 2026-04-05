@@ -21,18 +21,24 @@ export const getVapidPublicKey = async () => {
 };
 
 export const urlBase64ToUint8Array = (base64String) => {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
+  console.log('[PUSH] urlBase64ToUint8Array - input length:', base64String.length);
+  
+  let base64 = base64String
     .replace(/-/g, '+')
     .replace(/_/g, '/');
   
-  const rawData = window.atob(base64);
+  while (base64.length % 4) {
+    base64 += '=';
+  }
+  
+  const rawData = atob(base64);
   const outputArray = new Uint8Array(rawData.length);
   
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
   
+  console.log('[PUSH] Clave convertida - length:', outputArray.length);
   return outputArray;
 };
 
@@ -81,16 +87,28 @@ export const suscribirseAPush = async (token) => {
     }
     console.log("[PUSH] Permiso garantizado");
 
-    console.log("[PUSH] Obteniendo service worker listo...");
-    let registration;
-    try {
-      registration = await navigator.serviceWorker.ready;
-      console.log("[PUSH] Service worker listo:", registration.active?.scriptURL || 'sin URL');
-    } catch (swError) {
-      console.log("[PUSH] SW.ready falló, intentando registrar:", swError.message);
-      registration = await navigator.serviceWorker.register('/sw.js');
-      console.log("[PUSH] SW registrado manualmente:", registration);
+    console.log("[PUSH] Esperando service worker...");
+    let registration = await navigator.serviceWorker.ready;
+    
+    if (!registration || !registration.active) {
+      console.log("[PUSH] Registrando service worker...");
+      const swPath = import.meta.env.DEV ? '/dev-sw.js' : '/sw.js';
+      registration = await navigator.serviceWorker.register(swPath, { scope: '/' });
+      await navigator.serviceWorker.ready;
     }
+    
+    if (registration.active && registration.active.state !== 'activated') {
+      console.log("[PUSH] Esperando activación...");
+      await new Promise((resolve) => {
+        registration.active.addEventListener('statechange', (e) => {
+          if (e.target.state === 'activated') resolve();
+        });
+        setTimeout(resolve, 2000);
+      });
+    }
+    console.log('[PUSH] Service worker activo y listo');
+    console.log("[PUSH] SW:", registration.active?.scriptURL);
+    console.log("[PUSH] SW state:", registration.active?.state);
 
     if (!registration) {
       console.error("[PUSH] No se pudo obtener registration");
@@ -98,60 +116,77 @@ export const suscribirseAPush = async (token) => {
     }
 
     console.log("[PUSH] Service Worker activo:", registration.active);
-    console.log("[PUSH] Service Worker state:", registration.active?.state);
     console.log("[PUSH] Service Worker scope:", registration.scope);
     console.log("[PUSH] Notification permission:", Notification.permission);
-
-    await navigator.serviceWorker.getRegistrations().then(regs => {
-      regs.forEach(reg => {
-        console.log("[PUSH] Actualizando SW:", reg.scope);
-        reg.update();
-      });
-    });
 
     console.log("[PUSH] Obteniendo clave VAPID...");
     const publicKey = await getVapidPublicKey();
     if (!publicKey) {
-      console.error("[PUSH] No se pudo obtener la clave VAPID");
+      console.error("[PUSH] ERROR: No se pudo obtener la clave VAPID del servidor");
       return null;
     }
-    console.log("[PUSH] Clave VAPID obtenida");
-    console.log("[PUSH] Clave VAPID:", publicKey);
-    console.log("[PUSH] Convirtiendo clave VAPID...");
-    console.log("[PUSH] Intentando subscribe...");
-
+    console.log("[PUSH] Clave VAPID recibida del servidor:", publicKey);
+    
+    const applicationServerKey = urlBase64ToUint8Array(publicKey);
+    console.log("[PUSH] Clave convertida a Uint8Array - length:", applicationServerKey.length, "bytes");
+    console.log("[PUSH] Primeros bytes:", Array.from(applicationServerKey.slice(0, 4)));
+    
+    if (applicationServerKey.length !== 65) {
+      console.error("[PUSH] ERROR: La clave convertida debe tener 65 bytes, tiene:", applicationServerKey.length);
+    }
+    
     console.log("[PUSH] Suscribiendo al PushManager...");
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(publicKey)
-    });
+    console.log("[PUSH] Intentando pushManager.subscribe()...");
+    console.log("[PUSH] applicationServerKey length:", applicationServerKey.length);
+    console.log("[PUSH] URL del Service Worker:", registration.active?.scriptURL);
+    console.log("[PUSH] Origen:", window.location.origin);
+    
+    try {
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: applicationServerKey
+      });
 
-    console.log("[PUSH] Subscription:", subscription);
+      console.log("[PUSH] Subscription:", subscription);
 
-    console.log("[PUSH] Suscripción creada exitosamente");
-    console.log("[PUSH] Endpoint:", subscription.endpoint);
-    console.log("[PUSH] Keys:", subscription.toJSON().keys);
+      console.log("[PUSH] Suscripción creada exitosamente");
+      console.log("[PUSH] Endpoint:", subscription.endpoint);
+      console.log("[PUSH] Keys:", subscription.toJSON().keys);
 
-    console.log("[PUSH] Enviando suscripción al backend...");
-    const res = await fetch(`${API_URL}/push/subscribe`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        subscription: subscription.toJSON()
-      })
-    });
+      console.log("[PUSH] Enviando suscripción al backend...");
+      const res = await fetch(`${API_URL}/push/subscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          subscription: subscription.toJSON()
+        })
+      });
 
-    const result = await res.json();
-    console.log("[PUSH] Respuesta del backend:", res.status, result);
+      const result = await res.json();
+      console.log("[PUSH] Respuesta del backend:", res.status, result);
 
-    if (res.ok) {
-      console.log("[PUSH] ✓ Suscripción guardada en backend");
-      return subscription;
-    } else {
-      console.error("[PUSH] Error guardando suscripción:", result);
+      if (res.ok) {
+        console.log("[PUSH] ✓ Suscripción guardada en backend");
+        return subscription;
+      } else {
+        console.error("[PUSH] Error guardando suscripción:", result);
+        return null;
+      }
+    } catch (subscribeError) {
+      console.error("[PUSH] ERROR en pushManager.subscribe():", subscribeError);
+      console.error("[PUSH] Nombre del error:", subscribeError.name);
+      console.error("[PUSH] Mensaje del error:", subscribeError.message);
+      console.error("[PUSH] Causa:", subscribeError.cause);
+      
+      if (subscribeError.message && subscribeError.message.includes('push service')) {
+        console.error("[PUSH] ERROR: El servicio de push no está disponible.");
+        console.error("[PUSH] Esto puede ocurrir en desarrollo (localhost). Los navegadores requieren HTTPS para push en producción.");
+        console.error("[PUSH] Solución: Usa ngrok o desplega a producción con HTTPS");
+      }
+      
       return null;
     }
   } catch (e) {

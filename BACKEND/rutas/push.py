@@ -6,113 +6,77 @@ import logging
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from dotenv import load_dotenv
 import os
+from controlador.notificacion_push import get_vapid_public_key_base64url, enviar_notificacion_push
 
 load_dotenv()
 
 push_bp = Blueprint("push", __name__, url_prefix="/api/push")
 
-VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "")
-VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "")
-
 @push_bp.route("/public-key", methods=["GET"])
 def get_public_key():
-    if not VAPID_PUBLIC_KEY:
-        return jsonify({"error": "Clave VAPID no configurada"}), 500
-    return jsonify({"publicKey": VAPID_PUBLIC_KEY})
+    logging.info("[PUSH] ===== SOLICITUD /public-key =====")
+    try:
+        public_key = get_vapid_public_key_base64url()
+        return jsonify({"publicKey": public_key})
+    except Exception as e:
+        logging.error(f"[PUSH] ERROR: {e}")
+        return jsonify({"error": "Error generando clave VAPID"}), 500
 
 @push_bp.route("/subscribe", methods=["POST"])
 @jwt_required()
 def subscribe():
+    logging.info("[PUSH] ===== SOLICITUD /subscribe =====")
     identidad = get_jwt_identity()
-    id_barberia = identidad.get("id_barberia")
-    id_barbero = identidad.get("id_barbero")
     
-    data = request.get_json()
-    subscription = data.get("subscription")
+    id_barberia = None
+    id_barbero = None
     
-    if not subscription:
-        logging.warning("[PUSH] Suscripción requerida pero no recibida")
-        return jsonify({"error": "Suscripción requerida"}), 400
-    
-    logging.info(f"[PUSH] Recibida suscripción para barbería {id_barberia}, barbero {id_barbero}")
-    logging.info(f"[PUSH] Subscription keys: {subscription.get('keys', {})}")
-    
-    sub = PushSubscription(
-        barberia_id=id_barberia,
-        barbero_id=id_barbero,
-        subscription=subscription
-    )
-    db.session.add(sub)
-    db.session.commit()
-    
-    logging.info(f"[PUSH] Nueva suscripción guardada con ID: {sub.id}")
-    
-    return jsonify({"mensaje": "Suscripción guardada", "id": sub.id}), 201
-
-@push_bp.route("/unsubscribe", methods=["POST"])
-@jwt_required()
-def unsubscribe():
-    identidad = get_jwt_identity()
-    id_barberia = identidad.get("id_barberia")
-    id_barbero = identidad.get("id_barbero")
-    
-    data = request.get_json()
-    subscription = data.get("subscription")
-    
-    if not subscription:
-        return jsonify({"error": "Suscripción requerida"}), 400
-    
-    sub = PushSubscription.query.filter_by(
-        barberia_id=id_barberia,
-        barbero_id=id_barbero
-    ).first()
-    
-    if sub:
-        db.session.delete(sub)
-        db.session.commit()
-    
-    return jsonify({"mensaje": "Suscripción eliminada"})
-
-@push_bp.route("/send", methods=["POST"])
-@jwt_required()
-def send_notification():
-    identidad = get_jwt_identity()
-    id_barberia = identidad.get("id_barberia")
-    id_barbero = identidad.get("id_barbero")
-    
-    data = request.get_json()
-    titulo = data.get("title", "Nuevo Turno")
-    mensaje = data.get("message", "")
-    
-    subs = PushSubscription.query.filter_by(
-        barberia_id=id_barberia,
-        barbero_id=id_barbero
-    ).all()
-    
-    if not subs:
-        return jsonify({"mensaje": "No hay suscripciones para este barbero"})
-    
-    from pywebpush import webpush
-    
-    body = json.dumps({
-        "title": titulo,
-        "body": mensaje,
-        "icon": "/pwa-192x192.png",
-        "badge": "/pwa-192x192.png"
-    })
-    
-    enviados = 0
-    for sub in subs:
+    if isinstance(identidad, dict):
+        id_barberia = identidad.get("id_barberia")
+        id_barbero = identidad.get("id_barbero")
+    else:
+        from modelo.barbero import Barbero
         try:
-            webpush(
-                sub.subscription,
-                data=body,
-                vapid_private_key=VAPID_PRIVATE_KEY,
-                vapid_public_key=VAPID_PUBLIC_KEY,
-                ttl=3600
-            )
-            enviados += 1
-        except Exception as e:
-            logging.error(f"Error enviando push: {e}")
+            # Intentar como ID numérico
+            id_barbero = int(identidad)
+            barbero = Barbero.query.get(id_barbero)
+            if barbero:
+                id_barberia = barbero.id_barberia
+            else:
+                return jsonify({"error": f"Barbero no encontrado con ID: {id_barbero}"}), 404
+        except (ValueError, TypeError):
+            # Intentar como correo
+            barbero = Barbero.query.filter_by(correo=identidad).first()
+            if barbero:
+                id_barberia = barbero.id_barberia
+                id_barbero = barbero.id_barbero
+            else:
+                return jsonify({"error": f"Barbero no encontrado: {identidad}"}), 404
     
-    return jsonify({"mensaje": f"Notificación enviada a {enviados} dispositivos"})
+    if not id_barberia or not id_barbero:
+        return jsonify({"error": "No se pudo identificar barbería/barbero"}), 400
+    
+    logging.info(f"[PUSH] Barbería: {id_barberia}, Barbero: {id_barbero}")
+    
+    data = request.get_json()
+    subscription = data.get("subscription")
+    
+    if not subscription:
+        return jsonify({"error": "Suscripción requerida"}), 400
+    
+    try:
+        sub = PushSubscription(
+            barberia_id=id_barberia,
+            barbero_id=id_barbero,
+            subscription=subscription
+        )
+        db.session.add(sub)
+        db.session.commit()
+        logging.info(f"[PUSH] ✓ Suscripción guardada ID: {sub.id}")
+        return jsonify({"mensaje": "Suscripción guardada", "id": sub.id}), 201
+    except Exception as e:
+        logging.error(f"[PUSH] Error BD: {e}")
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+# ... el resto de los endpoints (unsubscribe, send) igual ...

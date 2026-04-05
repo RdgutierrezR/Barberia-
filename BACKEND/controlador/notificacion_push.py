@@ -1,24 +1,49 @@
 import json
 import logging
+import os
+import time
+import base64
 from pywebpush import webpush
 from modelo.push_subscription import PushSubscription
 from database import db
 from dotenv import load_dotenv
-import os
-import time
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import ec
 
 load_dotenv()
 
-VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "")
-VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "")
-
 logger = logging.getLogger(__name__)
 
+# --- Claves fijas desde variables de entorno ---
+VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY')
+VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY')
+
+if not VAPID_PUBLIC_KEY or not VAPID_PRIVATE_KEY:
+    logger.warning("[VAPID] No se encontraron claves VAPID en .env. Se generarán claves nuevas, pero NO PERSISTIRÁN.")
+    # Generar claves temporales (solo para pruebas)
+    from pywebpush import Vapid
+    _temp_vapid = Vapid()
+    _temp_vapid.generate_keys()
+    # Extraer clave pública en base64url
+    public_bytes = _temp_vapid.public_key.public_bytes(
+        encoding=serialization.Encoding.X962,
+        format=serialization.PublicFormat.UncompressedPoint
+    )
+    VAPID_PUBLIC_KEY = base64.urlsafe_b64encode(public_bytes).decode().rstrip('=')
+    # La clave privada de Vapid no es directamente exportable a base64url fácilmente.
+    # Es mejor generar claves fijas con 'npx web-push generate-vapid-keys'
+    # Por ahora, lanzamos error.
+    raise RuntimeError("Faltan VAPID_PUBLIC_KEY o VAPID_PRIVATE_KEY en .env. Genera un par con: npx web-push generate-vapid-keys")
+
+def get_vapid_public_key_base64url():
+    """Devuelve la clave pública VAPID fija desde el .env"""
+    return VAPID_PUBLIC_KEY
+
 def enviar_notificacion_push(barberia_id, barbero_id, titulo, mensaje):
-    logging.info(f"[PUSH] Intentando enviar notificación a barberia={barberia_id}, barbero={barbero_id}, titulo={titulo}")
+    logging.info(f"[PUSH] Enviando notificación a barberia={barberia_id}, barbero={barbero_id}, titulo={titulo}")
     
-    if not VAPID_PUBLIC_KEY or not VAPID_PRIVATE_KEY:
-        logger.warning("[PUSH] VAPID keys no configuradas, saltando notificación push")
+    if not VAPID_PRIVATE_KEY:
+        logger.warning("[PUSH] No hay clave privada VAPID, no se puede enviar push")
         return 0
     
     subs = PushSubscription.query.filter_by(
@@ -27,9 +52,7 @@ def enviar_notificacion_push(barberia_id, barbero_id, titulo, mensaje):
     ).all()
     
     logging.info(f"[PUSH] Suscripciones encontradas: {len(subs)}")
-    
     if not subs:
-        logger.info(f"No hay suscripciones push para barbero {barbero_id}")
         return 0
     
     timestamp = int(time.time())
@@ -42,25 +65,21 @@ def enviar_notificacion_push(barberia_id, barbero_id, titulo, mensaje):
         "timestamp": timestamp
     })
     
-    logging.info(f"[PUSH] Cuerpo del mensaje: {body}")
-    
     enviados = 0
     for sub in subs:
         try:
-            logging.info(f"[PUSH] Enviando a subscripción {sub.id}")
-            logging.info(f"[PUSH] Subscription keys: {sub.subscription.get('keys', {})}")
-            
+            logging.info(f"[PUSH] Enviando a suscripción {sub.id}")
             webpush(
-                sub.subscription,
+                subscription_info=sub.subscription,
                 data=body,
-                vapid_private_key=VAPID_PRIVATE_KEY,
-                vapid_public_key=VAPID_PUBLIC_KEY,
+                vapid_private_key=VAPID_PRIVATE_KEY,   # ✅ string base64url
+                vapid_claims={"sub": "mailto:admin@barberapp.com"},
                 ttl=3600
             )
-            logger.info(f"[PUSH] Notificación push enviada exitosamente a subscripción {sub.id}")
+            logger.info(f"[PUSH] Notificación enviada a suscripción {sub.id}")
             enviados += 1
         except Exception as e:
-            logger.error(f"[PUSH] Error enviando push a subscripción {sub.id}: {e}")
+            logger.error(f"[PUSH] Error enviando push a suscripción {sub.id}: {e}")
     
     return enviados
 
