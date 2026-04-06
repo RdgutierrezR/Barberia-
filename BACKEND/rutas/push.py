@@ -65,6 +65,11 @@ def subscribe():
         return jsonify({"error": "Suscripción requerida"}), 400
     
     try:
+        PushSubscription.query.filter_by(
+            barberia_id=id_barberia,
+            barbero_id=id_barbero
+        ).delete()
+        
         sub = PushSubscription(
             barberia_id=id_barberia,
             barbero_id=id_barbero,
@@ -72,7 +77,7 @@ def subscribe():
         )
         db.session.add(sub)
         db.session.commit()
-        logging.info(f"[PUSH] ✓ Suscripción guardada ID: {sub.id}")
+        logging.info(f"[PUSH] ✓ Suscripción guardada ID: {sub.id} (suscripciones anteriores eliminadas)")
         return jsonify({"mensaje": "Suscripción guardada", "id": sub.id}), 201
     except Exception as e:
         logging.error(f"[PUSH] Error BD: {e}")
