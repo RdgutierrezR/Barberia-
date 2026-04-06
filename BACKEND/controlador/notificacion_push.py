@@ -62,8 +62,10 @@ def enviar_notificacion_push(barberia_id, barbero_id, titulo, mensaje):
         "body": mensaje,
         "icon": "/pwa-192x192.png",
         "badge": "/pwa-192x192.png",
+        "url": "/",
         "tag": f"turno-{timestamp}",
-        "timestamp": timestamp
+        "timestamp": timestamp,
+        "requireInteraction": True
     })
     
     logging.info(f"[PUSH] Body: {body}")
@@ -79,7 +81,8 @@ def enviar_notificacion_push(barberia_id, barbero_id, titulo, mensaje):
                 data=body,
                 vapid_private_key=VAPID_PRIVATE_KEY,
                 vapid_claims={"sub": "mailto:admin@barberapp.com"},
-                ttl=3600
+                ttl=3600,
+                content_encoding="aes128gcm"
             )
             logger.info(f"[PUSH] Notificación enviada a suscripción {sub.id}, response: {result}")
             enviados += 1
