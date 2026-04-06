@@ -150,20 +150,33 @@ function BarberoDashboard() {
 
     if (!id_barberia || !id_barbero) return;
 
-    console.log('[PUSH] Iniciando suscripción, pushSoportado:', pushSoportado());
-    console.log('[PUSH] Permission actual:', Notification.permission);
+    console.log('[PUSH] ===== INICIANDO SUSCRIPCION PUSH =====');
+    console.log('[PUSH] pushSoportado:', pushSoportado());
+    console.log('[PUSH] Notification.permission:', Notification.permission);
+    console.log('[PUSH] serviceWorker en navigator:', 'serviceWorker' in navigator);
+    console.log('[PUSH] PushManager en window:', 'PushManager' in window);
+    
     solicitarPermisoNotificaciones();
 
     if (pushSoportado()) {
       const token = localStorage.getItem('barbero_token');
       console.log('[PUSH] Token existe:', !!token);
       if (token) {
+        console.log('[PUSH] Llamando suscribirseAPush...');
         suscribirseAPush(token)
-          .then(sub => console.log('[PUSH] Suscripción resultado:', sub ? 'OK' : 'FALLO'))
-          .catch(e => console.log('[PUSH] Error:', e.message));
+          .then(sub => {
+            console.log('[PUSH] RESULTADO FINAL:', sub ? 'EXITOSO - Suscripción guardada' : 'FALLIDO - No se guardó');
+            if (!sub) {
+              console.error('[PUSH] ERROR: La suscripción retornó null. Revisa los logs anteriores.');
+            }
+          })
+          .catch(e => console.error('[PUSH] EXCEPTION:', e.message));
+      } else {
+        console.error('[PUSH] ERROR: No hay token en localStorage');
       }
     } else {
-      console.log('[PUSH] Push no soportado en este dispositivo');
+      console.error('[PUSH] ERROR: Push no soportado en este dispositivo/navegador');
+      console.log('[PUSH] Navegador:', navigator.userAgent);
     }
 
     cargarCola();

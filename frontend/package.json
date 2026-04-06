@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node -e \"require('fs').copyFileSync('public/dev-sw.js', 'dist/sw.js')\"",
     "lint": "eslint .",
     "preview": "vite preview"
   },

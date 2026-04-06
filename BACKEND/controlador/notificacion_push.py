@@ -53,6 +53,7 @@ def enviar_notificacion_push(barberia_id, barbero_id, titulo, mensaje):
     
     logging.info(f"[PUSH] Suscripciones encontradas: {len(subs)}")
     if not subs:
+        logger.warning(f"[PUSH] No hay suscripciones para barbero {barbero_id}")
         return 0
     
     timestamp = int(time.time())
@@ -65,21 +66,27 @@ def enviar_notificacion_push(barberia_id, barbero_id, titulo, mensaje):
         "timestamp": timestamp
     })
     
+    logging.info(f"[PUSH] Body: {body}")
+    
     enviados = 0
     for sub in subs:
         try:
-            logging.info(f"[PUSH] Enviando a suscripción {sub.id}")
-            webpush(
+            logging.info(f"[PUSH] Enviando a suscripción {sub.id}, endpoint: {sub.subscription.get('endpoint', 'N/A')[:50]}...")
+            logging.info(f"[PUSH] Keys: {sub.subscription.get('keys', {})}")
+            
+            result = webpush(
                 subscription_info=sub.subscription,
                 data=body,
-                vapid_private_key=VAPID_PRIVATE_KEY,   # ✅ string base64url
+                vapid_private_key=VAPID_PRIVATE_KEY,
                 vapid_claims={"sub": "mailto:admin@barberapp.com"},
                 ttl=3600
             )
-            logger.info(f"[PUSH] Notificación enviada a suscripción {sub.id}")
+            logger.info(f"[PUSH] Notificación enviada a suscripción {sub.id}, response: {result}")
             enviados += 1
         except Exception as e:
             logger.error(f"[PUSH] Error enviando push a suscripción {sub.id}: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
     
     return enviados
 

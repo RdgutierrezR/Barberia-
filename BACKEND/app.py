@@ -15,7 +15,18 @@ def create_app():
     db.init_app(app)
     
     jwt = JWTManager(app)
-    CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True, expose_headers=["Location"])
+    
+    # ✅ Configuración CORS mejorada para desarrollo
+    CORS(app, 
+         resources={r"/api/*": {
+             "origins": ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174", "http://127.0.0.1:5174", "*"],
+             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+             "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
+             "expose_headers": ["Location", "Content-Disposition"],
+             "supports_credentials": True,
+             "max_age": 3600
+         }},
+         supports_credentials=True)
     
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
     
