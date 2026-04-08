@@ -1,4 +1,5 @@
-const CACHE_NAME = 'barberapp-v2'; // ← Cambié versión para forzar actualización
+const CACHE_VERSION = 'v3';
+const CACHE_NAME = `barberapp-${CACHE_VERSION}`;
 
 const PRECACHE_ASSETS = [
   '/',
@@ -34,28 +35,33 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-  
+
   // APIs sin cache
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(fetch(event.request));
     return;
   }
-  
-  // Cache para assets
+
+  // Network First Strategy (IMPORTANTE)
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request).then((fetchResponse) => {
+    fetch(event.request)
+      .then((response) => {
         return caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, fetchResponse.clone());
-          return fetchResponse;
+          cache.put(event.request, response.clone());
+          return response;
         });
-      });
-    })
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
 });
 
 
-// PUSH CORREGIDO
+// ============================
+// PUSH NOTIFICATIONS
+// ============================
+
 self.addEventListener('push', (event) => {
   console.log('[SW] Push event received');
 
@@ -96,6 +102,10 @@ self.addEventListener('push', (event) => {
 });
 
 
+// ============================
+// CLICK NOTIFICATION
+// ============================
+
 self.addEventListener('notificationclick', (event) => {
   console.log('[SW] Notification click', event.action);
   
@@ -122,6 +132,11 @@ self.addEventListener('notificationclick', (event) => {
       })
   );
 });
+
+
+// ============================
+// FORCE UPDATE
+// ============================
 
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
