@@ -709,7 +709,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 50px;
+  justify-self: center;
 }
 
 .time-badge .contador-valor {
@@ -728,6 +728,7 @@ body {
   font-size: 12px;
   white-space: nowrap;
   flex-shrink: 0;
+  justify-self: end;
 }
 
 .tipo-badge {
@@ -1055,10 +1056,9 @@ body {
 }
 
 .cliente-actual-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  margin-bottom: 12px;
   width: 100%;
 }
 
@@ -1069,6 +1069,7 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  justify-self: start;
 }
 
 .tipo-badge {
