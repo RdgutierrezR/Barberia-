@@ -709,7 +709,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 7px;
+  margin-left: 50px;
 }
 
 .time-badge .contador-valor {
