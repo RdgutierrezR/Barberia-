@@ -673,6 +673,81 @@ body {
   text-align: center;
 }
 
+.contador-valor {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.cliente-actual-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  width: 100%;
+  gap: 8px;
+}
+
+.cliente-nombre {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #fff 0%, #aaa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  flex-shrink: 0;
+}
+
+.time-badge {
+  background: #f59e0b;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 7px;
+}
+
+.time-badge .contador-valor {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.servicio-badge {
+  background: linear-gradient(90deg, #5a3b0f, #8b5a15);
+  color: #f59e0b;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tipo-badge {
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.tipo-badge.cola {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.tipo-badge.cita {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
 .cliente-nombre {
   font-size: 22px;
   font-weight: 700;
@@ -984,6 +1059,16 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+  width: 100%;
+}
+
+.cliente-nombre {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #fff 0%, #aaa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .tipo-badge {
@@ -3665,7 +3750,7 @@ body {
 .horario-horas {
   font-size: 16px;
   font-weight: 500;
-  color: #f97316;
+  color: #f59e0b;
 }
 
 .horario-edit {

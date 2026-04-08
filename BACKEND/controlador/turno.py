@@ -785,7 +785,8 @@ def obtener_cola_diaria(id_barberia, id_barbero):
             "posicion": turno.posicion,
             "hora_estimada": hora_estimada,
             "fecha_hora": turno.fecha_hora.isoformat() if turno.fecha_hora else None,
-            "fecha_creacion": turno.fecha_creacion.isoformat() if turno.fecha_creacion else None
+            "fecha_creacion": turno.fecha_creacion.isoformat() if turno.fecha_creacion else None,
+            "fecha_inicio_servicio": turno.fecha_inicio_servicio.isoformat() if turno.fecha_inicio_servicio else None
         })
         
         posicion += 1

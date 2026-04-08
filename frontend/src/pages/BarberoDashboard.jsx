@@ -37,7 +37,9 @@ function BarberoDashboard() {
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const [datosInicialesCargados, setDatosInicialesCargados] = useState(false);
   const [loadingAction, setLoadingAction] = useState(false);
+  const [loadingCrearTurno, setLoadingCrearTurno] = useState(false);
   const [ultimoIdTurno, setUltimoIdTurno] = useState(0);
+  const [tiempoTranscurrido, setTiempoTranscurrido] = useState('00:00');
   const ultimoTurnoNotificadoRef = useRef(0);
   const intervalRef = useRef(null);
   const abortControllersRef = useRef([]);
@@ -226,6 +228,48 @@ function BarberoDashboard() {
       }
     };
   }, [datosInicialesCargados, id_barberia, id_barbero]);
+
+  useEffect(() => {
+    const turno = colaDiaria.find(t => t.estado === 'en_proceso');
+    if (!turno?.fecha_inicio_servicio) {
+      setTiempoTranscurrido('00:00');
+      return;
+    }
+
+    const actualizarContador = () => {
+      try {
+        const inicio = new Date(turno.fecha_inicio_servicio);
+        const ahora = new Date();
+        const diffMs = ahora - inicio;
+        
+        if (diffMs < 0) {
+          setTiempoTranscurrido('00:00');
+          return;
+        }
+
+        const diffHrs = Math.floor(diffMs / 3600000);
+        const diffMins = Math.floor((diffMs % 3600000) / 60000);
+        const diffSegs = Math.floor((diffMs % 60000) / 1000);
+        
+        let tiempoFormateado;
+        if (diffHrs > 0) {
+          tiempoFormateado = `${diffHrs}h ${String(diffMins).padStart(2, '0')}m`;
+        } else {
+          tiempoFormateado = `${String(diffMins).padStart(2, '0')}:${String(diffSegs).padStart(2, '0')}`;
+        }
+        
+        setTiempoTranscurrido(tiempoFormateado);
+      } catch (e) {
+        console.error('Error calculando contador:', e);
+        setTiempoTranscurrido('00:00');
+      }
+    };
+
+    actualizarContador();
+    const interval = setInterval(actualizarContador, 1000);
+    
+    return () => clearInterval(interval);
+  }, [colaDiaria]);
 
   const guardarHorarioDia = async () => {
     try {
@@ -445,6 +489,7 @@ function BarberoDashboard() {
       alert('Selecciona fecha y hora para la cita');
       return;
     }
+    setLoadingCrearTurno(true);
     try {
       if (tipoReserva === 'hoy') {
         await api.crearTurnoCola(id_barberia, {
@@ -468,6 +513,8 @@ function BarberoDashboard() {
       cargarCola();
     } catch (err) {
       alert('Error al crear turno: ' + err.message);
+    } finally {
+      setLoadingCrearTurno(false);
     }
   };
 
@@ -604,9 +651,12 @@ function BarberoDashboard() {
                 <div className="cliente-actual">
                   <div className="cliente-actual-header">
                     <div className="cliente-nombre">{turnoActual.cliente_nombre}</div>
-                    <span className={`tipo-badge ${turnoActual.tipo_reserva}`}>
-                      {turnoActual.servicio_duracion} min
-                    </span>
+                    <div className="time-badge">
+                      <span className="contador-valor">{tiempoTranscurrido}</span>
+                    </div>
+                    <div className="servicio-badge">
+                      {turnoActual.servicio_duracion} MIN
+                    </div>
                   </div>
                     <div className="cliente-info-badge">
                       <Smartphone size={14} /> {turnoActual.cliente_telefono}
@@ -834,8 +884,8 @@ function BarberoDashboard() {
                   )}
                 </div>
                 
-                <button type="submit" className="btn-primary btn-full">
-                  {tipoReserva === 'hoy' ? 'Crear Turno para Hoy' : 'Confirmar Cita'}
+                <button type="submit" className="btn-primary btn-full" disabled={loadingCrearTurno}>
+                  {loadingCrearTurno ? 'Creando...' : tipoReserva === 'hoy' ? 'Crear Turno para Hoy' : 'Confirmar Cita'}
                 </button>
               </form>
             )}
