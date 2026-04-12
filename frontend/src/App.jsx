@@ -7,6 +7,7 @@ import Login from './pages/Login'
 import AdminPanel from './pages/AdminPanel'
 import OwnerDashboard from './pages/OwnerDashboard'
 import './App.css'
+import './nuevo.css'
 
 function RedirectBySession() {
   const token = localStorage.getItem('barbero_token')

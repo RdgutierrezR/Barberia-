@@ -135,6 +135,7 @@ def obtener_cola_barbero(id_barberia, id_barbero):
 
 def crear_turno_cola(id_barberia, id_barbero, id_servicio, nombre_cliente, telefono, notas=None):
     from modelo.cliente import Cliente
+    from controlador.cliente import buscar_o_crear_cliente, normalizar_telefono
     import uuid
     
     servicio = Servicio.query.get(id_servicio)
@@ -146,20 +147,9 @@ def crear_turno_cola(id_barberia, id_barbero, id_servicio, nombre_cliente, telef
     
     logger.info(f"Creando turno cola: servicio={servicio.nombre}, precio={servicio.precio}")
     
-    cliente = Cliente.query.filter_by(telefono=telefono, id_barberia=id_barberia).first()
+    cliente = buscar_o_crear_cliente(id_barberia, nombre_cliente, telefono)
     if not cliente:
-        codigo_qr = str(uuid.uuid4())[:8].upper()
-        cliente = Cliente(
-            id_barberia=id_barberia,
-            nombre=nombre_cliente,
-            telefono=telefono,
-            codigo_qr=codigo_qr
-        )
-        db.session.add(cliente)
-        db.session.commit()
-    else:
-        cliente.nombre = nombre_cliente
-        db.session.commit()
+        return None, "Error al crear o buscar cliente"
     
     ahora = ahora_fn()
     
@@ -217,6 +207,16 @@ def crear_turno_cola(id_barberia, id_barbero, id_servicio, nombre_cliente, telef
         notificar_nuevo_turno(id_barberia, id_barbero, nombre_cliente, servicio.nombre)
     except Exception as e:
         logger.error(f"Error enviando notificación push: {e}")
+    
+    try:
+        from modelo.barbero import Barbero
+        barbero = Barbero.query.get(id_barbero)
+        from controlador.notificacion_push import enviar_notificacion_cliente
+        titulo = "Turno Confirmado!"
+        mensaje = f"Estás en la cola. Tu posición: {posicion}. Barbero: {barbero.nombre if barbero else 'N/A'}"
+        enviar_notificacion_cliente(id_turno=nuevo.id_turno, titulo=titulo, mensaje=mensaje)
+    except Exception as e:
+        logger.error(f"Error notifying cliente: {e}")
     
     return {"turno": nuevo, "posicion": posicion}, None
 
@@ -534,6 +534,7 @@ def obtener_horarios_disponibles(id_barberia, id_barbero, fecha, duracion_servic
 
 def crear_turno_cita(id_barberia, id_barbero, id_servicio, cita_fecha_hora, nombre_cliente, telefono, notas=None):
     from modelo.cliente import Cliente
+    from controlador.cliente import buscar_o_crear_cliente
     import uuid
     
     servicio = Servicio.query.get(id_servicio)
@@ -549,20 +550,9 @@ def crear_turno_cita(id_barberia, id_barbero, id_servicio, cita_fecha_hora, nomb
     if verificar_conflicto_simple(id_barbero, cita_dt, duracion):
         return None, "El horario seleccionado no está disponible"
     
-    cliente = Cliente.query.filter_by(telefono=telefono, id_barberia=id_barberia).first()
+    cliente = buscar_o_crear_cliente(id_barberia, nombre_cliente, telefono)
     if not cliente:
-        codigo_qr = str(uuid.uuid4())[:8].upper()
-        cliente = Cliente(
-            id_barberia=id_barberia,
-            nombre=nombre_cliente,
-            telefono=telefono,
-            codigo_qr=codigo_qr
-        )
-        db.session.add(cliente)
-        db.session.commit()
-    else:
-        cliente.nombre = nombre_cliente
-        db.session.commit()
+        return None, "Error al crear o buscar cliente"
     
     codigo = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
     
@@ -606,6 +596,12 @@ def crear_turno_cita(id_barberia, id_barbero, id_servicio, cita_fecha_hora, nomb
             
             from controlador.notificacion_push import notificar_nuevo_turno
             notificar_nuevo_turno(id_barberia, id_barbero, nombre_cliente, servicio.nombre)
+            
+            from controlador.notificacion_push import enviar_notificacion_cliente
+            fecha_hora_str = cita_dt.strftime("%d/%m/%Y a las %I:%M %p")
+            titulo = "Cita Agendada!"
+            mensaje = f"Tu cita: {servicio.nombre} el {fecha_hora_str}"
+            enviar_notificacion_cliente(id_turno=nuevo.id_turno, titulo=titulo, mensaje=mensaje)
     except Exception as e:
         import logging
         logging.getLogger(__name__).error(f"Error sending notifications: {str(e)}")
@@ -916,6 +912,44 @@ def pasar_siguiente(id_barberia, id_barbero, forzar_cita=False):
             turno.estado = "en_proceso"
             turno.fecha_inicio_servicio = ahora_fn()
             db.session.commit()
+            
+            try:
+                from controlador.notificacion_push import enviar_notificacion_cliente
+                titulo = "¡Es tu turno!"
+                mensaje = f"{turno.cliente.nombre if turno.cliente else 'Cliente'}, te estamos esperando"
+                enviar_notificacion_cliente(id_turno=turno.id_turno, titulo=titulo, mensaje=mensaje)
+            except Exception as e:
+                logger.error(f"Error notificando cliente llamado: {e}")
+            
+            # Notificar al resto de la cola
+            turnos_restantes = Turno.query.filter(
+                Turno.id_barberia == id_barberia,
+                Turno.id_barbero == id_barbero,
+                Turno.id_turno != turno.id_turno,
+                Turno.estado.in_(["pendiente", "confirmado"]),
+                Turno.tipo_reserva == "cola"
+            ).order_by(sql_func.coalesce(Turno.posicion, 999999), Turno.fecha_creacion).all()
+            
+            for i, t in enumerate(turnos_restantes):
+                t.posicion = i + 1
+                db.session.commit()
+                
+                try:
+                    from controlador.notificacion_push import enviar_notificacion_cliente
+                    if t.posicion == 1:
+                        titulo = "Eres el siguiente"
+                        mensaje = f"{t.cliente.nombre if t.cliente else 'Cliente'}, prepárate. Te llamamos pronto!"
+                    elif t.posicion == 2:
+                        titulo = "Eres segundo en la cola"
+                        mensaje = "Quedan 2 turnos para que te atendamos. Prepárate!"
+                    else:
+                        titulo = "Posición actualizada"
+                        mensaje = f"Tu posición en la cola: {t.posicion}"
+                    
+                    enviar_notificacion_cliente(id_turno=t.id_turno, titulo=titulo, mensaje=mensaje)
+                except Exception as e:
+                    logger.error(f"Error notificando cliente cola: {e}")
+            
             return {
                 "id_turno": turno.id_turno,
                 "cliente_nombre": turno.cliente.nombre if turno.cliente else None,
@@ -974,7 +1008,16 @@ def finalizar_turno_actual(id_barberia, id_barbero):
     
     db.session.commit()
     
-    # Actualizar posiciones de turnos restantes
+    # Notificar al cliente que su turno terminó
+    try:
+        from controlador.notificacion_push import enviar_notificacion_cliente
+        titulo = "¡Turno Completado!"
+        mensaje = f"Gracias {cliente_nombre}, tu corte ha terminado. ¡Te esperamos pronto!"
+        enviar_notificacion_cliente(id_turno=turno_actual.id_turno, titulo=titulo, mensaje=mensaje)
+    except Exception as e:
+        logger.error(f"Error notificando cliente completado: {e}")
+    
+    # Actualizar posiciones de turnos restantes y notificar
     turnos_restantes = Turno.query.filter(
         Turno.id_barberia == id_barberia,
         Turno.id_barbero == id_barbero,
@@ -984,6 +1027,23 @@ def finalizar_turno_actual(id_barberia, id_barbero):
     
     for i, t in enumerate(turnos_restantes):
         t.posicion = i + 1
+        db.session.commit()
+        
+        try:
+            from controlador.notificacion_push import enviar_notificacion_cliente
+            if t.posicion == 1:
+                titulo = "Eres el siguiente"
+                mensaje = f"{t.cliente.nombre if t.cliente else 'Cliente'}, prepárate. Te llamamos pronto!"
+            elif t.posicion == 2:
+                titulo = "Eres segundo en la cola"
+                mensaje = "Quedan 2 turnos para que te atendamos. Prepárate!"
+            else:
+                titulo = "Posición actualizada"
+                mensaje = f"Tu posición en la cola: {t.posicion}"
+            
+            enviar_notificacion_cliente(id_turno=t.id_turno, titulo=titulo, mensaje=mensaje)
+        except Exception as e:
+            logger.error(f"Error notificando cliente: {e}")
     
     db.session.commit()
     

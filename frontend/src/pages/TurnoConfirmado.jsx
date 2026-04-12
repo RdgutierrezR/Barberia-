@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api';
 import { parsearFecha } from '../utils/fecha';
-import { Calendar, MapPin } from 'lucide-react';
+import { Calendar, MapPin, Bell, BellOff } from 'lucide-react';
+import { pushSoportado, solicitarPermisoPush, suscribirseAPushCliente } from '../utils/pushNotifications';
 
 function TurnoConfirmado() {
   const { codigo } = useParams();
@@ -11,6 +12,8 @@ function TurnoConfirmado() {
   const [turno, setTurno] = useState(() => location.state?.turno || null);
   const [loading, setLoading] = useState(!location.state?.turno);
   const [cancelando, setCancelando] = useState(false);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [notifSuscrito, setNotifSuscrito] = useState(false);
 
   useEffect(() => {
     let cancelado = false;
@@ -57,6 +60,36 @@ function TurnoConfirmado() {
     const interval = setInterval(() => buscarTurno(1), 8000);
     return () => { cancelado = true; clearInterval(interval); };
   }, [codigo]);
+
+  useEffect(() => {
+    if (!turno || !pushSoportado()) return;
+    
+    const yaSuscrito = localStorage.getItem(`push_cliente_${turno.codigo_confirmacion}`);
+    if (yaSuscrito) {
+      setNotifSuscrito(true);
+    }
+  }, [turno]);
+
+  const handleSuscribirNotificaciones = async () => {
+    if (!turno || notifSuscrito) return;
+    
+    setNotifLoading(true);
+    try {
+      const success = await suscribirseAPushCliente(
+        turno.codigo_confirmacion,
+        turno.id_barberia,
+        turno.id_turno
+      );
+      
+      if (success) {
+        setNotifSuscrito(true);
+        localStorage.setItem(`push_cliente_${turno.codigo_confirmacion}`, 'true');
+      }
+    } catch (err) {
+      console.error('Error suscribiendo a push:', err);
+    }
+    setNotifLoading(false);
+  };
 
   const handleCancelar = async () => {
     if (!confirm('¿Estás seguro de cancelar tu turno?')) return;
@@ -168,6 +201,25 @@ function TurnoConfirmado() {
           {turno.estado === 'completado' && 'Turno completado'}
           {turno.estado === 'cancelado' && 'Turno cancelado'}
         </div>
+
+        {turno.estado !== 'completado' && turno.estado !== 'cancelado' && pushSoportado() && (
+          <div className="notif-toggle">
+            {notifSuscrito ? (
+              <div className="notif-activa">
+                <Bell size={18} />
+                <span>Notificaciones activadas</span>
+              </div>
+            ) : (
+              <button 
+                className="btn-notif" 
+                onClick={handleSuscribirNotificaciones}
+                disabled={notifLoading}
+              >
+                {notifLoading ? 'Activando...' : <><Bell size={18} /> Activar notificaciones</>}
+              </button>
+            )}
+          </div>
+        )}
 
         {turno.estado === 'completado' && (
           <button className="btn-primary" onClick={() => navigate('/')}>

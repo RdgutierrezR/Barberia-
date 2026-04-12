@@ -218,3 +218,88 @@ export const cancelarSuscripcionPush = async (token) => {
     console.error('[PUSH] Error cancelando suscripción:', e);
   }
 };
+
+export const suscribirseAPushCliente = async (codigoConfirmacion, idBarberia, idTurno) => {
+  console.log("[PUSH CLIENTE] ========== INICIANDO SUSCRIPCION CLIENTE ==========");
+  
+  if (!pushSoportado()) {
+    console.log("[PUSH CLIENTE] Push no soportado");
+    return null;
+  }
+  
+  try {
+    let permission = Notification.permission;
+    console.log("[PUSH CLIENTE] Permission actual:", permission);
+
+    if (permission === 'default') {
+      permission = await Notification.requestPermission();
+      console.log("[PUSH CLIENTE] Permission solicitado:", permission);
+    }
+
+    if (permission !== 'granted') {
+      console.log("[PUSH CLIENTE] Permiso denegado");
+      return null;
+    }
+    
+    let registration = await navigator.serviceWorker.ready;
+    
+    if (!registration || !registration.active) {
+      console.log("[PUSH CLIENTE] Registrando service worker...");
+      const swPath = import.meta.env.DEV ? '/dev-sw.js' : '/sw.js';
+      registration = await navigator.serviceWorker.register(swPath, { scope: '/' });
+      await navigator.serviceWorker.ready;
+    }
+    
+    if (registration.active && registration.active.state !== 'activated') {
+      await new Promise((resolve) => {
+        registration.active.addEventListener('statechange', (e) => {
+          if (e.target.state === 'activated') resolve();
+        });
+        setTimeout(resolve, 2000);
+      });
+    }
+    
+    const publicKey = await getVapidPublicKey();
+    if (!publicKey) {
+      console.error("[PUSH CLIENTE] No se pudo obtener clave VAPID");
+      return null;
+    }
+    
+    const applicationServerKey = urlBase64ToUint8Array(publicKey);
+    
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: applicationServerKey
+    });
+    
+    console.log("[PUSH CLIENTE] Endpoint:", subscription.endpoint);
+    
+    const res = await fetch(`${API_URL}/push/subscribe-cliente`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        subscription: subscription.toJSON(),
+        codigo_confirmacion: codigoConfirmacion,
+        id_barberia: idBarberia,
+        id_turno: idTurno
+      })
+    });
+
+    const result = await res.json();
+    console.log("[PUSH CLIENTE] Respuesta:", res.status, result);
+
+    if (res.ok) {
+      console.log("[PUSH CLIENTE] ✓ Suscripción guardada en backend");
+      return subscription;
+    } else {
+      console.error("[PUSH CLIENTE] Error:", result);
+      return null;
+    }
+  } catch (e) {
+    console.error("[PUSH CLIENTE] Error:", e);
+    if (e.message && e.message.includes('push service')) {
+      console.error("[PUSH CLIENTE] Push requiere HTTPS en producción");
+    }
+    return null;
+  }
+};

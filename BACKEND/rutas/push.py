@@ -84,4 +84,62 @@ def subscribe():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+@push_bp.route("/subscribe-cliente", methods=["POST"])
+def subscribe_cliente():
+    logging.info("[PUSH CLIENTE] ===== SOLICITUD /subscribe-cliente =====")
+    
+    data = request.get_json()
+    subscription = data.get("subscription")
+    codigo_confirmacion = data.get("codigo_confirmacion")
+    id_barberia = data.get("id_barberia")
+    id_turno = data.get("id_turno")
+    
+    if not subscription or not codigo_confirmacion or not id_barberia:
+        return jsonify({"error": "Faltan datos: subscription, codigo_confirmacion, id_barberia"}), 400
+    
+    from modelo.turno import Turno
+    turno = Turno.query.filter_by(
+        codigo_confirmacion=codigo_confirmacion,
+        id_barberia=id_barberia
+    ).first()
+    
+    if not turno:
+        return jsonify({"error": "Turno no encontrado"}), 404
+    
+    id_turno_real = id_turno or turno.id_turno
+    logging.info(f"[PUSH CLIENTE] Turno: {id_turno_real}, Código: {codigo_confirmacion}")
+    
+    try:
+        endpoint = subscription.get('endpoint')
+        
+        PushSubscription.query.filter(
+            PushSubscription.id_turno == id_turno_real
+        ).delete()
+        
+        sub = PushSubscription(
+            barberia_id=id_barberia,
+            barbero_id=None,
+            id_turno=id_turno_real,
+            codigo_confirmacion=codigo_confirmacion,
+            subscription=subscription
+        )
+        db.session.add(sub)
+        db.session.commit()
+        logging.info(f"[PUSH CLIENTE] ✓ Suscripción guardada ID: {sub.id}")
+        
+        try:
+            from controlador.notificacion_push import enviar_notificacion_cliente
+            titulo = "Notificaciones Activadas!"
+            mensaje = "Recibirás alertas cuando sea tu turno. Te avisaremos cuando sea tu momento."
+            enviar_notificacion_cliente(id_turno=id_turno_real, titulo=titulo, mensaje=mensaje)
+            logging.info(f"[PUSH CLIENTE] ✓ Notificación de confirmación enviada")
+        except Exception as e:
+            logging.error(f"[PUSH CLIENTE] Error enviando notificación de confirmación: {e}")
+        
+        return jsonify({"mensaje": "Suscripción guardada", "id": sub.id}), 201
+    except Exception as e:
+        logging.error(f"[PUSH CLIENTE] Error BD: {e}")
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 # ... el resto de los endpoints (unsubscribe, send) igual ...

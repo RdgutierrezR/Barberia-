@@ -86,6 +86,8 @@ self.addEventListener('push', (event) => {
     icon: data.icon || '/pwa-192x192.png',
     badge: data.badge || '/pwa-192x192.png',
     vibrate: [100, 50, 100],
+    tag: 'barber-app-notification',
+    renotify: false,
     data: {
       url: data.url || '/',
       timestamp: Date.now()
