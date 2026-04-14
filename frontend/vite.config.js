@@ -5,9 +5,30 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [
     react(),
+
     VitePWA({
+      strategies: 'injectManifest',
+
+      srcDir: 'src',
+      filename: 'custom-sw.js',
+
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'pwa-192x192.png', 'pwa-512x512.png'],
+
+      injectRegister: false,
+
+      includeAssets: [
+        'favicon.ico',
+        'pwa-192x192.png',
+        'pwa-512x512.png'
+      ],
+
+      injectManifest: {
+        globPatterns: [
+          '**/*.{js,css,html,ico,png,svg,woff2}'
+        ],
+        maximumFileSizeToCacheInBytes: 5000000
+      },
+
       manifest: {
         name: 'BarberAPP',
         short_name: 'BarberAPP',
@@ -18,16 +39,30 @@ export default defineConfig({
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
+
         icons: [
-          { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' }
+          {
+            src: '/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
         ]
       },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
-      },
-      devOptions: { enabled: true, type: 'module' }
+
+      devOptions: {
+        enabled: true,
+        type: 'module'
+      }
     })
   ],
-  server: { host: '0.0.0.0', port: 5173 }
+
+  server: {
+    host: '0.0.0.0',
+    port: 5173
+  }
 })
