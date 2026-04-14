@@ -202,7 +202,7 @@ function TurnoConfirmado() {
           {turno.estado === 'cancelado' && 'Turno cancelado'}
         </div>
 
-        {turno.estado !== 'completado' && turno.estado !== 'cancelado' && pushSoportado() && (
+        {turno.estado !== 'completado' && turno.estado !== 'cancelado' && (
           <div className="notif-toggle">
             {notifSuscrito ? (
               <div className="notif-activa">
@@ -211,9 +211,9 @@ function TurnoConfirmado() {
               </div>
             ) : (
               <button 
-                className="btn-notif" 
+                className="btn-notif"
                 onClick={handleSuscribirNotificaciones}
-                disabled={notifLoading}
+                disabled={notifLoading || !pushSoportado()}
               >
                 {notifLoading ? 'Activando...' : <><Bell size={18} /> Activar notificaciones</>}
               </button>

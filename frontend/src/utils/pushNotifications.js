@@ -43,7 +43,9 @@ export const urlBase64ToUint8Array = (base64String) => {
 };
 
 export const pushSoportado = () => {
-  return 'serviceWorker' in navigator && 'PushManager' in window;
+  const soportado = 'serviceWorker' in navigator && 'PushManager' in window;
+  console.log('[PUSH] pushSoportado:', soportado);
+  return soportado;
 };
 
 export const solicitarPermisoPush = async () => {
@@ -62,7 +64,7 @@ export const solicitarPermisoPush = async () => {
 };
 
 export const suscribirseAPush = async (token) => {
-  console.log("[PUSH] ========== INICIANDO SUSCRIPCION ==========");
+  console.log("[PUSH] ========== INICIANDO SUSCRIPCION (VitePWA) ==========");
   
   if (!pushSoportado()) {
     console.log("[PUSH] Push no soportado en este navegador");
@@ -87,14 +89,12 @@ export const suscribirseAPush = async (token) => {
     }
     console.log("[PUSH] Permiso garantizado");
 
-    console.log("[PUSH] Esperando service worker...");
-    let registration = await navigator.serviceWorker.ready;
+    console.log("[PUSH] Obteniendo service worker existente (VitePWA)...");
+    const registration = await navigator.serviceWorker.ready;
     
     if (!registration || !registration.active) {
-      console.log("[PUSH] Registrando service worker...");
-      const swPath = import.meta.env.DEV ? '/dev-sw.js' : '/sw.js';
-      registration = await navigator.serviceWorker.register(swPath, { scope: '/' });
-      await navigator.serviceWorker.ready;
+      console.error("[PUSH] No hay Service Worker activo. VitePWA debe registrarlo automáticamente.");
+      return null;
     }
     
     if (registration.active && registration.active.state !== 'activated') {
@@ -109,11 +109,6 @@ export const suscribirseAPush = async (token) => {
     console.log('[PUSH] Service worker activo y listo');
     console.log("[PUSH] SW:", registration.active?.scriptURL);
     console.log("[PUSH] SW state:", registration.active?.state);
-
-    if (!registration) {
-      console.error("[PUSH] No se pudo obtener registration");
-      return null;
-    }
 
     console.log("[PUSH] Service Worker activo:", registration.active);
     console.log("[PUSH] Service Worker scope:", registration.scope);
@@ -220,7 +215,7 @@ export const cancelarSuscripcionPush = async (token) => {
 };
 
 export const suscribirseAPushCliente = async (codigoConfirmacion, idBarberia, idTurno) => {
-  console.log("[PUSH CLIENTE] ========== INICIANDO SUSCRIPCION CLIENTE ==========");
+  console.log("[PUSH CLIENTE] ========== INICIANDO SUSCRIPCION CLIENTE (VitePWA) ==========");
   
   if (!pushSoportado()) {
     console.log("[PUSH CLIENTE] Push no soportado");
@@ -241,13 +236,12 @@ export const suscribirseAPushCliente = async (codigoConfirmacion, idBarberia, id
       return null;
     }
     
-    let registration = await navigator.serviceWorker.ready;
+    console.log("[PUSH CLIENTE] Obteniendo service worker existente (VitePWA)...");
+    const registration = await navigator.serviceWorker.ready;
     
     if (!registration || !registration.active) {
-      console.log("[PUSH CLIENTE] Registrando service worker...");
-      const swPath = import.meta.env.DEV ? '/dev-sw.js' : '/sw.js';
-      registration = await navigator.serviceWorker.register(swPath, { scope: '/' });
-      await navigator.serviceWorker.ready;
+      console.error("[PUSH CLIENTE] No hay Service Worker activo. VitePWA debe registrarlo automáticamente.");
+      return null;
     }
     
     if (registration.active && registration.active.state !== 'activated') {
@@ -258,6 +252,8 @@ export const suscribirseAPushCliente = async (codigoConfirmacion, idBarberia, id
         setTimeout(resolve, 2000);
       });
     }
+    
+    console.log("[PUSH CLIENTE] SW activo:", registration.active?.scriptURL);
     
     const publicKey = await getVapidPublicKey();
     if (!publicKey) {

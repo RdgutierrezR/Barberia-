@@ -50,6 +50,7 @@ function BarberoDashboard() {
   
   const { inicializado, tokenValido, crearAbortController } = useAuthInit();
   const nombreBarbero = localStorage.getItem('barbero_nombre') || 'Barbero';
+  const [pushStatus, setPushStatus] = useState({ estado: 'inicial', mensaje: '' });
 
   const logout = () => {
     localStorage.removeItem('barbero_token');
@@ -152,11 +153,18 @@ function BarberoDashboard() {
 
     if (!id_barberia || !id_barbero) return;
 
+    const tienePush = pushSoportado();
+    const tieneSW = 'serviceWorker' in navigator;
+    const tienePM = 'PushManager' in window;
+    
     console.log('[PUSH] ===== INICIANDO SUSCRIPCION PUSH =====');
-    console.log('[PUSH] pushSoportado:', pushSoportado());
+    console.log('[PUSH] pushSoportado:', tienePush);
     console.log('[PUSH] Notification.permission:', Notification.permission);
-    console.log('[PUSH] serviceWorker en navigator:', 'serviceWorker' in navigator);
-    console.log('[PUSH] PushManager en window:', 'PushManager' in window);
+    console.log('[PUSH] serviceWorker en navigator:', tieneSW);
+    console.log('[PUSH] PushManager en window:', tienePM);
+    console.log('[PUSH] UserAgent:', navigator.userAgent);
+    
+    setPushStatus({ estado: 'verificando', mensaje: `Push: ${tienePush ? 'OK' : 'NO'} | SW: ${tieneSW ? 'OK' : 'NO'} | PM: ${tienePM ? 'OK' : 'NO'}` });
     
     solicitarPermisoNotificaciones();
 
@@ -165,20 +173,28 @@ function BarberoDashboard() {
       console.log('[PUSH] Token existe:', !!token);
       if (token) {
         console.log('[PUSH] Llamando suscribirseAPush...');
+        setPushStatus({ estado: 'suscribiendo', mensaje: 'Suscribiendo a notificaciones push...' });
         suscribirseAPush(token)
           .then(sub => {
-            console.log('[PUSH] RESULTADO FINAL:', sub ? 'EXITOSO - Suscripción guardada' : 'FALLIDO - No se guardó');
-            if (!sub) {
-              console.error('[PUSH] ERROR: La suscripción retornó null. Revisa los logs anteriores.');
+            if (sub) {
+              console.log('[PUSH] RESULTADO FINAL: EXITOSO');
+              setPushStatus({ estado: 'ok', mensaje: 'Notificaciones push activas' });
+            } else {
+              console.log('[PUSH] RESULTADO FINAL: FALLIDO');
+              setPushStatus({ estado: 'error', mensaje: 'No se pudo activar push. Revisa los logs en DevTools' });
             }
           })
-          .catch(e => console.error('[PUSH] EXCEPTION:', e.message));
+          .catch(e => {
+            console.error('[PUSH] EXCEPTION:', e.message);
+            setPushStatus({ estado: 'error', mensaje: 'Error: ' + e.message });
+          });
       } else {
         console.error('[PUSH] ERROR: No hay token en localStorage');
+        setPushStatus({ estado: 'error', mensaje: 'Error: No hay token' });
       }
     } else {
       console.error('[PUSH] ERROR: Push no soportado en este dispositivo/navegador');
-      console.log('[PUSH] Navegador:', navigator.userAgent);
+      setPushStatus({ estado: 'no-soportado', mensaje: 'Push no soportado en este navegador' });
     }
 
     cargarCola();
@@ -763,10 +779,21 @@ function BarberoDashboard() {
       {vistaActual === 'inicio' && (
         <div className="header-barbero">
           <div className="header-barbero-top">
-            <div className="header-barbero-info">
-              <h1>Hola, {nombreBarbero}</h1>
-              <p>Barbería #{id_barberia}</p>
-            </div>
+<div className="header-barbero-info">
+                <h1>Hola, {nombreBarbero}</h1>
+                <p>Barbería #{id_barberia}</p>
+                {pushStatus.estado !== 'inicial' && (
+                  <p style={{
+                    fontSize: '10px',
+                    color: pushStatus.estado === 'ok' ? '#4ade80' : 
+                           pushStatus.estado === 'error' || pushStatus.estado === 'no-soportado' ? '#f87171' : 
+                           pushStatus.estado === 'suscribiendo' ? '#fbbf24' : '#9ca3af',
+                    marginTop: '2px'
+                  }}>
+                    {pushStatus.mensaje}
+                  </p>
+                )}
+              </div>
             <div className="user-avatar" onClick={() => abrirModalTurno('hoy')} style={{ cursor: 'pointer', fontSize: '24px', fontWeight: 'bold' }}>+</div>
           </div>
         </div>
