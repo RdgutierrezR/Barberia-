@@ -97,3 +97,62 @@ def notificar_nuevo_turno(barberia_id, barbero_id, nombre_cliente, nombre_servic
     titulo = "Nuevo Turno!"
     mensaje = f"{nombre_cliente} - {nombre_servicio}"
     return enviar_notificacion_push(barberia_id, barbero_id, titulo, mensaje)
+
+def enviar_notificacion_cliente(id_turno=None, codigo_confirmacion=None, titulo=None, mensaje=None):
+    """Envía notificación push al cliente por id_turno o codigo_confirmacion"""
+    logging.info(f"[PUSH CLIENTE] Buscando suscripción para turno={id_turno}, codigo={codigo_confirmacion}")
+    
+    if not VAPID_PRIVATE_KEY:
+        logger.warning("[PUSH CLIENTE] No hay clave privada VAPID")
+        return 0
+    
+    query = PushSubscription.query.filter(
+        PushSubscription.id_turno.isnot(None)
+    )
+    
+    if id_turno:
+        query = query.filter(PushSubscription.id_turno == id_turno)
+    elif codigo_confirmacion:
+        query = query.filter(PushSubscription.codigo_confirmacion == codigo_confirmacion)
+    else:
+        logging.warning("[PUSH CLIENTE] Sin id_turno ni codigo_confirmacion")
+        return 0
+    
+    subs = query.all()
+    logging.info(f"[PUSH CLIENTE] Suscripciones encontradas: {len(subs)}")
+    
+    if not subs:
+        return 0
+    
+    timestamp = int(time.time())
+    body = json.dumps({
+        "title": titulo,
+        "body": mensaje,
+        "icon": "/pwa-192x192.png",
+        "badge": "/pwa-192x192.png",
+        "url": "/",
+        "tag": f"cliente-{timestamp}",
+        "timestamp": timestamp,
+        "requireInteraction": True
+    })
+    
+    enviados = 0
+    for sub in subs:
+        try:
+            endpoint = sub.subscription.get('endpoint', 'N/A')[:50]
+            logging.info(f"[PUSH CLIENTE] Enviando a sub {sub.id}, endpoint: {endpoint}...")
+            
+            result = webpush(
+                subscription_info=sub.subscription,
+                data=body,
+                vapid_private_key=VAPID_PRIVATE_KEY,
+                vapid_claims={"sub": "mailto:admin@barberapp.com"},
+                ttl=3600,
+                content_encoding="aes128gcm"
+            )
+            logger.info(f"[PUSH CLIENTE] Notificación enviada a sub {sub.id}")
+            enviados += 1
+        except Exception as e:
+            logger.error(f"[PUSH CLIENTE] Error enviando a sub {sub.id}: {e}")
+    
+    return enviados

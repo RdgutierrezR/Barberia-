@@ -11,6 +11,10 @@ class Cliente(db.Model):
     codigo_qr = db.Column(db.String(50), nullable=True)
     activo = db.Column(db.Boolean, default=True)
 
+    __table_args__ = (
+        db.UniqueConstraint('telefono', 'id_barberia', name='uq_telefono_barberia'),
+    )
+
     barberia = db.relationship("Barberia", backref="clientes")
 
     def to_dict(self):
