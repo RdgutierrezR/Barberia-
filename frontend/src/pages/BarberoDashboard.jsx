@@ -7,7 +7,7 @@ import VistaAgenda from './VistaAgenda';
 import Metricas from './Metricas';
 import { Settings, Edit2, Smartphone, Check, SkipForward, X, Home, BarChart3, Calendar, DollarSign, LogOut, Plus, Clock } from 'lucide-react';
 import { solicitarPermisoNotificaciones, tienePermisoNotificaciones, notificarNuevoTurno } from '../utils/notificaciones';
-import { pushSoportado, solicitarPermisoPush, suscribirseAPush } from '../utils/pushNotifications';
+import { pushSoportado, solicitarPermisoPush, suscribirseAPush, cancelarSuscripcionPush } from '../utils/pushNotifications';
 
 function BarberoDashboard() {
   const { id_barberia, id_barbero } = useParams();
@@ -52,7 +52,17 @@ function BarberoDashboard() {
   const nombreBarbero = localStorage.getItem('barbero_nombre') || 'Barbero';
   const [pushStatus, setPushStatus] = useState({ estado: 'inicial', mensaje: '' });
 
-  const logout = () => {
+  const logout = async () => {
+    const token = localStorage.getItem('barbero_token');
+    
+    if (token) {
+      try {
+        await cancelarSuscripcionPush(token);
+      } catch (e) {
+        console.error('[LOGOUT] Error eliminando push:', e);
+      }
+    }
+    
     localStorage.removeItem('barbero_token');
     localStorage.removeItem('barbero_id');
     localStorage.removeItem('barbero_nombre');

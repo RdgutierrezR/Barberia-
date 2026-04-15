@@ -142,4 +142,85 @@ def subscribe_cliente():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-# ... el resto de los endpoints (unsubscribe, send) igual ...
+@push_bp.route("/unsubscribe", methods=["POST"])
+@jwt_required()
+def unsubscribe():
+    logging.info("[PUSH UNSUBSCRIBE] ===== SOLICITUD /unsubscribe =====")
+    identidad = get_jwt_identity()
+    
+    id_barberia = None
+    id_barbero = None
+    id_turno = None
+    tipo_usuario = None
+    
+    if isinstance(identidad, dict):
+        id_barberia = identidad.get("id_barberia")
+        id_barbero = identidad.get("id_barbero")
+        tipo_usuario = "barbero"
+    else:
+        from modelo.barbero import Barbero
+        try:
+            id_barbero = int(identidad)
+            barbero = Barbero.query.get(id_barbero)
+            if barbero:
+                id_barberia = barbero.id_barberia
+                tipo_usuario = "barbero"
+            else:
+                return jsonify({"error": f"Barbero no encontrado: {id_barbero}"}), 404
+        except (ValueError, TypeError):
+            barbero = Barbero.query.filter_by(correo=identidad).first()
+            if barbero:
+                id_barberia = barbero.id_barberia
+                id_barbero = barbero.id_barbero
+                tipo_usuario = "barbero"
+            else:
+                logging.warning(f"[PUSH UNSUBSCRIBE] Identidad no reconocida: {identidad}")
+                return jsonify({"mensaje": "Suscripción eliminada"}), 200
+    
+    data = request.get_json()
+    subscription = data.get("subscription")
+    
+    if not subscription:
+        logging.warning("[PUSH UNSUBSCRIBE] Suscripción no proporcionada")
+        return jsonify({"mensaje": "Suscripción eliminada"}), 200
+    
+    endpoint = subscription.get("endpoint") if isinstance(subscription, dict) else None
+    
+    if not endpoint:
+        logging.warning("[PUSH UNSUBSCRIBE] Endpoint no encontrado en suscripción")
+        return jsonify({"mensaje": "Suscripción eliminada"}), 200
+    
+    logging.info(f"[PUSH UNSUBSCRIBE] Tipo: {tipo_usuario}, Barbería: {id_barberia}, Barbero: {id_barbero}")
+    logging.info(f"[PUSH UNSUBSCRIBE] Endpoint recibido: {endpoint}")
+    
+    try:
+        query = PushSubscription.query.filter(
+            PushSubscription.barberia_id == id_barberia,
+            PushSubscription.barbero_id == id_barbero,
+            PushSubscription.barbero_id.isnot(None)
+        )
+        
+        logging.info(f"[PUSH UNSUBSCRIBE] Total suscripciones para barbero_id={id_barbero}: {query.count()}")
+        
+        eliminados = 0
+        for sub in query.all():
+            sub_endpoint = sub.subscription.get("endpoint") if sub.subscription else None
+            logging.info(f"[PUSH UNSUBSCRIBE] Comparando: BD={sub_endpoint[:50] if sub_endpoint else 'None'}... vs RECIBIDO={endpoint[:50]}...")
+            if sub_endpoint == endpoint:
+                db.session.delete(sub)
+                eliminados += 1
+                logging.info(f"[PUSH UNSUBSCRIBE] ✓ Eliminando suscripción ID: {sub.id}")
+        
+        db.session.commit()
+        
+        if eliminados > 0:
+            logging.info(f"[PUSH UNSUBSCRIBE] ✓ {eliminados} suscripción(es) eliminada(s)")
+        else:
+            logging.warning(f"[PUSH UNSUBSCRIBE] No se encontró suscripción con ese endpoint")
+        
+        return jsonify({"mensaje": "Suscripción eliminada", "eliminados": eliminados}), 200
+        
+    except Exception as e:
+        logging.error(f"[PUSH UNSUBSCRIBE] Error: {e}")
+        db.session.rollback()
+        return jsonify({"mensaje": "Suscripción eliminada"}), 200

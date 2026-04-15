@@ -4,6 +4,7 @@ import { api } from '../api';
 import { useAuthInit } from '../hooks/useAuthInit';
 import { FRONTEND_URL } from '../config';
 import { Home, Users, Edit2, Trash2, User } from 'lucide-react';
+import { cancelarSuscripcionPush } from '../utils/pushNotifications';
 
 function OwnerDashboard() {
   const { id } = useParams();
@@ -30,7 +31,17 @@ function OwnerDashboard() {
   const [nuevoBarbero, setNuevoBarbero] = useState({ nombre: '', telefono: '', correo: '', contrasena: '' });
   const [nuevoServicio, setNuevoServicio] = useState({ nombre: '', descripcion: '', precio: '', duracion_minutos: '' });
 
-  const logout = () => {
+  const logout = async () => {
+    const token = localStorage.getItem('barbero_token');
+    
+    if (token) {
+      try {
+        await cancelarSuscripcionPush(token);
+      } catch (e) {
+        console.error('[LOGOUT] Error eliminando push:', e);
+      }
+    }
+    
     localStorage.removeItem('barbero_token');
     localStorage.removeItem('barbero_id');
     localStorage.removeItem('barbero_nombre');

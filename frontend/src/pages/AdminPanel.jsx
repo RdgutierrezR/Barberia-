@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
+import { cancelarSuscripcionPush } from '../utils/pushNotifications';
 
 function AdminPanel() {
   const navigate = useNavigate();
@@ -28,7 +29,17 @@ function AdminPanel() {
     setLoading(false);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const token = localStorage.getItem('barbero_token');
+    
+    if (token) {
+      try {
+        await cancelarSuscripcionPush(token);
+      } catch (e) {
+        console.error('[LOGOUT] Error eliminando push:', e);
+      }
+    }
+    
     localStorage.removeItem('barbero_token');
     localStorage.removeItem('barbero_id');
     localStorage.removeItem('barbero_nombre');

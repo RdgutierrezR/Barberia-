@@ -191,26 +191,47 @@ export const suscribirseAPush = async (token) => {
 };
 
 export const cancelarSuscripcionPush = async (token) => {
+  console.log('[PUSH UNSUBSCRIBE] ===== INITIATING UNSUBSCRIBE =====');
+  
+  if (!pushSoportado()) {
+    console.log('[PUSH UNSUBSCRIBE] Push no soportado');
+    return;
+  }
+  
   try {
     const registration = await navigator.serviceWorker.ready;
     const subscription = await registration.pushManager.getSubscription();
     
-    if (subscription) {
-      await subscription.unsubscribe();
-      
-      await fetch(`${API_URL}/push/unsubscribe`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          subscription: subscription.toJSON()
-        })
-      });
+    if (!subscription) {
+      console.log('[PUSH UNSUBSCRIBE] No hay suscripción activa en navegador');
+      return;
     }
+    
+    const subscriptionJson = subscription.toJSON();
+    const endpoint = subscriptionJson.endpoint;
+    console.log('[PUSH UNSUBSCRIBE] Endpoint:', endpoint);
+    
+    console.log('[PUSH UNSUBSCRIBE] 1. Eliminando en backend...');
+    const res = await fetch(`${API_URL}/push/unsubscribe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        subscription: subscriptionJson
+      })
+    });
+    
+    const result = await res.json();
+    console.log('[PUSH UNSUBSCRIBE] Respuesta backend:', res.status, result);
+    
+    console.log('[PUSH UNSUBSCRIBE] 2. Eliminando en navegador...');
+    await subscription.unsubscribe();
+    console.log('[PUSH UNSUBSCRIBE] ✓ Suscripción eliminada');
+    
   } catch (e) {
-    console.error('[PUSH] Error cancelando suscripción:', e);
+    console.error('[PUSH UNSUBSCRIBE] Error:', e);
   }
 };
 
