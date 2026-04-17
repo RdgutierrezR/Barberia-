@@ -760,7 +760,7 @@ function BarberoDashboard() {
                       {t.hora_estimada && (
                         <span className="hora-programada">{formatHora12h(t.hora_estimada)}</span>
                       )}
-                      <span className="tipo-reserva-label">{t.tipo_reserva === 'cola' ? 'En cola' : 'Cita'}</span>
+                      <span className="tipo-reserva-label">Hora estimada</span>
                     </div>
                     <button 
                       className="btn-cancelar-turno" 
@@ -792,17 +792,6 @@ function BarberoDashboard() {
 <div className="header-barbero-info">
                 <h1>Hola, {nombreBarbero}</h1>
                 <p>Barbería #{id_barberia}</p>
-                {pushStatus.estado !== 'inicial' && (
-                  <p style={{
-                    fontSize: '10px',
-                    color: pushStatus.estado === 'ok' ? '#4ade80' : 
-                           pushStatus.estado === 'error' || pushStatus.estado === 'no-soportado' ? '#f87171' : 
-                           pushStatus.estado === 'suscribiendo' ? '#fbbf24' : '#9ca3af',
-                    marginTop: '2px'
-                  }}>
-                    {pushStatus.mensaje}
-                  </p>
-                )}
               </div>
             <div className="user-avatar" onClick={() => abrirModalTurno('hoy')} style={{ cursor: 'pointer', fontSize: '24px', fontWeight: 'bold' }}>+</div>
           </div>

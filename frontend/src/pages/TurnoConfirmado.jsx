@@ -5,6 +5,16 @@ import { parsearFecha } from '../utils/fecha';
 import { Calendar, MapPin, Bell, BellOff } from 'lucide-react';
 import { pushSoportado, solicitarPermisoPush, suscribirseAPushCliente } from '../utils/pushNotifications';
 
+const formatHora12h = (hora24) => {
+  if (!hora24) return '';
+  const [hora, minuto] = hora24.split(':');
+  let h = parseInt(hora);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12;
+  h = h ? h : 12;
+  return `${h}:${minuto} ${ampm}`;
+};
+
 function TurnoConfirmado() {
   const { codigo } = useParams();
   const navigate = useNavigate();
@@ -145,7 +155,7 @@ function TurnoConfirmado() {
             
             <div className="codigo-turno">
               <p>Tu código:</p>
-              <h2>{turno.codigo_confirmacion}</h2>
+              <h2>{turno.hora_programada ? formatHora12h(turno.hora_programada) : turno.codigo_confirmacion}</h2>
             </div>
 
             <div className="cita-info-card">
@@ -161,8 +171,8 @@ function TurnoConfirmado() {
             <h1>En la Cola!</h1>
             
             <div className="codigo-turno">
-              <p>Tu código:</p>
-              <h2>{turno.codigo_confirmacion}</h2>
+              <p>HORA ESTIMADA:</p>
+              <h2>{turno.hora_programada ? formatHora12h(turno.hora_programada) : turno.codigo_confirmacion}</h2>
             </div>
 
             {turno.estado !== 'completado' && turno.estado !== 'cancelado' && (
