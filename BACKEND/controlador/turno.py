@@ -169,8 +169,9 @@ def crear_turno_cola(id_barberia, id_barbero, id_servicio, nombre_cliente, telef
             hora_parts = ultimo.hora_programada.split(':')
             hora = int(hora_parts[0])
             minuto = int(hora_parts[1])
-            duracion_servicio = servicio.duracion_minutos
-            minuto += duracion_servicio
+            servicio_ultimo = Servicio.query.get(ultimo.id_servicio)
+            duracion_ultimo = servicio_ultimo.duracion_minutos if servicio_ultimo else 30
+            minuto += duracion_ultimo
             if minuto >= 60:
                 hora += minuto // 60
                 minuto = minuto % 60
