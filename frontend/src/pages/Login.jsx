@@ -143,14 +143,16 @@ function Login() {
                     type="button" 
                     onClick={handleValidarCodigo}
                     disabled={loading || codigoValidado}
+                    className="btn-primary"
                     style={{ 
                       padding: '14px 16px', 
-                      background: codigoValidado ? '#4ade80' : '#fff', 
-                      color: '#000',
+                      background: codigoValidado ? '#4ade80' : 'linear-gradient(145deg, #2f4f67 0%, #1a3040 100%)', 
+                      color: '#fff',
                       border: 'none', 
                       borderRadius: '10px',
                       fontWeight: '600',
-                      cursor: codigoValidado ? 'default' : 'pointer'
+                      cursor: codigoValidado ? 'default' : 'pointer',
+                      width: 'auto'
                     }}
                   >
                     {codigoValidado ? <Check size={16} /> : 'Validar'}

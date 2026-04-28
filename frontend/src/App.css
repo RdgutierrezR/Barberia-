@@ -270,8 +270,8 @@ body {
 .btn-primary {
   width: 100%;
   padding: 14px;
-  background: #fff;
-  color: #000;
+  background: linear-gradient(145deg, #2f4f67 0%, #1a3040 100%);
+  color: #fff;
   border: none;
   border-radius: 12px;
   font-size: 14px;
@@ -281,6 +281,10 @@ body {
 
 .btn-primary:active {
   transform: scale(0.98);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(145deg, #3d5f77 0%, #2f4f67 100%);
 }
 
 .btn-primary:disabled {
@@ -585,7 +589,7 @@ body {
 
 .header-barbero-info p {
   font-size: 12px;
-  color: #f59e0b;
+  color: #2F4F6F;
   margin-top: 2px;
 }
 
@@ -700,7 +704,7 @@ body {
 }
 
 .time-badge {
-  background: #f59e0b;
+  background: #2f4f67;
   color: white;
   padding: 6px 12px;
   border-radius: 12px;
@@ -720,8 +724,8 @@ body {
 }
 
 .servicio-badge {
-  background: linear-gradient(90deg, #5a3b0f, #8b5a15);
-  color: #f59e0b;
+  background: linear-gradient(90deg, #1a2f3d, #2f4f67);
+  color: white;
   padding: 6px 12px;
   border-radius: 12px;
   font-weight: 600;
@@ -740,13 +744,13 @@ body {
 }
 
 .tipo-badge.cola {
-  background: rgba(245, 158, 11, 0.2);
-  color: #f59e0b;
+  background: rgba(47, 79, 103, 0.2);
+  color: #2f4f67;
 }
 
 .tipo-badge.cita {
-  background: rgba(245, 158, 11, 0.2);
-  color: #f59e0b;
+  background: rgba(47, 79, 103, 0.2);
+  color: #2f4f67;
 }
 
 .cliente-nombre {
@@ -1081,13 +1085,13 @@ body {
 }
 
 .tipo-badge.cola {
-  background: rgba(245, 158, 11, 0.2);
-  color: #f59e0b;
+  background: rgba(47, 79, 103, 0.2);
+  color: #2f4f67;
 }
 
 .tipo-badge.cita {
-  background: rgba(245, 158, 11, 0.2);
-  color: #f59e0b;
+  background: rgba(47, 79, 103, 0.2);
+  color: #2f4f67;
 }
 
 .btn-finalizar {
@@ -1115,12 +1119,12 @@ body {
 }
 
 .btn-small.btn-finalizar {
-  background: linear-gradient(145deg, #f59e0b 0%, #d97706 100%);
+  background: linear-gradient(145deg, #2f4f67 0%, #1a3040 100%);
   color: #fff;
 }
 
 .btn-small.btn-finalizar:hover {
-  background: linear-gradient(145deg, #fbbf24 0%, #f59e0b 100%);
+  background: linear-gradient(145deg, #3d5f77 0%, #2f4f67 100%);
 }
 
 .btn-small.btn-secondary {
@@ -1135,11 +1139,11 @@ body {
 }
 
 .cola-item.cita {
-  border-left: 3px solid #f59e0b;
+  border-left: 3px solid #2f4f67;
 }
 
 .cola-item.cola {
-  border-left: 3px solid #f59e0b;
+  border-left: 3px solid #2f4f67;
 }
 
 .btn-cancelar-turno {
@@ -1179,13 +1183,13 @@ body {
 }
 
 .tipo-mini.cola {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  background: rgba(47, 79, 103, 0.15);
+  color: #2f4f67;
 }
 
 .tipo-mini.cita {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  background: rgba(47, 79, 103, 0.15);
+  color: #2f4f67;
 }
 
 .cola-hora {
@@ -1210,8 +1214,8 @@ body {
 
 .cita-llegada {
   font-size: 9px;
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.15);
+  color: #2f4f67;
+  background: rgba(47, 79, 103, 0.15);
   padding: 2px 6px;
   border-radius: 6px;
 }
@@ -1306,12 +1310,12 @@ body {
 }
 
 .login-tabs .tab.active {
-  background: #fff;
-  color: #000;
+  background: linear-gradient(145deg, #2f4f67 0%, #1a3040 100%);
+  color: #fff;
 }
 
 .login-tabs .tab:not(.active):hover {
-  color: #888;
+  color: #aaa;
 }
 
 .login-form {
@@ -1598,7 +1602,7 @@ body {
 }
 
 .resumen-card.ingresos .resumen-value {
-  color: #f59e0b;
+  color: #4CAF50;
 }
 
 .resumen-card.egresos .resumen-value {
@@ -3156,7 +3160,7 @@ body {
 
 .agenda-page .header-barbero-info p {
   font-size: 12px;
-  color: #f59e0b;
+  color: #2F4F6F;
   margin-top: 2px;
 }
 
@@ -3180,7 +3184,7 @@ body {
 .btn-bloquear {
   background: #252525;
   border: 1px solid #3a3a3a;
-  color: #f59e0b;
+  color: #2F4F6F;
   padding: 8px 14px;
   border-radius: 8px;
   font-size: 13px;
@@ -3190,8 +3194,8 @@ body {
 }
 
 .btn-bloquear:hover {
-  background: #f59e0b;
-  color: #000;
+  background: #2F4F6F;
+  color: #fff;
 }
 
 .selector-fecha {
@@ -3219,7 +3223,7 @@ body {
 .btn-nav-fecha:hover {
   background: #1f1f1f;
   color: #fff;
-  border-color: #f59e0b;
+  border-color: #2F4F6F;
 }
 
 .dias-scroll {
@@ -3250,23 +3254,23 @@ body {
 }
 
 .dia-btn:hover {
-  border-color: #f59e0b;
+  border-color: #2F4F6F;
   background: #1a1a1a;
 }
 
 .dia-btn.hoy {
-  border-color: #f59e0b;
+  border-color: #2F4F6F;
 }
 
 .dia-btn.active {
-  background: linear-gradient(145deg, #f59e0b 0%, #d97706 100%);
+  background: linear-gradient(145deg, #2F4F6F 0%, #1e3a5f 100%);
   color: #fff;
-  border-color: #f59e0b;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  border-color: #2F4F6F;
+  box-shadow: 0 4px 12px rgba(47, 79, 111, 0.3);
 }
 
 .dia-btn.hoy {
-  border-color: #f59e0b;
+  border-color: #2F4F6F;
 }
 
 .dia-nombre {
@@ -3320,7 +3324,7 @@ body {
 }
 
 .seccion-card::-webkit-scrollbar-thumb {
-  background: #f59e0b;
+  background: #2F4F6F;
   border-radius: 3px;
 }
 
@@ -3350,7 +3354,7 @@ body {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #f59e0b;
+  background: #2F4F6F;
 }
 
 .seccion-bloqueos .seccion-header h3::before {
@@ -3358,8 +3362,8 @@ body {
 }
 
 .seccion-count {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  background: rgba(47, 79, 111, 0.15);
+  color: #2F4F6F;
   font-size: 12px;
   padding: 4px 10px;
   border-radius: 20px;
@@ -3379,7 +3383,7 @@ body {
 }
 
 .cita-card:hover {
-  border-color: #f59e0b;
+  border-color: #2F4F6F;
   transform: translateY(-1px);
 }
 
@@ -3394,8 +3398,8 @@ body {
   text-align: center;
   padding: 8px 10px;
   border-radius: 8px;
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  background: rgba(47, 79, 111, 0.15);
+  color: #2F4F6F;
   flex-shrink: 0;
 }
 
@@ -3406,13 +3410,13 @@ body {
   padding: 16px;
   background: #141414;
   border-radius: 12px;
-  border: 1px solid rgba(245, 158, 11, 0.25);
+  border: 1px solid rgba(47, 79, 111, 0.25);
   margin-bottom: 10px;
   transition: all 0.2s;
 }
 
 .bloqueo-card:hover {
-  border-color: #f59e0b;
+  border-color: #2F4F6F;
   background: #151515;
 }
 
@@ -3444,8 +3448,8 @@ body {
 }
 
 .cita-estado.pendiente {
-  background: rgba(245, 158, 11, 0.2);
-  color: #f59e0b;
+  background: rgba(47, 79, 111, 0.2);
+  color: #2F4F6F;
 }
 
 
@@ -3493,9 +3497,9 @@ body {
 }
 
 .btn-agendar-cola:hover {
-  background: #f59e0b;
-  border-color: #f59e0b;
-  color: #000;
+  background: #2F4F6F;
+  border-color: #2F4F6F;
+  color: #fff;
 }
 
 .cita-completado {
@@ -3510,7 +3514,7 @@ body {
   flex-direction: column;
   gap: 4px;
   padding-left: 8px;
-  border-left: 2px solid rgba(245, 158, 11, 0.4);
+  border-left: 2px solid rgba(47, 79, 111, 0.4);
 }
 
 .bloqueo-motivo {
@@ -3608,8 +3612,8 @@ body {
 
 .form-group input:focus {
   outline: none;
-  border-color: #f59e0b;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+  border-color: #2F4F6F;
+  box-shadow: 0 0 0 3px rgba(47, 79, 111, 0.1);
 }
 
 .form-group input::placeholder {
@@ -3751,7 +3755,7 @@ body {
 .horario-horas {
   font-size: 16px;
   font-weight: 500;
-  color: #f59e0b;
+  color: #2F4F6F;
 }
 
 .horario-edit {
@@ -3842,9 +3846,9 @@ body {
 }
 
 .periodo-btn.active {
-  background: #f59e0b;
-  color: #000;
-  border-color: #f59e0b;
+  background: #2F4F6F;
+  color: #fff;
+  border-color: #2F4F6F;
 }
 
 .periodo-btn:hover:not(.active) {
@@ -3924,7 +3928,7 @@ body {
 .metrica-value {
   font-size: 22px;
   font-weight: 700;
-  color: #f59e0b;
+  color: #2F4F6F;
   display: block;
 }
 
@@ -4106,8 +4110,8 @@ body {
 }
 
 .servicio-chip .servicio-cantidad {
-  background: #f59e0b;
-  color: #000;
+  background: #2F4F6F;
+  color: #fff;
   padding: 1px 5px;
   border-radius: 10px;
   font-size: 9px;
@@ -4208,7 +4212,7 @@ body {
 .duracion-valor {
   font-size: 18px;
   font-weight: 700;
-  color: #f59e0b;
+  color: #2F4F6F;
   display: block;
 }
 
@@ -4245,7 +4249,7 @@ body {
 
 .productividad-fill {
   height: 100%;
-  background: #f59e0b;
+  background: #2F4F6F;
   border-radius: 4px;
   transition: width 0.3s;
 }
@@ -4492,7 +4496,7 @@ body {
 .modal-form input:focus,
 .modal-form select:focus {
   outline: none;
-  border-color: #f97316;
+  border-color: #2f4f67;
 }
 
 .modal-form select {
@@ -4523,9 +4527,9 @@ body {
 }
 
 .tipo-btn.active {
-  border-color: #f97316;
-  background: rgba(249, 115, 22, 0.1);
-  color: #f97316;
+  border-color: #2f4f67;
+  background: rgba(47, 79, 103, 0.1);
+  color: #2f4f67;
 }
 
 .tipo-btn:hover:not(.active) {
@@ -4559,13 +4563,13 @@ body {
 }
 
 .hora-btn:hover {
-  border-color: #f97316;
-  color: #f97316;
+  border-color: #2f4f67;
+  color: #2f4f67;
 }
 
 .hora-btn.active {
-  border-color: #f97316;
-  background: rgba(249, 115, 22, 0.2);
-  color: #f97316;
+  border-color: #2f4f67;
+  background: rgba(47, 79, 103, 0.2);
+  color: #2f4f67;
   font-weight: 600;
 }
