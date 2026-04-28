@@ -413,7 +413,7 @@ function Contabilidad({ idBarberia, idBarbero, nombreBarbero }) {
                         className={`dia-tarjeta dia-tarjeta-semana ${esMejor ? 'dia-mejor' : ''}`}
                         style={{ 
                           backgroundColor: colores.bg,
-                          borderColor: esMejor ? '#fbbf24' : colores.border,
+                          borderColor: esMejor ? '#2F4F6F' : colores.border,
                           color: colores.text
                         }}
                         onClick={() => diaData && setDiaDetalle(fecha)}
@@ -510,7 +510,7 @@ function Contabilidad({ idBarberia, idBarbero, nombreBarbero }) {
                           className={`dia-tarjeta ${esMejor ? 'dia-mejor' : ''} ${esPeor ? 'dia-peor' : ''}`}
                           style={{ 
                             backgroundColor: colores.bg,
-                            borderColor: esMejor ? '#fbbf24' : esPeor ? '#ef4444' : colores.border,
+                            borderColor: esMejor ? '#2F4F6F' : esPeor ? '#ef4444' : colores.border,
                             color: colores.text
                           }}
                           onClick={() => diaData && setDiaDetalle(fecha)}

@@ -757,8 +757,8 @@ function BarberoDashboard() {
                       <div className="cola-telefono"><Smartphone size={12} /> {t.cliente_telefono}</div>
                     </div>
                     <div className="cola-hora">
-                      {t.hora_estimada && (
-                        <span className="hora-programada">{formatHora12h(t.hora_estimada)}</span>
+                      {t.hora_programada && (
+                        <span className="hora-programada">{formatHora12h(t.hora_programada)}</span>
                       )}
                       <span className="tipo-reserva-label">Hora estimada</span>
                     </div>

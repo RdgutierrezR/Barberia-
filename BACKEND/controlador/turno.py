@@ -758,13 +758,13 @@ def obtener_cola_diaria(id_barberia, id_barbero):
         duracion_servicio = servicio.duracion_minutos if servicio else 30
         
         if turno.tipo_reserva == "cola":
-            hora_estimada = horas_dict.get(turno.id_turno, "")
+            hora_programada = turno.hora_programada or ""
             tipo_mostrar = "cola"
         else:
             if turno.cita_fecha_hora and turno.cita_fecha_hora.date() == fecha_hoy:
-                hora_estimada = turno.cita_fecha_hora.strftime("%H:%M")
+                hora_programada = turno.cita_fecha_hora.strftime("%H:%M")
             else:
-                hora_estimada = ""
+                hora_programada = ""
             tipo_mostrar = "cita"
         
         resultado.append({
@@ -780,7 +780,7 @@ def obtener_cola_diaria(id_barberia, id_barbero):
             "codigo_confirmacion": turno.codigo_confirmacion,
             "posicion_en_cola": posicion,
             "posicion": turno.posicion,
-            "hora_estimada": hora_estimada,
+            "hora_programada": hora_programada,
             "fecha_hora": turno.fecha_hora.isoformat() if turno.fecha_hora else None,
             "fecha_creacion": turno.fecha_creacion.isoformat() if turno.fecha_creacion else None,
             "fecha_inicio_servicio": turno.fecha_inicio_servicio.isoformat() if turno.fecha_inicio_servicio else None
