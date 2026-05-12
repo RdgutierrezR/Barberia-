@@ -67,6 +67,7 @@ def actualizar(id_barberia, id_barbero):
 @barberos_bp.route("/<int:id_barbero>", methods=["DELETE"])
 @jwt_required()
 def eliminar(id_barberia, id_barbero):
+    logger.info(f"DELETE /barberos/{id_barbero} - barberia: {id_barberia}")
     if ctrl.eliminar_barbero(id_barbero):
         return jsonify({"mensaje": "Barbero eliminado"})
     return jsonify({"error": "Barbero no encontrado"}), 404
