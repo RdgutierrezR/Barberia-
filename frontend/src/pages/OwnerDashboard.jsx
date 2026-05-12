@@ -31,6 +31,7 @@ function OwnerDashboard() {
   const [nuevoBarbero, setNuevoBarbero] = useState({ nombre: '', telefono: '', correo: '', contrasena: '', comision_monto: 0 });
   const [nuevoServicio, setNuevoServicio] = useState({ nombre: '', descripcion: '', precio: '', duracion_minutos: '' });
   const [barberoEditando, setBarberoEditando] = useState(null);
+  const [guardandoBarbero, setGuardandoBarbero] = useState(false);
 
   const logout = async () => {
     const token = localStorage.getItem('barbero_token');
@@ -125,6 +126,7 @@ function OwnerDashboard() {
     if (!nuevoBarbero.nombre || !nuevoBarbero.telefono || !nuevoBarbero.correo || !nuevoBarbero.contrasena) {
       return;
     }
+    setGuardandoBarbero(true);
     try {
       await api.registroBarbero(id, { 
         ...nuevoBarbero, 
@@ -137,6 +139,7 @@ function OwnerDashboard() {
     } catch (err) {
       alert(err.message);
     }
+    setGuardandoBarbero(false);
   };
 
   const guardarComision = async (idBarbero, comision) => {
@@ -435,8 +438,11 @@ function OwnerDashboard() {
               <small style={{ color: '#666', fontSize: '12px' }}>Monto que recibe el barbero por cada servicio. 0 = sin comisión</small>
             </div>
             <div className="modal-buttons">
-              <button className="btn-cancelar-modal" onClick={() => setShowModalBarbero(false)}>Cancelar</button>
-              <button className="btn-confirmar-modal" onClick={agregarBarbero}>Agregar</button>
+              <button className="btn-cancelar-modal" onClick={() => setShowModalBarbero(false)} disabled={guardandoBarbero}>Cancelar</button>
+              <button className="btn-confirmar-modal" onClick={agregarBarbero} disabled={guardandoBarbero}>
+                {guardandoBarbero && <span className="spinner"></span>}
+                {guardandoBarbero ? 'Guardando...' : 'Agregar'}
+              </button>
             </div>
           </div>
         </div>

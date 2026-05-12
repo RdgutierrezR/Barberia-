@@ -2982,6 +2982,37 @@ body {
   background: #e0e0e0;
 }
 
+.btn-confirmar-modal:disabled,
+.btn-cancelar-modal:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-confirmar-modal:disabled {
+  background: #ccc;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #fff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.spinner-dark {
+  border-color: #666;
+  border-top-color: transparent;
+}
+
 .btn-cerrar-sesion {
   margin-top: 12px;
   width: 100%;
