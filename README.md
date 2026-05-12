@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Stack-Flask%20%2B%20React-blue" alt="Stack">
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
-  <img src="https://img.shields.io/badge/Version-1.1.0-orange" alt="Version">
+  <img src="https://img.shields.io/badge/Version-1.2.0-orange" alt="Version">
 </p>
 
 Sistema de gestión integral para barberías con soporte multi-tenant. Permite gestionar barberías, barberos, clientes, turnos, servicios, horarios y contabilidad.
@@ -13,22 +13,29 @@ Sistema de gestión integral para barberías con soporte multi-tenant. Permite g
 - **Gestión Multi-Tenant**: Múltiples barberías en una sola plataforma
 - **Sistema de Turnos**: 
   - Cola dinámica con hora fija (no cambia con el tiempo)
+  - Posición en cola (reordenar turnos)
   - Citas programadas
   - Intervalos de 30 minutos
   - Turnos rápidos (botón + en panel barbero) para clientes sin celular/internet
+  - Cola diaria pública (sin JWT) para mostrar en pantalla
 - **Gestión de Barberos**: 
   - Comisiones configurables
   - Horarios semanales y diarios
   - Panel individual de trabajo
+  - Contador de tiempo en servicio
 - **Contabilidad**: 
   - Registro automático de ingresos
   - Métricas y reportes
   - Por barbería y por barbero
+  - Mapa de calor tipo GitHub (ingresos por día)
 - **Código QR**: Acceso rápido para clientes
-- **Notificaciones**: WhatsApp via Twilio
+- **Notificaciones**: 
+  - WhatsApp via Twilio (al cliente)
+  - Web Push (al barbero cuando llega un turno)
+- **PWA**: Aplicación web progresiva instalable
 - **Timezone**: Configuración automática America/Bogota
 - **UI Responsiva**: Diseño dark adaptativo para móviles
-- **API RESTful**: Documentada y lista para integraciones
+- **Iconos**: Lucide React profesionales
 
 ## Tecnologías
 
@@ -121,23 +128,28 @@ npm run dev
 # Backend
 FLASK_APP=app.py
 FLASK_ENV=production
-DATABASE_URL=postgresql://user:pass@host/barberia
+DATABASE_URL=mysql+pymysql://user:pass@host:port/dbname?ssl_ca=/path/to/ca.pem&ssl_verify_cert=true
 JWT_SECRET_KEY=tu-secret-key
+SECRET_KEY=tu-secret-key
 TZ=America/Bogota
+
+# VAPID Keys (Web Push)
+VAPID_PUBLIC_KEY=...
+VAPID_PRIVATE_KEY=...
 
 # Twilio (opcional)
 TWILIO_ACCOUNT_SID=...
 TWILIO_AUTH_TOKEN=...
-TWILIO_WHATSAPP_NUMBER=...
+TWILIO_PHONE_NUMBER=...
 ```
 
 ### Despliegue Recomendado
 
 | Componente | Hosting recomendado |
 |------------|-------------------|
-| Backend | Render, Railway, Heroku |
-| Frontend | Vercel, Netlify |
-| Base de datos | PostgreSQL (prod) |
+| Backend | Render |
+| Frontend | Vercel |
+| Base de datos | MySQL Aiven |
 
 ## Documentación
 
@@ -154,19 +166,27 @@ TWILIO_WHATSAPP_NUMBER=...
 - [x] Gestión de barberos con comisiones
 - [x] Sistema de turnos en cola
 - [x] Hora fija en cola (no cambia)
+- [x] Posición en cola (reordenar turnos)
 - [x] Finalizar sin avanzar la cola
 - [x] Cancelar turnos desde la cola
 - [x] Citas programadas
+- [x] Turnos rápidos (botón +)
+- [x] Contador de tiempo en panel barbero
+- [x] Cola diaria pública (sin JWT)
 - [x] Gestión de servicios
 - [x] Horarios semanales y diarios
 - [x] Bloqueos de agenda
 - [x] Contabilidad automática
 - [x] Métricas y reportes
+- [x] Mapa de calor en contabilidad
 - [x] Código QR para barberías
 - [x] Invitaciones para crear barberías
-- [x] Notificaciones WhatsApp
+- [x] Notificaciones WhatsApp al cliente
+- [x] Web Push Notifications al barbero
+- [x] PWA (Progressive Web App)
 - [x] Timezone Colombia
 - [x] UI responsiva para móviles
+- [x] Iconos Lucide profesionales
 - [x] Panel de métricas
 
 ## Usuarios de Prueba
@@ -203,7 +223,7 @@ GET /api/barberias/1/contabilidad/metricas/barberia
 |------------|----------|-----|
 | **Frontend** | Vercel | https://barberia-ochre-eta.vercel.app |
 | **Backend** | Render | https://barberapp.onrender.com |
-| **Base de datos** | Railway | MySQL |
+| **Base de datos** | Aiven | MySQL |
 
 **Acceso directo:** https://barberia-ochre-eta.vercel.app/login
 
@@ -216,9 +236,11 @@ GET /api/barberias/1/contabilidad/metricas/barberia
 ```env
 # Backend (Render)
 TZ=America/Bogota
-DATABASE_URL=mysql://... (de Railway)
+DATABASE_URL=mysql://... (de Aiven)
 JWT_SECRET_KEY=...
 SECRET_KEY=...
+VAPID_PUBLIC_KEY=...
+VAPID_PRIVATE_KEY=...
 FLASK_ENV=production
 
 # Frontend (Vercel)
@@ -227,7 +249,7 @@ VITE_API_URL=https://barberapp.onrender.com
 
 ## Estado del Proyecto
 
-**Versión 1.1.0** - En producción
+**Versión 1.2.0** - En producción
 
 El proyecto se encuentra en desarrollo activo con mejoras continuas.
 
