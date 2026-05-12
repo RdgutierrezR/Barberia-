@@ -1,5 +1,6 @@
 from flask import Flask
 import os
+import logging
 from configuracion import Config
 from database import db
 from flask_cors import CORS
@@ -8,6 +9,12 @@ from flask_jwt_extended import JWTManager
 from modelo.bloqueo_agenda import BloqueoAgenda
 from modelo.horario_dia import HorarioDia
 from modelo.push_subscription import PushSubscription
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 def create_app():
     app = Flask(__name__)
@@ -60,10 +67,15 @@ def create_app():
     
     @app.route("/health")
     def health():
+        return {"status": "OK", "service": "running"}
+    
+    @app.route("/health/db")
+    def health_db():
         try:
             db.session.execute(db.text("SELECT 1"))
             return {"status": "OK", "database": "connected"}
         except Exception as e:
+            logger.error(f"Health check DB failed: {str(e)}")
             return {"status": "ERROR", "database": str(e)}, 500
     
     @app.route("/ping")

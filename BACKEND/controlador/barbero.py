@@ -1,6 +1,9 @@
 from database import db
 from modelo.barbero import Barbero
 from werkzeug.security import generate_password_hash, check_password_hash
+import logging
+
+logger = logging.getLogger(__name__)
 
 def listar_barberos(id_barberia):
     return Barbero.query.filter_by(id_barberia=id_barberia, activo=True).all()
@@ -12,25 +15,32 @@ def obtener_barbero_por_correo(correo):
     return Barbero.query.filter_by(correo=correo).first()
 
 def crear_barbero(id_barberia, nombre, telefono, correo, contrasena, foto_url=None, comision_monto=0, rol="barbero"):
-    existente = Barbero.query.filter_by(correo=correo, id_barberia=id_barberia).first()
-    if existente:
-        return None
-    
-    contrasena_hash = generate_password_hash(contrasena)
-    nuevo = Barbero(
-        id_barberia=id_barberia,
-        nombre=nombre,
-        telefono=telefono,
-        correo=correo,
-        contrasena=contrasena_hash,
-        foto_url=foto_url,
-        comision_monto=comision_monto,
-        rol=rol,
-        activo=True
-    )
-    db.session.add(nuevo)
-    db.session.commit()
-    return nuevo
+    try:
+        existente = Barbero.query.filter_by(correo=correo, id_barberia=id_barberia).first()
+        if existente:
+            logger.warning(f"Intento de crear barbero con correo duplicado: {correo}")
+            return None
+        
+        contrasena_hash = generate_password_hash(contrasena)
+        nuevo = Barbero(
+            id_barberia=id_barberia,
+            nombre=nombre,
+            telefono=telefono,
+            correo=correo,
+            contrasena=contrasena_hash,
+            foto_url=foto_url,
+            comision_monto=comision_monto,
+            rol=rol,
+            activo=True
+        )
+        db.session.add(nuevo)
+        db.session.commit()
+        logger.info(f"Barbero creado exitosamente: {correo} (barberia: {id_barberia})")
+        return nuevo
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al crear barbero: {str(e)}")
+        raise
 
 def actualizar_barbero(id_barbero, nombre=None, telefono=None, correo=None, foto_url=None, comision_monto=None):
     barbero = Barbero.query.get(id_barbero)

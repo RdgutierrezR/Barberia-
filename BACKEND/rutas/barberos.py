@@ -1,6 +1,9 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from controlador import barbero as ctrl
+import logging
+
+logger = logging.getLogger(__name__)
 
 barberos_bp = Blueprint("barberos", __name__, url_prefix="/api/barberias/<int:id_barberia>/barberos")
 
@@ -27,19 +30,23 @@ def obtener(id_barberia, id_barbero):
 def crear(id_barberia):
     data = request.get_json()
     rol = data.get("rol", "barbero")
-    nuevo = ctrl.crear_barbero(
-        id_barberia,
-        data["nombre"],
-        data["telefono"],
-        data["correo"],
-        data["contrasena"],
-        data.get("foto_url"),
-        data.get("comision_monto", 0),
-        rol
-    )
-    if not nuevo:
-        return jsonify({"error": "Ya existe un barbero con este correo"}), 400
-    return jsonify(nuevo.to_dict()), 201
+    try:
+        nuevo = ctrl.crear_barbero(
+            id_barberia,
+            data["nombre"],
+            data["telefono"],
+            data["correo"],
+            data["contrasena"],
+            data.get("foto_url"),
+            data.get("comision_monto", 0),
+            rol
+        )
+        if not nuevo:
+            return jsonify({"error": "Ya existe un barbero con este correo"}), 400
+        return jsonify(nuevo.to_dict()), 201
+    except Exception as e:
+        logger.error(f"Error al crear barbero: {str(e)}")
+        return jsonify({"error": f"Error al crear barbero: {str(e)}"}), 500
 
 @barberos_bp.route("/<int:id_barbero>", methods=["PUT"])
 @jwt_required()
