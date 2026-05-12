@@ -332,6 +332,15 @@ export const api = {
     return data;
   },
 
+  getColaDiariaLigero: async (idBarberia, idBarbero) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/cola/${idBarbero}/diaria/ligero`, {
+      headers: headers()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+
   reordenarTurno: async (idBarberia, idTurno, nuevaPosicion) => {
     const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/cola/reordenar`, {
       method: 'PUT',

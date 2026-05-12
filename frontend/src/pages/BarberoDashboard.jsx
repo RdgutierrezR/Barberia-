@@ -81,7 +81,7 @@ function BarberoDashboard() {
     abortControllersRef.current.push(controller);
     
     try {
-      const data = await api.getColaDiaria(id_barberia, id_barbero);
+      const data = await api.getColaDiariaLigero(id_barberia, id_barbero);
       if (!mountedRef.current) return;
       
       if (requestId !== requestIdRef.current) return;

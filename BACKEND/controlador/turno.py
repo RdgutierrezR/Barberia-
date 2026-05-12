@@ -809,6 +809,44 @@ def obtener_cola_diaria(id_barberia, id_barbero):
     
     return resultado
 
+def obtener_cola_diaria_ligero(id_barberia, id_barbero):
+    ahora = ahora_fn()
+    fecha_hoy = ahora.date()
+    
+    turnos = Turno.query.filter(
+        Turno.id_barberia == id_barberia,
+        Turno.id_barbero == id_barbero,
+        Turno.estado.in_(["pendiente", "confirmado", "en_proceso"]),
+        Turno.tipo_reserva == "cola"
+    ).order_by(sql_func.coalesce(Turno.posicion, 999999), Turno.fecha_creacion).limit(30).all()
+    
+    if not turnos:
+        return []
+    
+    resultado = []
+    posicion = 1
+    
+    for turno in turnos:
+        if not turno.cliente:
+            continue
+        
+        resultado.append({
+            "id_turno": turno.id_turno,
+            "cliente_nombre": turno.cliente.nombre if turno.cliente else "Sin nombre",
+            "cliente_telefono": turno.cliente.telefono if turno.cliente else "",
+            "id_servicio": turno.id_servicio,
+            "servicio_nombre": turno.servicio.nombre if turno.servicio else "Servicio",
+            "servicio_duracion": turno.servicio.duracion_minutos if turno.servicio else 30,
+            "estado": turno.estado,
+            "posicion_en_cola": posicion,
+            "hora_programada": turno.hora_programada or "",
+            "tipo_reserva": turno.tipo_reserva
+        })
+        
+        posicion += 1
+    
+    return resultado
+
 DIAS_RETENCION_TURNOS = 30
 
 def limpiar_turnos_antiguos(id_barberia=None, dias=None):

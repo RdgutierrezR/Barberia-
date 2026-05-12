@@ -78,6 +78,28 @@ function OwnerDashboard() {
     setLoading(false);
   };
 
+  const recargarParcial = async () => {
+    if (!mountedRef.current) return;
+    
+    const controller = crearAbortController();
+    abortControllersRef.current.push(controller);
+    
+    try {
+      const [bs, s] = await Promise.all([
+        api.getTodosBarberos(id),
+        api.getServicios(id)
+      ]);
+      if (!mountedRef.current) return;
+      
+      setBarberos(bs.filter(b => b.rol !== 'owner' && b.rol !== 'admin'));
+      setServicios(s);
+    } catch (err) {
+      if (!mountedRef.current) return;
+      if (err.name === 'AbortError' || err.message.includes('canceled')) return;
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     mountedRef.current = true;
     
@@ -111,7 +133,7 @@ function OwnerDashboard() {
       });
       setShowModalBarbero(false);
       setNuevoBarbero({ nombre: '', telefono: '', correo: '', contrasena: '', comision_monto: 0 });
-      cargarDatos();
+      recargarParcial();
     } catch (err) {
       alert(err.message);
     }
@@ -128,7 +150,7 @@ function OwnerDashboard() {
         body: JSON.stringify({ comision_monto: Number(comision) || 0 })
       });
       setBarberoEditando(null);
-      cargarDatos();
+      recargarParcial();
     } catch (err) {
       alert(err.message);
     }
@@ -138,7 +160,7 @@ function OwnerDashboard() {
     if (!confirm('¿Estás seguro de eliminar este barbero?')) return;
     try {
       await api.eliminarBarbero(id, idBarbero);
-      cargarDatos();
+      recargarParcial();
     } catch (err) {
       alert(err.message);
     }
@@ -179,7 +201,7 @@ function OwnerDashboard() {
       setShowModalServicio(false);
       setNuevoServicio({ nombre: '', descripcion: '', precio: '', duracion_minutos: '' });
       setEditandoServicio(null);
-      cargarDatos();
+      recargarParcial();
     } catch (err) {
       alert(err.message);
     }
@@ -200,7 +222,7 @@ function OwnerDashboard() {
     if (!confirm('¿Estás seguro de eliminar este servicio?')) return;
     try {
       await api.eliminarServicio(id, idServicio);
-      cargarDatos();
+      recargarParcial();
     } catch (err) {
       alert(err.message);
     }
