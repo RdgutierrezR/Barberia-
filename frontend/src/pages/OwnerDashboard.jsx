@@ -13,7 +13,7 @@ function OwnerDashboard() {
   const [barberia, setBarberia] = useState(null);
   const [barberos, setBarberos] = useState([]);
   const [servicios, setServicios] = useState([]);
-  const [turnos, setTurnos] = useState([]);
+  const [resumenTurnos, setResumenTurnos] = useState({ total_activos: 0, hoy_activos: 0 });
   const [loading, setLoading] = useState(true);
   const mountedRef = useRef(true);
   const abortControllersRef = useRef([]);
@@ -58,18 +58,18 @@ function OwnerDashboard() {
     abortControllersRef.current.push(controller);
     
     try {
-      const [b, bs, s, t] = await Promise.all([
+      const [b, bs, s, r] = await Promise.all([
         api.getBarberia(id),
         api.getTodosBarberos(id),
         api.getServicios(id),
-        api.getTurnos(id)
+        api.getResumenTurnos(id)
       ]);
       if (!mountedRef.current) return;
       
       setBarberia(b);
       setBarberos(bs.filter(b => b.rol !== 'owner' && b.rol !== 'admin'));
       setServicios(s);
-      setTurnos(t);
+      setResumenTurnos(r);
     } catch (err) {
       if (!mountedRef.current) return;
       if (err.name === 'AbortError' || err.message.includes('canceled')) return;
@@ -327,8 +327,8 @@ function OwnerDashboard() {
                 <div className="stat-label">Servicios</div>
               </div>
               <div className="stat-item">
-                <div className="stat-value">{turnos.length}</div>
-                <div className="stat-label">Turnos</div>
+                <div className="stat-value">{resumenTurnos.hoy_activos}</div>
+                <div className="stat-label">Turnos Hoy</div>
               </div>
             </div>
           </div>

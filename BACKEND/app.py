@@ -26,7 +26,12 @@ def create_app():
     # ✅ Configuración CORS mejorada para desarrollo
     CORS(app, 
          resources={r"/api/*": {
-             "origins": ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174", "http://127.0.0.1:5174", "*"],
+             "origins": [
+                 "http://localhost:5173", "http://127.0.0.1:5173", 
+                 "http://localhost:5174", "http://127.0.0.1:5174",
+                 "https://barberia-ochre-eta.vercel.app",
+                 "*"
+             ],
              "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
              "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
              "expose_headers": ["Location", "Content-Disposition"],

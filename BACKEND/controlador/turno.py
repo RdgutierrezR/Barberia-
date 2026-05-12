@@ -1201,3 +1201,25 @@ def asignar_posiciones_turnos(id_barberia):
     db.session.commit()
     
     return {"mensaje": f"Se asignaron posiciones a {total_actualizados} turnos"}
+
+def obtener_resumen_turnos(id_barberia):
+    """Resumen ligero de turnos para OwnerDashboard - solo conteos, no datos completos"""
+    hoy = ahora_fn().date()
+    ahora_dt = ahora_fn()
+    
+    total_activos = Turno.query.filter(
+        Turno.id_barberia == id_barberia,
+        Turno.estado.in_(["pendiente", "confirmado", "en_proceso"])
+    ).count()
+    
+    hoy_activos = Turno.query.filter(
+        Turno.id_barberia == id_barberia,
+        Turno.estado.in_(["pendiente", "confirmado", "en_proceso"]),
+        Turno.fecha_hora >= hoy,
+        Turno.fecha_hora < hoy + timedelta(days=1)
+    ).count()
+    
+    return {
+        "total_activos": total_activos,
+        "hoy_activos": hoy_activos
+    }

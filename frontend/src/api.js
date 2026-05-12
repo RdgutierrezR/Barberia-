@@ -341,6 +341,15 @@ export const api = {
     return data;
   },
 
+  getResumenTurnos: async (idBarberia) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/resumen`, {
+      headers: headers()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Error: ${res.status}`);
+    return data;
+  },
+
   reordenarTurno: async (idBarberia, idTurno, nuevaPosicion) => {
     const res = await fetch(`${API_URL}/barberias/${idBarberia}/turnos/cola/reordenar`, {
       method: 'PUT',

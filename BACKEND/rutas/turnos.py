@@ -78,6 +78,11 @@ def cola_diaria_ligero(id_barberia, id_barbero):
     lista = ctrl.obtener_cola_diaria_ligero(id_barberia, id_barbero)
     return jsonify(lista)
 
+@turnos_bp.route("/resumen", methods=["GET"])
+def resumen_turnos(id_barberia):
+    resumen = ctrl.obtener_resumen_turnos(id_barberia)
+    return jsonify(resumen)
+
 @turnos_bp.route("/cola/reordenar", methods=["PUT"])
 @jwt_required()
 def reordenar_turno(id_barberia):
