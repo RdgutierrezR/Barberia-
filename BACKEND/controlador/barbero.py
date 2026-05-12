@@ -62,7 +62,7 @@ def eliminar_barbero(id_barbero):
     return False
 
 def listar_todos_barberos(id_barberia):
-    return Barbero.query.filter_by(id_barberia=id_barberia).all()
+    return Barbero.query.filter_by(id_barberia=id_barberia, activo=True).all()
 
 def actualizar_contrasena_barbero(id_barbero, nueva_contrasena):
     barbero = Barbero.query.get(id_barbero)
