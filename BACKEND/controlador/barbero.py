@@ -11,7 +11,7 @@ def obtener_barbero(id_barbero):
 def obtener_barbero_por_correo(correo):
     return Barbero.query.filter_by(correo=correo).first()
 
-def crear_barbero(id_barberia, nombre, telefono, correo, contrasena, foto_url=None, comision_porcentaje=50, rol="barbero"):
+def crear_barbero(id_barberia, nombre, telefono, correo, contrasena, foto_url=None, comision_monto=0, rol="barbero"):
     existente = Barbero.query.filter_by(correo=correo, id_barberia=id_barberia).first()
     if existente:
         return None
@@ -24,7 +24,7 @@ def crear_barbero(id_barberia, nombre, telefono, correo, contrasena, foto_url=No
         correo=correo,
         contrasena=contrasena_hash,
         foto_url=foto_url,
-        comision_porcentaje=comision_porcentaje,
+        comision_monto=comision_monto,
         rol=rol,
         activo=True
     )
@@ -32,14 +32,14 @@ def crear_barbero(id_barberia, nombre, telefono, correo, contrasena, foto_url=No
     db.session.commit()
     return nuevo
 
-def actualizar_barbero(id_barbero, nombre=None, telefono=None, correo=None, foto_url=None, comision_porcentaje=None):
+def actualizar_barbero(id_barbero, nombre=None, telefono=None, correo=None, foto_url=None, comision_monto=None):
     barbero = Barbero.query.get(id_barbero)
     if barbero:
         if nombre: barbero.nombre = nombre
         if telefono: barbero.telefono = telefono
         if correo: barbero.correo = correo
         if foto_url: barbero.foto_url = foto_url
-        if comision_porcentaje: barbero.comision_porcentaje = comision_porcentaje
+        if comision_monto is not None: barbero.comision_monto = comision_monto
         db.session.commit()
     return barbero
 

@@ -28,8 +28,9 @@ function OwnerDashboard() {
   const [barberoEditandoPassword, setBarberoEditandoPassword] = useState(null);
   const [nuevaPassword, setNuevaPassword] = useState('');
   
-  const [nuevoBarbero, setNuevoBarbero] = useState({ nombre: '', telefono: '', correo: '', contrasena: '' });
+  const [nuevoBarbero, setNuevoBarbero] = useState({ nombre: '', telefono: '', correo: '', contrasena: '', comision_monto: 0 });
   const [nuevoServicio, setNuevoServicio] = useState({ nombre: '', descripcion: '', precio: '', duracion_minutos: '' });
+  const [barberoEditando, setBarberoEditando] = useState(null);
 
   const logout = async () => {
     const token = localStorage.getItem('barbero_token');
@@ -103,9 +104,30 @@ function OwnerDashboard() {
       return;
     }
     try {
-      await api.registroBarbero(id, { ...nuevoBarbero, rol: 'barbero' });
+      await api.registroBarbero(id, { 
+        ...nuevoBarbero, 
+        rol: 'barbero',
+        comision_monto: Number(nuevoBarbero.comision_monto) || 0
+      });
       setShowModalBarbero(false);
-      setNuevoBarbero({ nombre: '', telefono: '', correo: '', contrasena: '' });
+      setNuevoBarbero({ nombre: '', telefono: '', correo: '', contrasena: '', comision_monto: 0 });
+      cargarDatos();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const guardarComision = async (idBarbero, comision) => {
+    try {
+      await fetch(`${window.API_URL || 'http://localhost:5000'}/api/barberias/${id}/barberos/${idBarbero}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('barbero_token')}`
+        },
+        body: JSON.stringify({ comision_monto: Number(comision) || 0 })
+      });
+      setBarberoEditando(null);
       cargarDatos();
     } catch (err) {
       alert(err.message);
@@ -309,9 +331,25 @@ function OwnerDashboard() {
                     <div className="barbero-item-foto"><User size={24} /></div>
                     <div className="barbero-item-info">
                       <div className="barbero-item-nombre">{b.nombre}</div>
-                      <div className="barbero-item-rol">{b.activo ? 'Activo' : 'Inactivo'}</div>
+                      <div className="barbero-item-rol">
+                        {b.activo ? 'Activo' : 'Inactivo'} 
+                        {b.comision_monto > 0 && <span style={{ marginLeft: '8px', color: '#2ecc71' }}>• ${Number(b.comision_monto).toLocaleString()} por servicio</span>}
+                        {b.comision_monto == 0 && <span style={{ marginLeft: '8px', color: '#999' }}>• Sin comisión</span>}
+                      </div>
                     </div>
                     <div className="barbero-item-actions">
+                      {barberoEditando === b.id_barbero ? (
+                        <input
+                          type="number"
+                          style={{ width: '80px', padding: '4px', fontSize: '12px' }}
+                          defaultValue={b.comision_monto}
+                          onBlur={(e) => guardarComision(b.id_barbero, e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && guardarComision(b.id_barbero, e.target.value)}
+                          autoFocus
+                        />
+                      ) : (
+                        <button className="btn-editar" onClick={() => setBarberoEditando(b.id_barbero)} title="Editar comisión">💰</button>
+                      )}
                       <button className="btn-editar" onClick={() => abrirModalPassword(b)}>🔑</button>
                       <button className="btn-eliminar" onClick={() => eliminarBarbero(b.id_barbero)}><Trash2 size={14} /></button>
                     </div>
@@ -362,6 +400,17 @@ function OwnerDashboard() {
                 onChange={e => setNuevoBarbero({ ...nuevoBarbero, contrasena: e.target.value })}
                 placeholder="Contraseña"
               />
+            </div>
+            <div className="form-group">
+              <label>Comisión por servicio ($)</label>
+              <input
+                type="number"
+                value={nuevoBarbero.comision_monto}
+                onChange={e => setNuevoBarbero({ ...nuevoBarbero, comision_monto: e.target.value })}
+                placeholder="0 = sin comisión"
+                min="0"
+              />
+              <small style={{ color: '#666', fontSize: '12px' }}>Monto que recibe el barbero por cada servicio. 0 = sin comisión</small>
             </div>
             <div className="modal-buttons">
               <button className="btn-cancelar-modal" onClick={() => setShowModalBarbero(false)}>Cancelar</button>

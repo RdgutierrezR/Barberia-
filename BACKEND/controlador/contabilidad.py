@@ -67,6 +67,8 @@ def obtener_resumen_barbero(id_barberia, id_barbero, periodo="mensual", fecha_in
             ).count()
         elif tipo == "egreso":
             resumen["egresos"] = float(total) if total else 0
+        elif tipo == "comision":
+            resumen["egresos"] += float(total) if total else 0
     
     resumen["balance"] = resumen["ingresos"] - resumen["egresos"]
     return resumen
@@ -94,6 +96,8 @@ def obtener_resumen_barberia(id_barberia, periodo="mensual"):
             resumen["ingresos"] = float(total)
         elif tipo == "egreso":
             resumen["egresos"] = float(total)
+        elif tipo == "comision":
+            resumen["egresos"] += float(total)
     
     resumen["balance"] = resumen["ingresos"] - resumen["egresos"]
     return resumen

@@ -34,7 +34,7 @@ def crear(id_barberia):
         data["correo"],
         data["contrasena"],
         data.get("foto_url"),
-        data.get("comision_porcentaje", 50),
+        data.get("comision_monto", 0),
         rol
     )
     if not nuevo:
@@ -51,7 +51,7 @@ def actualizar(id_barberia, id_barbero):
         data.get("telefono"),
         data.get("correo"),
         data.get("foto_url"),
-        data.get("comision_porcentaje")
+        data.get("comision_monto")
     )
     if b and b.id_barberia == id_barberia:
         return jsonify(b.to_dict())

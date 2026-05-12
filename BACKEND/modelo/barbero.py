@@ -12,7 +12,7 @@ class Barbero(db.Model):
     rol = db.Column(db.String(20), default="barbero")
     activo = db.Column(db.Boolean, default=True)
     foto_url = db.Column(db.String(255), nullable=True)
-    comision_porcentaje = db.Column(db.Numeric(5, 2), default=50)
+    comision_monto = db.Column(db.Numeric(10, 2), default=0)
 
     barberia = db.relationship("Barberia", backref="barberos")
 
@@ -26,5 +26,5 @@ class Barbero(db.Model):
             "rol": self.rol,
             "activo": self.activo,
             "foto_url": self.foto_url,
-            "comision_porcentaje": float(self.comision_porcentaje) if self.comision_porcentaje else 50
+            "comision_monto": float(self.comision_monto) if self.comision_monto else 0
         }

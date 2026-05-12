@@ -288,6 +288,8 @@ def cancelar_turno(id_turno):
     return turno
 
 def registrar_contabilidad(id_barberia, id_barbero, id_turno, monto, tipo, descripcion, barbero_nombre=None, cliente_nombre=None, servicio_nombre=None):
+    from modelo.barbero import Barbero
+    
     registro = Contabilidad(
         id_barberia=id_barberia,
         id_barbero=id_barbero,
@@ -300,6 +302,23 @@ def registrar_contabilidad(id_barberia, id_barbero, id_turno, monto, tipo, descr
         servicio_nombre=servicio_nombre
     )
     db.session.add(registro)
+    
+    if tipo == "ingreso" and monto > 0:
+        barbero = Barbero.query.get(id_barbero)
+        if barbero and barbero.comision_monto and barbero.comision_monto > 0:
+            comision_registro = Contabilidad(
+                id_barberia=id_barberia,
+                id_barbero=id_barbero,
+                id_turno=id_turno,
+                monto=float(barbero.comision_monto),
+                tipo="comision",
+                descripcion=f"Comisión por servicio - {descripcion}",
+                barbero_nombre=barbero_nombre,
+                cliente_nombre=cliente_nombre,
+                servicio_nombre=servicio_nombre
+            )
+            db.session.add(comision_registro)
+    
     db.session.commit()
     return registro
 
