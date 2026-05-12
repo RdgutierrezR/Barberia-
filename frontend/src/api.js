@@ -196,7 +196,7 @@ export const api = {
   },
 
   eliminarBarbero: async (idBarberia, idBarbero) => {
-    const res = await fetch(`${API_URL}/barberias/${idBarberia}/barberos/${idBarbero}/`, {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/barberos/${idBarbero}`, {
       method: 'DELETE',
       headers: headers()
     });
