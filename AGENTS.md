@@ -371,13 +371,20 @@ JWT_SECRET_KEY=tu-jwt-secret
 TZ=America/Bogota
 ```
 
-### Producción (Render/Railway/etc)
+### Producción (Aiven MySQL)
 
 ```env
-# Configurar en el dashboard del hosting
+# Configurar en el dashboard del hosting o variables de entorno
 TZ=America/Bogota
-DATABASE_URL=postgresql://...
+DATABASE_URL=mysql+pymysql://user:password@host:port/dbname?ssl_ca=/path/to/ca.pem&ssl_verify_cert=true
 JWT_SECRET_KEY=...
+# VAPID keys para Web Push (generar con web-push generate-vapid-keys)
+VAPID_PUBLIC_KEY=...
+VAPID_PRIVATE_KEY=...
+# Twilio para WhatsApp (opcional)
+TWILIO_ACCOUNT_SID=...
+TWILIO_AUTH_TOKEN=...
+TWILIO_PHONE_NUMBER=...
 ```
 
 ### Frontend (src/config.js)
@@ -402,7 +409,7 @@ export const API_URL = 'http://localhost:5000';
 
 4. **CORS**: Configurado para permitir todos los origins en desarrollo (`resources={r"/api/*": {"origins": "*"}}`)
 
-5. **Base de datos**: SQLite para desarrollo. En producción configurar MySQL/PostgreSQL.
+5. **Base de datos**: MySQL Aiven en producción (con SSL y pool de conexiones). SQLite para desarrollo local.
 
 6. **Timezone**: Configurar `TZ=America/Bogota` en el servidor de producción.
 
@@ -410,9 +417,29 @@ export const API_URL = 'http://localhost:5000';
 
 8. **Hora_programada**: El modelo Turno tiene un campo `hora_programada` (VARCHAR 5) que guarda la hora fija asignada al turno cuando se crea. Esta hora no cambia aunque pase el tiempo.
 
-9. **Notificaciones**: Twilio configurado en `configuracion.py` para enviar WhatsApp. Para habilitar, agregar credenciales.
+9. **Posición en cola**: El modelo Turno tiene un campo `posicion` que permite reordenar los turnos en la cola. Usar endpoint `PUT /api/barberias/:id/turnos/cola/reordenar` para cambiar posiciones.
 
-10. **Turnos Rápidos**: El BarberoDashboard tiene un botón "+" en el header que abre un modal para crear turnos rápidos. El barbero puede agendar clientes sin celular/internet. Campos: `nombre_cliente`, `telefono`, `id_servicio`.
+10. **Notificaciones Push (Web Push)**: Sistema de notificaciones push para notificar a los barberos cuando llega un nuevo turno. Requiere:
+    - VAPID keys configuradas en el backend
+    - Service Worker personalizado (`frontend/public/sw.js`)
+    - Suscripción del navegador almacenada en la base de datos
+
+11. **Notificaciones al Cliente**: Sistema para enviar notificaciones al cliente cuando su turno está por llegar o cuando cambia su estado. TWILIO configurado en `configuracion.py` para WhatsApp.
+
+12. **PWA (Progressive Web App)**: La aplicación es instalable como PWA:
+    - Manifest configurado en `vite.config.js` con `vite-plugin-pwa`
+    - Service Worker personalizado para cache y notificaciones push
+    - Iconos: `pwa-192x192.png` y `pwa-512x512.png`
+
+13. **Turnos Rápidos**: El BarberoDashboard tiene un botón "+" en el header que abre un modal para crear turnos rápidos. El barbero puede agendar clientes sin celular/internet. Campos: `nombre_cliente`, `telefono`, `id_servicio`.
+
+14. **Contador de Tiempo**: En el BarberoDashboard se muestra un contador de tiempo que indica cuánto tiempo ha pasado desde que started_at del turno actual.
+
+15. **Mapa de Calor en Contabilidad**: La página de Contabilidad muestra un mapa de calor tipo GitHub con los ingresos por día de la semana, resaltando el mejor y peor día.
+
+16. **Cola Diaria Pública**: El endpoint `GET /api/barberias/:id/turnos/cola/:id_barbero/diaria` no requiere autenticación JWT y muestra la cola de turnos del día actual.
+
+17. **Iconos**: Se usan iconos de `lucide-react` en lugar de emojis para una apariencia más profesional.
 
 ---
 
