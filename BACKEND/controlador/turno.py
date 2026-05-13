@@ -840,7 +840,9 @@ def obtener_cola_diaria_ligero(id_barberia, id_barbero):
             "estado": turno.estado,
             "posicion_en_cola": posicion,
             "hora_programada": turno.hora_programada or "",
-            "tipo_reserva": turno.tipo_reserva
+            "tipo_reserva": turno.tipo_reserva,
+            "posicion": turno.posicion,
+            "fecha_inicio_servicio": turno.fecha_inicio_servicio.isoformat() if turno.fecha_inicio_servicio else None
         })
         
         posicion += 1
