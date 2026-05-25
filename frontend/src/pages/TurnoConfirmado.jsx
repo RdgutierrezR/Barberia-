@@ -4,6 +4,7 @@ import { api } from '../api';
 import { parsearFecha } from '../utils/fecha';
 import { Calendar, MapPin, Bell, BellOff } from 'lucide-react';
 import { pushSoportado, solicitarPermisoPush, suscribirseAPushCliente } from '../utils/pushNotifications';
+import { alertaError, confirmarAccion } from '../utils/alerts';
 
 const formatHora12h = (hora24) => {
   if (!hora24) return '';
@@ -102,7 +103,7 @@ function TurnoConfirmado() {
   };
 
   const handleCancelar = async () => {
-    if (!confirm('¿Estás seguro de cancelar tu turno?')) return;
+    if (!await confirmarAccion('Cancelar turno', '¿Estás seguro de cancelar tu turno?')) return;
     
     const barberiaId = location.state?.id_barberia || localStorage.getItem('barberia_actual') || 1;
     setCancelando(true);
@@ -112,7 +113,7 @@ function TurnoConfirmado() {
       localStorage.removeItem('barberia_actual');
       navigate(`/barberia/${turno.id_barberia}`);
     } catch {
-      alert('Error al cancelar turno');
+      alertaError('Error al cancelar turno');
       setCancelando(false);
     }
   };

@@ -4,6 +4,7 @@ import { api } from '../api';
 import { useAuthInit } from '../hooks/useAuthInit';
 import { FRONTEND_URL } from '../config';
 import { Home, Users, Edit2, Trash2, User } from 'lucide-react';
+import { alertaError, alertaExito, confirmarAccion } from '../utils/alerts';
 import { cancelarSuscripcionPush } from '../utils/pushNotifications';
 
 function OwnerDashboard() {
@@ -137,7 +138,7 @@ function OwnerDashboard() {
       setNuevoBarbero({ nombre: '', telefono: '', correo: '', contrasena: '', comision_monto: 0 });
       recargarParcial();
     } catch (err) {
-      alert(err.message);
+      alertaError(err.message);
     }
     setGuardandoBarbero(false);
   };
@@ -155,17 +156,17 @@ function OwnerDashboard() {
       setBarberoEditando(null);
       recargarParcial();
     } catch (err) {
-      alert(err.message);
+      alertaError(err.message);
     }
   };
 
   const eliminarBarbero = async (idBarbero) => {
-    if (!confirm('¿Estás seguro de eliminar este barbero?')) return;
+    if (!await confirmarAccion('Eliminar barbero', '¿Estás seguro de eliminar este barbero?')) return;
     try {
       await api.eliminarBarbero(id, idBarbero);
       recargarParcial();
     } catch (err) {
-      alert(err.message);
+      alertaError(err.message);
     }
   };
 
@@ -177,7 +178,7 @@ function OwnerDashboard() {
 
   const guardarPassword = async () => {
     if (!nuevaPassword || nuevaPassword.length < 4) {
-      alert('La contraseña debe tener al menos 4 caracteres');
+      alertaError('La contraseña debe tener al menos 4 caracteres');
       return;
     }
     try {
@@ -185,9 +186,9 @@ function OwnerDashboard() {
       setShowModalPassword(false);
       setBarberoEditandoPassword(null);
       setNuevaPassword('');
-      alert('Contraseña actualizada correctamente');
+      alertaExito('Contraseña actualizada correctamente');
     } catch (err) {
-      alert(err.message);
+      alertaError(err.message);
     }
   };
 
@@ -206,7 +207,7 @@ function OwnerDashboard() {
       setEditandoServicio(null);
       recargarParcial();
     } catch (err) {
-      alert(err.message);
+      alertaError(err.message);
     }
   };
 
@@ -222,12 +223,12 @@ function OwnerDashboard() {
   };
 
   const eliminarServicio = async (idServicio) => {
-    if (!confirm('¿Estás seguro de eliminar este servicio?')) return;
+    if (!await confirmarAccion('Eliminar servicio', '¿Estás seguro de eliminar este servicio?')) return;
     try {
       await api.eliminarServicio(id, idServicio);
       recargarParcial();
     } catch (err) {
-      alert(err.message);
+      alertaError(err.message);
     }
   };
 

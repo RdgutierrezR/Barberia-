@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { BarChart3, Timer, Calendar, Check, X } from 'lucide-react';
+import { DatePicker } from '../utils/CustomPicker';
 
 function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
   const [metricas, setMetricas] = useState(null);
@@ -133,11 +134,9 @@ function Metricas({ id_barberia, id_barbero, nombreBarbero }) {
 
       {periodo === 'diario' && (
         <div className="dia-selector">
-          <input 
-            type="date" 
+          <DatePicker 
             value={diaSeleccionado}
-            onChange={(e) => setDiaSeleccionado(e.target.value)}
-            className="date-input"
+            onChange={setDiaSeleccionado}
           />
         </div>
       )}

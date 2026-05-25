@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { getAhoraColombia } from '../utils/fecha';
 import { DollarSign, TrendingUp, TrendingDown, Scissors, Banknote, ArrowLeft, Calendar } from 'lucide-react';
+import { DatePicker, MonthPicker } from '../utils/CustomPicker';
 
 function Contabilidad({ idBarberia, idBarbero, nombreBarbero }) {
   const [periodo, setPeriodo] = useState('mensual');
@@ -248,11 +249,9 @@ function Contabilidad({ idBarberia, idBarbero, nombreBarbero }) {
       {periodo === 'diario' && (
         <div className="dia-selector">
           <label>Seleccionar fecha:</label>
-          <input 
-            type="date" 
+          <DatePicker 
             value={diaSeleccionado}
-            onChange={(e) => setDiaSeleccionado(e.target.value)}
-            className="date-input"
+            onChange={setDiaSeleccionado}
           />
         </div>
       )}
@@ -260,11 +259,9 @@ function Contabilidad({ idBarberia, idBarbero, nombreBarbero }) {
       {periodo === 'semanal' && (
         <div className="dia-selector">
           <label>Ver semana específica:</label>
-          <input 
-            type="date" 
+          <DatePicker 
             value={diaSeleccionado}
-            onChange={(e) => setDiaSeleccionado(e.target.value)}
-            className="date-input"
+            onChange={setDiaSeleccionado}
           />
         </div>
       )}
@@ -272,11 +269,9 @@ function Contabilidad({ idBarberia, idBarbero, nombreBarbero }) {
       {periodo === 'mensual' && (
         <div className="dia-selector">
           <label>Seleccionar mes:</label>
-          <input 
-            type="month" 
+          <MonthPicker 
             value={mesSeleccionado}
-            onChange={(e) => setMesSeleccionado(e.target.value)}
-            className="date-input"
+            onChange={setMesSeleccionado}
           />
         </div>
       )}

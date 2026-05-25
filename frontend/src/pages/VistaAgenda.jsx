@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { getFechaLocal, parsearFecha, formatearFechaHora } from '../utils/fecha';
 import { Check, X } from 'lucide-react';
+import { alertaError, alertaExito, confirmarAccion } from '../utils/alerts';
+import { DatePicker, TimePicker } from '../utils/CustomPicker';
 
 function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
   const [fechaSeleccionada, setFechaSeleccionada] = useState(() => {
@@ -86,7 +88,7 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
       setNuevoBloqueo({ fecha_inicio: '', fecha_fin: '', motivo: '' });
       setErrorBloqueo('');
       cargarDatos();
-      alert('Bloqueo creado exitosamente');
+      alertaExito('Bloqueo creado exitosamente');
     } catch (err) {
       console.error('Error creando bloqueo:', err);
       setErrorBloqueo(err.message);
@@ -122,13 +124,13 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
   };
 
   const handleEliminarBloqueo = async (idBloqueo) => {
-    if (!confirm('¿Estás seguro de eliminar este bloqueo?')) return;
+    if (!await confirmarAccion('Eliminar bloqueo', '¿Estás seguro de eliminar este bloqueo?')) return;
     try {
       await api.eliminarBloqueo(id_barberia, idBloqueo);
       cargarDatos();
-      alert('Bloqueo eliminado');
+      alertaExito('Bloqueo eliminado');
     } catch (err) {
-      alert(err.message);
+      alertaError(err.message);
     }
   };
 
@@ -270,13 +272,13 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
                     <button 
                       className="btn-agregar-cola"
                       onClick={async () => {
-                        if (confirm('¿Agregar esta cita a la cola?')) {
+                        if (await confirmarAccion('Agregar a la cola', '¿Agregar esta cita a la cola?')) {
                           try {
                             await api.agregarCitaACola(id_barberia, turno.id_turno);
-                            alert('Cita agregada a la cola');
+                            alertaExito('Cita agregada a la cola');
                             cargarDatos();
                           } catch (err) {
-                            alert(err.message);
+                            alertaError(err.message);
                           }
                         }
                       }}
@@ -352,19 +354,45 @@ function VistaAgenda({ id_barberia, id_barbero, nombreBarbero }) {
             
             <div className="form-group">
               <label>Fecha y hora de inicio</label>
-              <input
-                type="datetime-local"
-                value={nuevoBloqueo.fecha_inicio}
-                onChange={(e) => { setNuevoBloqueo({...nuevoBloqueo, fecha_inicio: e.target.value}); setErrorBloqueo(''); }}
-              />
+              <div className="date-time-pair">
+                <DatePicker
+                  value={nuevoBloqueo.fecha_inicio ? nuevoBloqueo.fecha_inicio.split('T')[0] : ''}
+                  onChange={(date) => {
+                    const time = nuevoBloqueo.fecha_inicio?.split('T')[1] || '09:00';
+                    setNuevoBloqueo({...nuevoBloqueo, fecha_inicio: `${date}T${time}`});
+                    setErrorBloqueo('');
+                  }}
+                />
+                <TimePicker
+                  value={nuevoBloqueo.fecha_inicio ? nuevoBloqueo.fecha_inicio.split('T')[1] || '' : ''}
+                  onChange={(time) => {
+                    const date = nuevoBloqueo.fecha_inicio?.split('T')[0] || '';
+                    setNuevoBloqueo({...nuevoBloqueo, fecha_inicio: `${date}T${time}`});
+                    setErrorBloqueo('');
+                  }}
+                />
+              </div>
             </div>
             <div className="form-group">
               <label>Fecha y hora de fin</label>
-              <input
-                type="datetime-local"
-                value={nuevoBloqueo.fecha_fin}
-                onChange={(e) => { setNuevoBloqueo({...nuevoBloqueo, fecha_fin: e.target.value}); setErrorBloqueo(''); }}
-              />
+              <div className="date-time-pair">
+                <DatePicker
+                  value={nuevoBloqueo.fecha_fin ? nuevoBloqueo.fecha_fin.split('T')[0] : ''}
+                  onChange={(date) => {
+                    const time = nuevoBloqueo.fecha_fin?.split('T')[1] || '09:00';
+                    setNuevoBloqueo({...nuevoBloqueo, fecha_fin: `${date}T${time}`});
+                    setErrorBloqueo('');
+                  }}
+                />
+                <TimePicker
+                  value={nuevoBloqueo.fecha_fin ? nuevoBloqueo.fecha_fin.split('T')[1] || '' : ''}
+                  onChange={(time) => {
+                    const date = nuevoBloqueo.fecha_fin?.split('T')[0] || '';
+                    setNuevoBloqueo({...nuevoBloqueo, fecha_fin: `${date}T${time}`});
+                    setErrorBloqueo('');
+                  }}
+                />
+              </div>
             </div>
             <div className="form-group">
               <label>Motivo (opcional)</label>

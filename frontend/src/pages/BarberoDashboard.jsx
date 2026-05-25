@@ -7,6 +7,8 @@ import VistaAgenda from './VistaAgenda';
 import Metricas from './Metricas';
 import { Settings, Edit2, Smartphone, Check, SkipForward, X, Home, BarChart3, Calendar, DollarSign, LogOut, Plus, Clock } from 'lucide-react';
 import { solicitarPermisoNotificaciones, tienePermisoNotificaciones, notificarNuevoTurno } from '../utils/notificaciones';
+import { alertaError, alertaExito, confirmarAccion } from '../utils/alerts';
+import { TimePicker } from '../utils/CustomPicker';
 import { pushSoportado, solicitarPermisoPush, suscribirseAPush, cancelarSuscripcionPush } from '../utils/pushNotifications';
 
 function BarberoDashboard() {
@@ -300,7 +302,7 @@ function BarberoDashboard() {
   const guardarHorarioDia = async () => {
     try {
       if (!horaInicio || !horaFin) {
-        alert('Por favor selecciona hora de inicio y fin');
+        alertaError('Por favor selecciona hora de inicio y fin');
         return;
       }
       
@@ -333,7 +335,7 @@ function BarberoDashboard() {
       });
       
       console.log('Horario global de barbería actualizado');
-      alert('Horario actualizado correctamente');
+      alertaExito('Horario actualizado correctamente');
       setMostrarSelectorHorario(false);
       cargarHorarioDia();
       cargarCola();
@@ -341,7 +343,7 @@ function BarberoDashboard() {
       console.error('Error completo:', err);
       console.error('Response:', err.response);
       console.error('Status:', err.status);
-      alert('Error al guardar horario: ' + err.message);
+      alertaError('Error al guardar horario: ' + err.message);
     }
   };
 
@@ -359,7 +361,7 @@ function BarberoDashboard() {
 
   const finalizarSolo = async () => {
     if (!turnoActual) return;
-    if (!confirm('¿Finalizar este turno sin llamar al siguiente?')) return;
+    if (!await confirmarAccion('Finalizar sin llamar', '¿Finalizar este turno sin llamar al siguiente?')) return;
     
     setLoadingAction(true);
     try {
@@ -373,13 +375,13 @@ function BarberoDashboard() {
   };
 
   const cancelarTurno = async (idTurno) => {
-    if (!confirm('¿Estás seguro de cancelar este turno?')) return;
+    if (!await confirmarAccion('Cancelar turno', '¿Estás seguro de cancelar este turno?')) return;
     try {
       await api.cancelarTurno(id_barberia, idTurno);
       cargarCola();
     } catch (err) {
       console.error('Error al cancelar:', err);
-      alert('Error al cancelar turno');
+      alertaError('Error al cancelar turno');
     }
   };
 
@@ -504,15 +506,15 @@ function BarberoDashboard() {
   const crearTurnoRapido = async (e) => {
     e.preventDefault();
     if (!formTurno.cliente_nombre.trim()) {
-      alert('Ingresa el nombre del cliente');
+      alertaError('Ingresa el nombre del cliente');
       return;
     }
     if (!formTurno.id_servicio) {
-      alert('Selecciona un servicio');
+      alertaError('Selecciona un servicio');
       return;
     }
     if (tipoReserva === 'cita' && (!formTurno.fecha || !formTurno.hora)) {
-      alert('Selecciona fecha y hora para la cita');
+      alertaError('Selecciona fecha y hora para la cita');
       return;
     }
     setLoadingCrearTurno(true);
@@ -524,7 +526,7 @@ function BarberoDashboard() {
           telefono: formTurno.cliente_telefono.trim() || 'Sin teléfono',
           id_servicio: parseInt(formTurno.id_servicio)
         });
-        alert('Turno creado exitosamente');
+        alertaExito('Turno creado exitosamente');
       } else {
         await api.crearTurnoCita(id_barberia, {
           id_barbero: parseInt(id_barbero),
@@ -533,12 +535,12 @@ function BarberoDashboard() {
           id_servicio: parseInt(formTurno.id_servicio),
           cita_fecha_hora: `${formTurno.fecha} ${formTurno.hora}`
         });
-        alert('Cita creada exitosamente');
+        alertaExito('Cita creada exitosamente');
       }
       setMostrarModalTurno(false);
       cargarCola();
     } catch (err) {
-      alert('Error al crear turno: ' + err.message);
+      alertaError('Error al crear turno: ' + err.message);
     } finally {
       setLoadingCrearTurno(false);
     }
@@ -588,10 +590,10 @@ function BarberoDashboard() {
                 onClick={async () => {
                   try {
                     const result = await api.asignarPosiciones(id_barberia);
-                    alert(result.mensaje);
+                    alertaExito(result.mensaje);
                     cargarCola();
                   } catch (err) {
-                    alert('Error: ' + err.message);
+                    alertaError('Error: ' + err.message);
                   }
                 }}
               >
@@ -607,14 +609,18 @@ function BarberoDashboard() {
                   console.log('[DEBUG-PUSH] Iniciando manualmente...');
                   const token = localStorage.getItem('barbero_token');
                   if (!token) {
-                    alert('No hay token');
+                    alertaError('No hay token');
                     return;
                   }
                   try {
                     const result = await suscribirseAPush(token);
-                    alert(result ? 'Suscripción exitosa' : 'Suscripción fallida');
+                    if (result) {
+                      alertaExito('Suscripción exitosa');
+                    } else {
+                      alertaError('Suscripción fallida');
+                    }
                   } catch (err) {
-                    alert('Error: ' + err.message);
+                    alertaError('Error: ' + err.message);
                   }
                 }}
               >
@@ -650,18 +656,16 @@ function BarberoDashboard() {
                 <div className="selector-horario-panel">
                   <div className="selector-row">
                     <label>Inicio:</label>
-                    <input 
-                      type="time" 
+                    <TimePicker 
                       value={horaInicio} 
-                      onChange={(e) => setHoraInicio(e.target.value)}
+                      onChange={setHoraInicio}
                     />
                   </div>
                   <div className="selector-row">
                     <label>Fin:</label>
-                    <input 
-                      type="time" 
+                    <TimePicker 
                       value={horaFin} 
-                      onChange={(e) => setHoraFin(e.target.value)}
+                      onChange={setHoraFin}
                     />
                   </div>
                   <button className="btn-primary" onClick={guardarHorarioDia}>
