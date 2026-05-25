@@ -4650,8 +4650,8 @@ body {
 }
 
 .cpicker-trigger:hover {
-  border-color: #4a90d9;
-  background: #111;
+  border-color: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.03);
 }
 
 .cpicker-trigger:focus-visible {
@@ -4692,11 +4692,11 @@ body {
   z-index: 100;
   max-height: 220px;
   overflow-y: auto;
-  background: #2F4F6F;
-  border: 1px solid #333;
+  background: #243447;
+  border: 1px solid rgba(255,255,255,0.06);
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-  animation: cpickerFadeIn 0.15s ease;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  animation: cpickerFadeIn 0.2s ease;
 }
 
 .cpicker-dropdown::-webkit-scrollbar {
@@ -4747,12 +4747,12 @@ body {
   transform: translateX(-50%);
   z-index: 100;
   min-width: 280px;
-  background: #2F4F6F;
-  border: 1px solid #333;
+  background: #243447;
+  border: 1px solid rgba(255,255,255,0.06);
   border-radius: 14px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-  padding: 12px;
-  animation: cpickerFadeIn 0.15s ease;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.3);
+  padding: 14px;
+  animation: cpickerPopoverIn 0.2s ease;
 }
 
 .cpicker-popover-header {
@@ -4763,9 +4763,9 @@ body {
 }
 
 .cpicker-popover-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
-  color: #e0e0e0;
+  color: #fff;
 }
 
 .cpicker-nav-btn {
@@ -4775,7 +4775,7 @@ body {
   width: 32px;
   height: 32px;
   background: transparent;
-  border: 1px solid #333;
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
   color: #aaa;
   cursor: pointer;
@@ -4783,9 +4783,9 @@ body {
 }
 
 .cpicker-nav-btn:hover {
-  background: rgba(74, 144, 217, 0.15);
-  border-color: #4a90d9;
-  color: #4a90d9;
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.2);
+  color: #fff;
 }
 
 .cpicker-weekdays {
@@ -4824,24 +4824,25 @@ body {
 }
 
 .cpicker-day:hover:not(.empty) {
-  background: rgba(74, 144, 217, 0.15);
+  background: rgba(255,255,255,0.06);
   color: #fff;
 }
 
 .cpicker-day.today {
-  border: 1px solid #4a90d9;
-  color: #4a90d9;
-  font-weight: 600;
-}
-
-.cpicker-day.selected {
-  background: #4a90d9;
+  border: 1px solid rgba(255,255,255,0.2);
   color: #fff;
   font-weight: 600;
 }
 
+.cpicker-day.selected {
+  background: #2F4F6F;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
 .cpicker-day.selected:hover {
-  background: #3a7bc8;
+  background: #3a5f7f;
 }
 
 .cpicker-day.empty {
@@ -4871,7 +4872,7 @@ body {
 }
 
 .cpicker-month-display:hover {
-  border-color: #4a90d9;
+  border-color: rgba(255,255,255,0.2);
 }
 
 .cpicker-month-grid {
@@ -4881,33 +4882,41 @@ body {
 }
 
 .cpicker-month-opt {
-  padding: 10px 8px;
+  padding: 11px 8px;
   background: transparent;
-  border: 1px solid #333;
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 10px;
   color: #ccc;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s ease;
 }
 
 .cpicker-month-opt:hover {
-  background: rgba(74, 144, 217, 0.15);
-  border-color: #4a90d9;
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.15);
   color: #fff;
+  transform: translateY(-1px);
 }
 
 .cpicker-month-opt.selected {
-  background: #4a90d9;
-  border-color: #4a90d9;
+  background: #2F4F6F;
+  border-color: rgba(47, 79, 111, 0.6);
   color: #fff;
   font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 0 0 1px rgba(47, 79, 111, 0.3);
+  transform: translateY(-1px);
 }
 
 @keyframes cpickerFadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes cpickerPopoverIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-6px) scale(0.96); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 }
 
 
