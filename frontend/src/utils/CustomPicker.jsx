@@ -67,7 +67,124 @@ export function TimePicker({ value, onChange, label }) {
   );
 }
 
-export function DatePicker({ value, onChange, label }) {
+export function SelectPicker({ value, onChange, label, options, placeholder }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const listRef = useRef(null);
+
+  useClickOutside(ref, () => setOpen(false));
+
+  useEffect(() => {
+    if (open && value && listRef.current) {
+      const btn = listRef.current.querySelector(`[data-value="${value}"]`);
+      if (btn) btn.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  }, [open, value]);
+
+  const selected = options?.find(o => String(o.value) === String(value));
+  const displayText = selected ? selected.label : (placeholder || 'Seleccionar');
+
+  return (
+    <div className="cpicker cpicker-select" ref={ref}>
+      {label && <label className="cpicker-label">{label}</label>}
+      <button type="button" className="cpicker-trigger" onClick={() => setOpen(!open)}>
+        <span className={`cpicker-value ${!value ? 'placeholder' : ''}`}>
+          {displayText}
+        </span>
+        <ChevronDown size={14} className={`cpicker-arrow ${open ? 'open' : ''}`} />
+      </button>
+      {open && (
+        <div className="cpicker-dropdown" ref={listRef}>
+          {options?.map(o => (
+            <button
+              key={o.value}
+              type="button"
+              data-value={o.value}
+              className={`cpicker-option ${String(value) === String(o.value) ? 'selected' : ''}`}
+              onClick={() => { onChange(o.value); setOpen(false); }}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+function getDayLabel(fecha, index) {
+  const dia = fecha.getDate();
+  const mes = MONTH_NAMES[fecha.getMonth()];
+  const nombreDia = DAY_NAMES[fecha.getDay()];
+  if (index === 0) return `Hoy - ${nombreDia}, ${dia} de ${mes}`;
+  if (index === 1) return `Mañana - ${nombreDia}, ${dia} de ${mes}`;
+  return `${nombreDia}, ${dia} de ${mes}`;
+}
+
+export function DayListPicker({ value, onChange, label, maxDaysForward = 15 }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const listRef = useRef(null);
+
+  useClickOutside(ref, () => setOpen(false));
+
+  const days = [];
+  const hoy = new Date();
+  for (let i = 0; i < maxDaysForward; i++) {
+    const fecha = new Date(hoy);
+    fecha.setDate(hoy.getDate() + i);
+    const anio = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    days.push({
+      valor: `${anio}-${mes}-${dia}`,
+      label: getDayLabel(fecha, i)
+    });
+  }
+
+  useEffect(() => {
+    if (open && value && listRef.current) {
+      const btn = listRef.current.querySelector(`[data-value="${value}"]`);
+      if (btn) btn.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  }, [open, value]);
+
+  const selected = days.find(d => d.valor === value);
+  const displayText = selected ? selected.label : 'Seleccionar fecha';
+
+  return (
+    <div className="cpicker cpicker-date" ref={ref}>
+      {label && <label className="cpicker-label">{label}</label>}
+      <button type="button" className="cpicker-trigger" onClick={() => setOpen(!open)}>
+        <Calendar size={16} className="cpicker-icon" />
+        <span className={`cpicker-value ${!value ? 'placeholder' : ''}`}>
+          {displayText}
+        </span>
+        <ChevronDown size={14} className={`cpicker-arrow ${open ? 'open' : ''}`} />
+      </button>
+      {open && (
+        <div className="cpicker-dropdown" ref={listRef}>
+          {days.map(d => (
+            <button
+              key={d.valor}
+              type="button"
+              data-value={d.valor}
+              className={`cpicker-option ${value === d.valor ? 'selected' : ''}`}
+              onClick={() => { onChange(d.valor); setOpen(false); }}
+            >
+              {d.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function DatePicker({ value, onChange, label, maxDaysForward }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -83,6 +200,10 @@ export function DatePicker({ value, onChange, label }) {
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
+  const maxDate = maxDaysForward != null
+    ? new Date(today.getFullYear(), today.getMonth(), today.getDate() + maxDaysForward)
+    : null;
+
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const firstDay = new Date(viewYear, viewMonth, 1).getDay();
 
@@ -96,7 +217,13 @@ export function DatePicker({ value, onChange, label }) {
     else setViewMonth(m => m + 1);
   };
 
+  const isDisabled = (day) => {
+    if (!maxDate) return false;
+    return new Date(viewYear, viewMonth, day) > maxDate;
+  };
+
   const selectDay = (day) => {
+    if (isDisabled(day)) return;
     const month = String(viewMonth + 1).padStart(2, '0');
     const d = String(day).padStart(2, '0');
     onChange(`${viewYear}-${month}-${d}`);
@@ -147,8 +274,9 @@ export function DatePicker({ value, onChange, label }) {
                 <button
                   key={day}
                   type="button"
-                  className={`cpicker-day ${isSelected(day) ? 'selected' : ''} ${dayStr === todayStr ? 'today' : ''}`}
+                  className={`cpicker-day ${isSelected(day) ? 'selected' : ''} ${dayStr === todayStr ? 'today' : ''} ${isDisabled(day) ? 'disabled' : ''}`}
                   onClick={() => selectDay(day)}
+                  disabled={isDisabled(day)}
                 >
                   {day}
                 </button>

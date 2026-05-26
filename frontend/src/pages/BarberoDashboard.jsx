@@ -8,7 +8,7 @@ import Metricas from './Metricas';
 import { Settings, Edit2, Smartphone, Check, SkipForward, X, Home, BarChart3, Calendar, DollarSign, LogOut, Plus, Clock } from 'lucide-react';
 import { solicitarPermisoNotificaciones, tienePermisoNotificaciones, notificarNuevoTurno } from '../utils/notificaciones';
 import { alertaError, alertaExito, confirmarAccion } from '../utils/alerts';
-import { TimePicker } from '../utils/CustomPicker';
+import { TimePicker, DayListPicker, SelectPicker } from '../utils/CustomPicker';
 import { pushSoportado, solicitarPermisoPush, suscribirseAPush, cancelarSuscripcionPush } from '../utils/pushNotifications';
 
 function BarberoDashboard() {
@@ -20,6 +20,7 @@ function BarberoDashboard() {
   const [vistaActual, setVistaActual] = useState('inicio');
   const [horarioDia, setHorarioDia] = useState(null);
   const [mostrarSelectorHorario, setMostrarSelectorHorario] = useState(false);
+  const [loadingHorario, setLoadingHorario] = useState(false);
   const [horaInicio, setHoraInicio] = useState('09:00');
   const [horaFin, setHoraFin] = useState('18:00');
   const [mostrarModalTurno, setMostrarModalTurno] = useState(false);
@@ -40,6 +41,7 @@ function BarberoDashboard() {
   const [datosInicialesCargados, setDatosInicialesCargados] = useState(false);
   const [loadingAction, setLoadingAction] = useState(false);
   const [loadingCrearTurno, setLoadingCrearTurno] = useState(false);
+  const [cancelandoTurnoId, setCancelandoTurnoId] = useState(null);
   const [ultimoIdTurno, setUltimoIdTurno] = useState(0);
   const [tiempoTranscurrido, setTiempoTranscurrido] = useState('00:00');
   const ultimoTurnoNotificadoRef = useRef(0);
@@ -53,8 +55,10 @@ function BarberoDashboard() {
   const { inicializado, tokenValido, crearAbortController } = useAuthInit();
   const nombreBarbero = localStorage.getItem('barbero_nombre') || 'Barbero';
   const [pushStatus, setPushStatus] = useState({ estado: 'inicial', mensaje: '' });
+  const [mostrandoLogout, setMostrandoLogout] = useState(false);
 
   const logout = async () => {
+    setMostrandoLogout(true);
     const token = localStorage.getItem('barbero_token');
     
     if (token) {
@@ -305,6 +309,7 @@ function BarberoDashboard() {
         alertaError('Por favor selecciona hora de inicio y fin');
         return;
       }
+      setLoadingHorario(true);
       
       const fechaHoy = new Date();
       const año = fechaHoy.getFullYear();
@@ -344,6 +349,8 @@ function BarberoDashboard() {
       console.error('Response:', err.response);
       console.error('Status:', err.status);
       alertaError('Error al guardar horario: ' + err.message);
+    } finally {
+      setLoadingHorario(false);
     }
   };
 
@@ -376,12 +383,16 @@ function BarberoDashboard() {
 
   const cancelarTurno = async (idTurno) => {
     if (!await confirmarAccion('Cancelar turno', '¿Estás seguro de cancelar este turno?')) return;
+    setCancelandoTurnoId(idTurno);
     try {
       await api.cancelarTurno(id_barberia, idTurno);
+      alertaExito('Turno cancelado correctamente');
       cargarCola();
     } catch (err) {
       console.error('Error al cancelar:', err);
       alertaError('Error al cancelar turno');
+    } finally {
+      setCancelandoTurnoId(null);
     }
   };
 
@@ -405,31 +416,6 @@ function BarberoDashboard() {
     h = h % 12;
     h = h ? h : 12;
     return `${h}:${minuto} ${ampm}`;
-  };
-
-  const formatFechaCompleta = (fechaStr) => {
-    if (!fechaStr) return '';
-    const fecha = new Date(fechaStr + 'T00:00:00');
-    const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    return `${dias[fecha.getDay()]} ${fecha.getDate()} de ${meses[fecha.getMonth()]}`;
-  };
-
-  const getFechasDisponibles = () => {
-    const fechas = [];
-    const hoy = new Date();
-    for (let i = 0; i <= 15; i++) {
-      const fecha = new Date(hoy);
-      fecha.setDate(hoy.getDate() + i);
-      const anio = fecha.getFullYear();
-      const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-      const dia = String(fecha.getDate()).padStart(2, '0');
-      fechas.push({
-        valor: `${anio}-${mes}-${dia}`,
-        label: formatFechaCompleta(`${anio}-${mes}-${dia}`)
-      });
-    }
-    return fechas;
   };
 
   const getFechaHoy = () => {
@@ -668,8 +654,8 @@ function BarberoDashboard() {
                       onChange={setHoraFin}
                     />
                   </div>
-                  <button className="btn-primary" onClick={guardarHorarioDia}>
-                    Guardar Horario
+                  <button className="btn-primary" onClick={guardarHorarioDia} disabled={loadingHorario}>
+                    {loadingHorario ? <><span className="spinner"></span>Guardando...</> : 'Guardar Horario'}
                   </button>
                 </div>
               )}
@@ -770,8 +756,9 @@ function BarberoDashboard() {
                       className="btn-cancelar-turno" 
                       onClick={() => cancelarTurno(t.id_turno)}
                       title="Cancelar turno"
+                      disabled={cancelandoTurnoId === t.id_turno}
                     >
-                      <X size={14} />
+                      {cancelandoTurnoId === t.id_turno ? <span className="spinner"></span> : <X size={14} />}
                     </button>
                   </div>
                 ))}
@@ -830,21 +817,16 @@ function BarberoDashboard() {
             {tipoReserva === 'cita' && (
               <div className="modal-seccion">
                 <div className="form-group">
-                  <label>1. Selecciona el día</label>
-                  <select
+                  <DayListPicker
                     value={formTurno.fecha}
-                    onChange={(e) => {
-                      setFormTurno({ ...formTurno, fecha: e.target.value, hora: '' });
-                      if (e.target.value) {
-                        cargarHorariosDisponibles默认(e.target.value);
+                    onChange={(fecha) => {
+                      setFormTurno({ ...formTurno, fecha, hora: '' });
+                      if (fecha) {
+                        cargarHorariosDisponibles默认(fecha);
                       }
                     }}
-                  >
-                    <option value="">Seleccionar fecha</option>
-                    {getFechasDisponibles().map(f => (
-                      <option key={f.valor} value={f.valor}>{f.label}</option>
-                    ))}
-                  </select>
+                    label="1. Selecciona el día"
+                  />
                 </div>
                 
                 {formTurno.fecha && (
@@ -895,23 +877,16 @@ function BarberoDashboard() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Servicio *</label>
-                  {loadingServicios ? (
-                    <p>Cargando...</p>
-                  ) : (
-                    <select
-                      value={formTurno.id_servicio}
-                      onChange={(e) => setFormTurno({ ...formTurno, id_servicio: e.target.value })}
-                      required
-                    >
-                      <option value="">Seleccionar</option>
-                      {servicios.map((s) => (
-                        <option key={s.id_servicio} value={s.id_servicio}>
-                          {s.nombre} - {s.duracion_minutos} min
-                        </option>
-                      ))}
-                    </select>
-                  )}
+                  <SelectPicker
+                    value={formTurno.id_servicio}
+                    onChange={(val) => setFormTurno({ ...formTurno, id_servicio: val })}
+                    label="Servicio *"
+                    placeholder="Seleccionar servicio"
+                    options={servicios.map(s => ({
+                      value: s.id_servicio,
+                      label: `${s.nombre} - ${s.duracion_minutos} min`
+                    }))}
+                  />
                 </div>
                 
                 <button type="submit" className="btn-primary btn-full" disabled={loadingCrearTurno}>
@@ -949,6 +924,15 @@ function BarberoDashboard() {
           <span>Salir</span>
         </button>
       </div>
+
+      {mostrandoLogout && (
+        <div className="logout-overlay">
+          <div className="logout-modal">
+            <span className="spinner" style={{ width: 32, height: 32, borderWidth: 3 }}></span>
+            <p>Cerrando sesión...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
