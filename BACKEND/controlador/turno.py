@@ -158,7 +158,7 @@ def crear_turno_cola(id_barberia, id_barbero, id_servicio, nombre_cliente, telef
         Turno.id_barbero == id_barbero,
         Turno.estado.in_(["pendiente", "confirmado", "en_proceso"]),
         Turno.tipo_reserva == "cola"
-    ).order_by(Turno.fecha_creacion).all()
+    ).order_by(sql_func.coalesce(Turno.posicion, 999999), Turno.fecha_creacion).all()
     
     duracion_promedio = servicio.duracion_minutos
     fecha_hora_turno = ahora.replace(second=0, microsecond=0)
@@ -1152,10 +1152,13 @@ def reordenar_turno(id_turno, nueva_posicion):
     )
     
     if turno_destino and turno_destino.id_turno != turno.id_turno:
-        # Swap real
         posicion_original = turno.posicion
         turno.posicion = turno_destino.posicion
         turno_destino.posicion = posicion_original
+
+        hora_original = turno.hora_programada
+        turno.hora_programada = turno_destino.hora_programada
+        turno_destino.hora_programada = hora_original
     
     db.session.commit()
     

@@ -16,6 +16,32 @@ const formatHora12h = (hora24) => {
   return `${h}:${minuto} ${ampm}`;
 };
 
+const calcularRangoEspera = (turnosAdelante, servicioDuracion) => {
+  if (!turnosAdelante || turnosAdelante <= 0 || !servicioDuracion) return null;
+  const estimado = turnosAdelante * servicioDuracion;
+  return {
+    minimo: Math.max(5, estimado - 15),
+    maximo: estimado + 15
+  };
+};
+
+const formatParte = (minutos) => {
+  const h = Math.floor(minutos / 60);
+  const m = minutos % 60;
+  if (h === 0) return `${m}min`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}min`;
+};
+
+const formatRangoEspera = ({ minimo, maximo }) => {
+  const desde = formatParte(minimo);
+  const hasta = formatParte(maximo);
+  if (maximo >= 60 && minimo < 60) {
+    return `${desde} - ${hasta}`;
+  }
+  return minimo === maximo ? desde : `${desde} - ${hasta}`;
+};
+
 function TurnoConfirmado() {
   const { codigo } = useParams();
   const navigate = useNavigate();
@@ -172,8 +198,15 @@ function TurnoConfirmado() {
             <h1>En la Cola!</h1>
             
             <div className="codigo-turno">
-              <p>HORA ESTIMADA:</p>
-              <h2>{turno.hora_programada ? formatHora12h(turno.hora_programada) : turno.codigo_confirmacion}</h2>
+              <p>ESPERA APROXIMADA</p>
+              <h2 className="espera-texto">
+                {turno.estado === 'en_proceso' ? 'Siendo atendido' :
+                 turno.turnos_adelante === 0 ? 'Tu turno es el siguiente' :
+                 (() => {
+                   const rango = calcularRangoEspera(turno.turnos_adelante, turno.servicio_duracion);
+                   return rango ? formatRangoEspera(rango) : turno.codigo_confirmacion;
+                 })()}
+              </h2>
             </div>
 
             {turno.estado !== 'completado' && turno.estado !== 'cancelado' && (
