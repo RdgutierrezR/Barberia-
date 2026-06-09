@@ -6,6 +6,20 @@
   <img src="https://img.shields.io/badge/Version-1.2.0-orange" alt="Version">
 </p>
 
+<p align="center">
+  <img src="./Captures/Princiapl x2.PNG" width="700" alt="Vista principal">
+</p>
+
+<p align="center">
+  <img src="./Captures/elegir servicio.PNG" width="32%" alt="Selección de servicio">
+  <img src="./Captures/elegir barbero x3.PNG" width="32%" alt="Selección de barbero">
+  <img src="./Captures/turno confirmado.PNG" width="32%" alt="Turno confirmado">
+</p>
+
+<p align="center">
+  <img src="./Captures/contabilidad X1.PNG" width="700" alt="Panel de contabilidad">
+</p>
+
 Sistema de gestión integral para barberías con soporte multi-tenant. Permite gestionar barberías, barberos, clientes, turnos, servicios, horarios y contabilidad.
 
 ## Características Principales
