@@ -797,7 +797,7 @@ def obtener_cola_diaria(id_barberia, id_barbero):
             "tipo_reserva": tipo_mostrar,
             "estado": turno.estado,
             "codigo_confirmacion": turno.codigo_confirmacion,
-            "posicion_en_cola": posicion,
+            "posicion_en_cola": posicion if turno.estado != "en_proceso" else None,
             "posicion": turno.posicion,
             "hora_programada": hora_programada,
             "fecha_hora": turno.fecha_hora.isoformat() if turno.fecha_hora else None,
@@ -805,7 +805,8 @@ def obtener_cola_diaria(id_barberia, id_barbero):
             "fecha_inicio_servicio": turno.fecha_inicio_servicio.isoformat() if turno.fecha_inicio_servicio else None
         })
         
-        posicion += 1
+        if turno.estado != "en_proceso":
+            posicion += 1
     
     return resultado
 
@@ -838,14 +839,15 @@ def obtener_cola_diaria_ligero(id_barberia, id_barbero):
             "servicio_nombre": turno.servicio.nombre if turno.servicio else "Servicio",
             "servicio_duracion": turno.servicio.duracion_minutos if turno.servicio else 30,
             "estado": turno.estado,
-            "posicion_en_cola": posicion,
+            "posicion_en_cola": posicion if turno.estado != "en_proceso" else None,
             "hora_programada": turno.hora_programada or "",
             "tipo_reserva": turno.tipo_reserva,
             "posicion": turno.posicion,
             "fecha_inicio_servicio": turno.fecha_inicio_servicio.isoformat() if turno.fecha_inicio_servicio else None
         })
         
-        posicion += 1
+        if turno.estado != "en_proceso":
+            posicion += 1
     
     return resultado
 
