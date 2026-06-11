@@ -202,10 +202,10 @@ function TurnoConfirmado() {
               <h2 className="espera-texto">
                 {turno.estado === 'en_proceso' ? 'Siendo atendido' :
                  turno.turnos_adelante === 0 ? 'Tu turno es el siguiente' :
-                 (() => {
+                 turno.turnos_adelante > 0 ? (() => {
                    const rango = calcularRangoEspera(turno.turnos_adelante, turno.servicio_duracion);
-                   return rango ? formatRangoEspera(rango) : turno.codigo_confirmacion;
-                 })()}
+                   return rango ? formatRangoEspera(rango) : 'Calculando...';
+                 })() : null}
               </h2>
             </div>
 
