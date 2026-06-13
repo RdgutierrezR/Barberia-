@@ -1141,8 +1141,8 @@ def reordenar_turno(id_turno, nueva_posicion):
     ).order_by(Turno.posicion).all()
     
     # Validar rango
-    if nueva_posicion <= 0:
-        nueva_posicion = 1
+    if nueva_posicion is None or nueva_posicion < 1:
+        return None, "Posición inválida. El turno destino no tiene posición asignada."
     
     if nueva_posicion > len(todos_turnos):
         nueva_posicion = len(todos_turnos)

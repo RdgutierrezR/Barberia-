@@ -403,6 +403,7 @@ function BarberoDashboard() {
       cargarCola();
     } catch (err) {
       console.error('Error al reordenar:', err);
+      alertaError('Error al reordenar la cola: ' + err.message);
     } finally {
       setLoadingAction(false);
     }
@@ -722,8 +723,12 @@ function BarberoDashboard() {
                     onDragOver={(e) => {
                       e.preventDefault();
                       e.dataTransfer.dropEffect = 'move';
+                      setDragOverIndex(i);
                     }}
-                    onDragEnter={() => setDragOverIndex(i)}
+                    onDragEnter={(e) => {
+                      e.preventDefault();
+                      setDragOverIndex(i);
+                    }}
                     onDrop={(e) => {
                       e.preventDefault();
                       if (dragTurno && dragTurno.id_turno !== t.id_turno && t.tipo_reserva === 'cola') {

@@ -33,7 +33,7 @@ class Turno(db.Model):
     notas = db.Column(db.Text, nullable=True)
     precio_final = db.Column(db.Numeric(10, 2), nullable=True)
     fecha_creacion = db.Column(db.DateTime, default=_ahora)
-    posicion = db.Column(db.Integer, nullable=True)  # Posición en la cola
+    posicion = db.Column(db.Integer, nullable=False, default=0)  # Posición en la cola
 
     barberia = db.relationship("Barberia", backref="turnos")
     barbero = db.relationship("Barbero", backref="turnos")
