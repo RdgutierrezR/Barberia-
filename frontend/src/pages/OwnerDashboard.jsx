@@ -32,6 +32,8 @@ function OwnerDashboard() {
   const [nuevoBarbero, setNuevoBarbero] = useState({ nombre: '', telefono: '', correo: '', contrasena: '', comision_monto: 0 });
   const [nuevoServicio, setNuevoServicio] = useState({ nombre: '', descripcion: '', precio: '', duracion_minutos: '' });
   const [barberoEditando, setBarberoEditando] = useState(null);
+  const [barberoEditandoNombre, setBarberoEditandoNombre] = useState(null);
+  const [nombreEditando, setNombreEditando] = useState('');
   const [guardandoBarbero, setGuardandoBarbero] = useState(false);
 
   const logout = async () => {
@@ -145,15 +147,27 @@ function OwnerDashboard() {
 
   const guardarComision = async (idBarbero, comision) => {
     try {
-      await fetch(`${window.API_URL || 'http://localhost:5000'}/api/barberias/${id}/barberos/${idBarbero}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('barbero_token')}`
-        },
-        body: JSON.stringify({ comision_monto: Number(comision) || 0 })
-      });
+      await api.actualizarBarbero(id, idBarbero, { comision_monto: Number(comision) || 0 });
       setBarberoEditando(null);
+      recargarParcial();
+    } catch (err) {
+      alertaError(err.message);
+    }
+  };
+
+  const editarNombre = (barbero) => {
+    setBarberoEditandoNombre(barbero.id_barbero);
+    setNombreEditando(barbero.nombre);
+  };
+
+  const guardarBarberoNombre = async (idBarbero) => {
+    if (!nombreEditando.trim()) {
+      setBarberoEditandoNombre(null);
+      return;
+    }
+    try {
+      await api.actualizarBarbero(id, idBarbero, { nombre: nombreEditando.trim() });
+      setBarberoEditandoNombre(null);
       recargarParcial();
     } catch (err) {
       alertaError(err.message);
@@ -356,7 +370,28 @@ function OwnerDashboard() {
                   <div key={b.id_barbero} className="barbero-item">
                     <div className="barbero-item-foto"><User size={24} /></div>
                     <div className="barbero-item-info">
-                      <div className="barbero-item-nombre">{b.nombre}</div>
+                      {barberoEditandoNombre === b.id_barbero ? (
+                        <div className="barbero-item-nombre-editing">
+                          <input
+                            type="text"
+                            value={nombreEditando}
+                            onChange={(e) => setNombreEditando(e.target.value)}
+                            onBlur={() => guardarBarberoNombre(b.id_barbero)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') guardarBarberoNombre(b.id_barbero);
+                              if (e.key === 'Escape') setBarberoEditandoNombre(null);
+                            }}
+                            autoFocus
+                          />
+                        </div>
+                      ) : (
+                        <div className="barbero-item-nombre">
+                          {b.nombre}
+                          <button className="btn-editar-icono" onClick={() => editarNombre(b)} title="Editar nombre">
+                            <Edit2 size={13} />
+                          </button>
+                        </div>
+                      )}
                       <div className="barbero-item-rol">
                         {b.activo ? 'Activo' : 'Inactivo'} 
                         {b.comision_monto > 0 && <span style={{ marginLeft: '8px', color: '#2ecc71' }}>• ${Number(b.comision_monto).toLocaleString()} por servicio</span>}

@@ -195,6 +195,17 @@ export const api = {
     return result;
   },
 
+  actualizarBarbero: async (idBarberia, idBarbero, data) => {
+    const res = await fetch(`${API_URL}/barberias/${idBarberia}/barberos/${idBarbero}`, {
+      method: 'PUT',
+      headers: headers(),
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || `Error: ${res.status}`);
+    return result;
+  },
+
   eliminarBarbero: async (idBarberia, idBarbero) => {
     const res = await fetch(`${API_URL}/barberias/${idBarberia}/barberos/${idBarbero}`, {
       method: 'DELETE',

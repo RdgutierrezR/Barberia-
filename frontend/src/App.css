@@ -2846,6 +2846,44 @@ body {
   font-size: 14px;
   font-weight: 600;
   color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.barbero-item-nombre-editing {
+  margin-bottom: 4px;
+}
+
+.barbero-item-nombre-editing input {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 14px;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #1a1a1a;
+  color: #fff;
+  outline: none;
+}
+
+.barbero-item-nombre-editing input:focus {
+  border-color: #2196F3;
+}
+
+.btn-editar-icono {
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+}
+
+.btn-editar-icono:hover {
+  color: #2196F3;
+  background: rgba(33, 150, 243, 0.1);
 }
 
 .barbero-item-rol {
