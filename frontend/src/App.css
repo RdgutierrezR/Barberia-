@@ -2852,11 +2852,14 @@ body {
 }
 
 .barbero-item-nombre-editing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin-bottom: 4px;
 }
 
 .barbero-item-nombre-editing input {
-  width: 100%;
+  flex: 1;
   padding: 6px 8px;
   font-size: 14px;
   border: 1px solid #333;
@@ -2920,6 +2923,69 @@ body {
 
 .btn-editar:hover {
   color: #2196F3;
+}
+
+.comision-edit-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.comision-edit-input {
+  width: 80px;
+  padding: 4px;
+  font-size: 12px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background: #1a1a1a;
+  color: #fff;
+  outline: none;
+}
+
+.comision-edit-input:focus {
+  border-color: #2196F3;
+}
+
+.btn-comision-confirmar {
+  background: none;
+  border: none;
+  color: #2ecc71;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+}
+
+.btn-comision-confirmar:hover {
+  background: rgba(46, 204, 113, 0.15);
+}
+
+.btn-comision-confirmar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: none;
+}
+
+.btn-comision-cancelar {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+}
+
+.btn-comision-cancelar:hover {
+  background: rgba(231, 76, 60, 0.15);
+}
+
+.btn-comision-cancelar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: none;
 }
 
 .btn-agregar {
@@ -3054,6 +3120,10 @@ body {
 .spinner-dark {
   border-color: #666;
   border-top-color: transparent;
+}
+
+.icon-spin {
+  animation: spin 0.8s linear infinite;
 }
 
 .btn-cerrar-sesion {

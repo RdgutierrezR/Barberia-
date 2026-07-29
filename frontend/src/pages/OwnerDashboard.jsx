@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuthInit } from '../hooks/useAuthInit';
 import { FRONTEND_URL } from '../config';
-import { Home, Users, Edit2, Trash2, User } from 'lucide-react';
+import { Home, Users, Edit2, Trash2, User, Check, X, Loader2 } from 'lucide-react';
 import { alertaError, alertaExito, confirmarAccion } from '../utils/alerts';
 import { cancelarSuscripcionPush } from '../utils/pushNotifications';
 
@@ -35,6 +35,8 @@ function OwnerDashboard() {
   const [barberoEditandoNombre, setBarberoEditandoNombre] = useState(null);
   const [nombreEditando, setNombreEditando] = useState('');
   const [guardandoBarbero, setGuardandoBarbero] = useState(false);
+  const [guardandoComisionId, setGuardandoComisionId] = useState(null);
+  const [guardandoNombreId, setGuardandoNombreId] = useState(null);
 
   const logout = async () => {
     const token = localStorage.getItem('barbero_token');
@@ -146,6 +148,7 @@ function OwnerDashboard() {
   };
 
   const guardarComision = async (idBarbero, comision) => {
+    setGuardandoComisionId(idBarbero);
     try {
       await api.actualizarBarbero(id, idBarbero, { comision_monto: Number(comision) || 0 });
       setBarberoEditando(null);
@@ -153,6 +156,7 @@ function OwnerDashboard() {
     } catch (err) {
       alertaError(err.message);
     }
+    setGuardandoComisionId(null);
   };
 
   const editarNombre = (barbero) => {
@@ -165,6 +169,7 @@ function OwnerDashboard() {
       setBarberoEditandoNombre(null);
       return;
     }
+    setGuardandoNombreId(idBarbero);
     try {
       await api.actualizarBarbero(id, idBarbero, { nombre: nombreEditando.trim() });
       setBarberoEditandoNombre(null);
@@ -172,6 +177,7 @@ function OwnerDashboard() {
     } catch (err) {
       alertaError(err.message);
     }
+    setGuardandoNombreId(null);
   };
 
   const eliminarBarbero = async (idBarbero) => {
@@ -376,13 +382,18 @@ function OwnerDashboard() {
                             type="text"
                             value={nombreEditando}
                             onChange={(e) => setNombreEditando(e.target.value)}
-                            onBlur={() => guardarBarberoNombre(b.id_barbero)}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') guardarBarberoNombre(b.id_barbero);
                               if (e.key === 'Escape') setBarberoEditandoNombre(null);
                             }}
                             autoFocus
                           />
+                          <button className="btn-comision-confirmar" onClick={() => guardarBarberoNombre(b.id_barbero)} title="Guardar nombre" disabled={guardandoNombreId === b.id_barbero}>
+                            {guardandoNombreId === b.id_barbero ? <Loader2 size={14} className="icon-spin" /> : <Check size={14} />}
+                          </button>
+                          <button className="btn-comision-cancelar" onClick={() => setBarberoEditandoNombre(null)} title="Cancelar" disabled={guardandoNombreId === b.id_barbero}>
+                            <X size={14} />
+                          </button>
                         </div>
                       ) : (
                         <div className="barbero-item-nombre">
@@ -400,14 +411,24 @@ function OwnerDashboard() {
                     </div>
                     <div className="barbero-item-actions">
                       {barberoEditando === b.id_barbero ? (
-                        <input
-                          type="number"
-                          style={{ width: '80px', padding: '4px', fontSize: '12px' }}
-                          defaultValue={b.comision_monto}
-                          onBlur={(e) => guardarComision(b.id_barbero, e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && guardarComision(b.id_barbero, e.target.value)}
-                          autoFocus
-                        />
+                        <span className="comision-edit-container">
+                          <input
+                            type="number"
+                            className="comision-edit-input"
+                            defaultValue={b.comision_monto}
+                            onKeyDown={(e) => e.key === 'Enter' && guardarComision(b.id_barbero, e.target.value)}
+                            autoFocus
+                          />
+                          <button className="btn-comision-confirmar" onClick={(e) => {
+                            const input = e.currentTarget.parentElement.querySelector('input');
+                            guardarComision(b.id_barbero, input.value);
+                          }} title="Guardar comisión" disabled={guardandoComisionId === b.id_barbero}>
+                            {guardandoComisionId === b.id_barbero ? <Loader2 size={14} className="icon-spin" /> : <Check size={14} />}
+                          </button>
+                          <button className="btn-comision-cancelar" onClick={() => setBarberoEditando(null)} title="Cancelar" disabled={guardandoComisionId === b.id_barbero}>
+                            <X size={14} />
+                          </button>
+                        </span>
                       ) : (
                         <button className="btn-editar" onClick={() => setBarberoEditando(b.id_barbero)} title="Editar comisión">💰</button>
                       )}
